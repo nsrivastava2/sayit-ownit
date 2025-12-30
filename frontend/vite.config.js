@@ -5,6 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    host: true,
+    allowedHosts: ['sayitownit.com', 'www.sayitownit.com', 'localhost'],
     proxy: {
       '/api': {
         target: 'http://localhost:4001',

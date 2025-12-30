@@ -2,16 +2,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const baseUrl = process.env.OLLAMA_BASE_URL;
+const baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 const username = process.env.OLLAMA_USERNAME;
 const password = process.env.OLLAMA_PASSWORD;
 
-if (!baseUrl || !username || !password) {
-  throw new Error('Missing Ollama configuration. Check OLLAMA_BASE_URL, OLLAMA_USERNAME, OLLAMA_PASSWORD in .env');
-}
-
-// Create Basic Auth header
-const authHeader = 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
+// Create Basic Auth header only if credentials are provided
+const authHeader = (username && password)
+  ? 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64')
+  : null;
 
 /**
  * Ollama API client with retry logic
@@ -30,12 +28,12 @@ export const ollama = {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+        const headers = { 'Content-Type': 'application/json' };
+        if (authHeader) headers['Authorization'] = authHeader;
+
         const response = await fetch(`${baseUrl}${endpoint}`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': authHeader
-          },
+          headers,
           body: JSON.stringify(body),
           signal: controller.signal
         });
@@ -131,11 +129,10 @@ export const ollama = {
    */
   async testConnection() {
     try {
-      const response = await fetch(`${baseUrl}/api/tags`, {
-        headers: {
-          'Authorization': authHeader
-        }
-      });
+      const headers = {};
+      if (authHeader) headers['Authorization'] = authHeader;
+
+      const response = await fetch(`${baseUrl}/api/tags`, { headers });
 
       if (!response.ok) {
         throw new Error(`Connection test failed: ${response.status}`);

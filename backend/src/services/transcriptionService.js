@@ -32,9 +32,9 @@ export const transcriptionService = {
       return 'whisper-cpp';
     } catch {}
 
-    // Try faster-whisper
+    // Try faster-whisper (Python library)
     try {
-      await execAsync('which faster-whisper');
+      await execAsync('python3 -c "from faster_whisper import WhisperModel"');
       return 'faster-whisper';
     } catch {}
 
@@ -141,18 +141,28 @@ export const transcriptionService = {
   },
 
   /**
-   * Transcribe using faster-whisper
+   * Transcribe using faster-whisper via Python script
    */
   async transcribeWithFasterWhisper(audioPath, language) {
+    const scriptPath = path.join(path.dirname(new URL(import.meta.url).pathname), '../../scripts/transcribe.py');
     const langArg = language === 'auto' ? '' : `--language ${language}`;
 
     try {
-      const { stdout } = await execAsync(
-        `faster-whisper "${audioPath}" --model medium ${langArg} --output_format json`,
-        { timeout: 600000, maxBuffer: 10 * 1024 * 1024 }
+      console.log(`Running faster-whisper transcription on ${audioPath}`);
+      const { stdout, stderr } = await execAsync(
+        `python3 "${scriptPath}" "${audioPath}" --model medium ${langArg}`,
+        { timeout: 600000, maxBuffer: 50 * 1024 * 1024 }
       );
 
+      if (stderr) {
+        console.log('Transcription progress:', stderr);
+      }
+
       const result = JSON.parse(stdout);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
       return {
         text: result.text || '',
@@ -216,11 +226,75 @@ export const transcriptionService = {
   },
 
   /**
+   * Batch transcribe a directory of chunks using GPU (loads model once)
+   * This is much faster than transcribing each chunk individually
+   */
+  async transcribeChunksBatch(chunksDir, options = {}) {
+    const scriptPath = path.join(path.dirname(new URL(import.meta.url).pathname), '../../scripts/transcribe_batch.py');
+    const language = options.language || 'auto';
+    const langArg = language === 'auto' ? '' : `--language ${language}`;
+
+    try {
+      console.log(`Batch transcribing chunks in ${chunksDir} using GPU...`);
+      const { stdout, stderr } = await execAsync(
+        `python3 "${scriptPath}" "${chunksDir}" --model medium ${langArg}`,
+        { timeout: 3600000, maxBuffer: 100 * 1024 * 1024 } // 1 hour timeout for long videos
+      );
+
+      if (stderr) {
+        console.log('Transcription progress:', stderr);
+      }
+
+      const result = JSON.parse(stdout);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Convert to expected format
+      return result.chunks.map(chunk => ({
+        chunkIndex: chunk.chunk_index,
+        startTime: chunk.chunk_index * 30, // Assuming 30s chunks
+        endTime: (chunk.chunk_index + 1) * 30,
+        text: chunk.text || '',
+        language: chunk.language || 'unknown',
+        segments: chunk.segments || [],
+        error: chunk.error
+      }));
+    } catch (error) {
+      console.error('Batch transcription failed:', error.message);
+      throw new Error(`Batch transcription failed: ${error.message}`);
+    }
+  },
+
+  /**
    * Transcribe multiple chunks and merge results
+   * Uses batch mode when faster-whisper is available for 10x+ speedup
    */
   async transcribeChunks(chunks, options = {}) {
-    const results = [];
     const backend = options.backend || await this.detectBackend();
+
+    // Use batch mode for faster-whisper (GPU optimized, loads model once)
+    if (backend === 'faster-whisper' && chunks.length > 0) {
+      const chunksDir = path.dirname(chunks[0].path);
+      try {
+        console.log(`Using batch transcription mode for ${chunks.length} chunks`);
+        const results = await this.transcribeChunksBatch(chunksDir, options);
+
+        // Update startTime/endTime from actual chunk info
+        return results.map((result, i) => ({
+          ...result,
+          startTime: chunks[i]?.startTime ?? result.startTime,
+          endTime: chunks[i]?.endTime ?? result.endTime
+        }));
+      } catch (error) {
+        console.error('Batch transcription failed, falling back to individual:', error.message);
+        // Fall through to individual transcription
+      }
+    }
+
+    // Fallback: individual chunk transcription
+    const results = [];
 
     for (const chunk of chunks) {
       try {
