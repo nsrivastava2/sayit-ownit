@@ -9,7 +9,7 @@ Build an MVP application that transcribes YouTube videos (both live streams and 
 
 - **Backend**: Node.js with Express
 - **Frontend**: React with Tailwind CSS
-- **Database**: Supabase (PostgreSQL)
+- **Database**: PostgreSQL (local)
 - **AI/ML**: Ollama (self-hosted) for both transcription and analysis
 - **Video Processing**: yt-dlp for YouTube stream/video capture
 
@@ -24,11 +24,12 @@ Build an MVP application that transcribes YouTube videos (both live streams and 
   - Transcription: Use Whisper model via Ollama
   - Analysis: Use Llama 3.1 or Mistral for extracting recommendations
 
-### Supabase Configuration
-- **Project URL**: `https://rltobpjezlhnmzuyrsmk.supabase.co`
-- **API Key**: `sb_publishable_MvcFz47k547UdJuKhDLZcQ_PKEx5ncn`
-- **Project Password**: `tEst@#987lui`
-- **Project Name**: `sayit-ownit`
+### PostgreSQL Configuration (Local)
+- **Host**: `127.0.0.1`
+- **Port**: `5433`
+- **Database**: `sayitownit`
+- **Username**: `sayitownit`
+- **Password**: `sayitownit123`
 
 ## Core Features to Implement
 
@@ -106,7 +107,7 @@ Features:
 
 **Prompt Template for LLM Analysis**:
 ```
-You are an expert at analyzing Indian stock market TV channel transcripts. 
+You are an expert at analyzing Indian stock market TV channel transcripts.
 Your task is to extract stock recommendations from the following transcript.
 
 The transcript is from a financial TV channel where market experts discuss stocks.
@@ -147,9 +148,9 @@ Respond ONLY in valid JSON format as an array of recommendations:
 If no recommendations found, return empty array: []
 ```
 
-### 4. Database Schema (Supabase)
+### 4. Database Schema (PostgreSQL)
 
-Create these tables in Supabase:
+Create these tables in PostgreSQL:
 
 ```sql
 -- Videos table to track processed videos
@@ -198,20 +199,15 @@ CREATE TABLE recommendations (
 );
 
 -- Indexes for common queries
+CREATE INDEX idx_videos_status ON videos(status);
+CREATE INDEX idx_videos_created_at ON videos(created_at);
+CREATE INDEX idx_transcripts_video_id ON transcripts(video_id);
 CREATE INDEX idx_recommendations_expert ON recommendations(expert_name);
 CREATE INDEX idx_recommendations_share ON recommendations(share_name);
+CREATE INDEX idx_recommendations_nse_symbol ON recommendations(nse_symbol);
 CREATE INDEX idx_recommendations_date ON recommendations(recommendation_date);
 CREATE INDEX idx_recommendations_action ON recommendations(action);
-
--- Enable Row Level Security (optional for MVP, but good practice)
-ALTER TABLE videos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE transcripts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE recommendations ENABLE ROW LEVEL SECURITY;
-
--- For MVP, allow all operations (tighten in production)
-CREATE POLICY "Allow all" ON videos FOR ALL USING (true);
-CREATE POLICY "Allow all" ON transcripts FOR ALL USING (true);
-CREATE POLICY "Allow all" ON recommendations FOR ALL USING (true);
+CREATE INDEX idx_recommendations_video_id ON recommendations(video_id);
 ```
 
 ### 5. Backend API Endpoints
@@ -231,7 +227,7 @@ GET /api/videos/:id
 
 GET /api/recommendations
   - List all recommendations
-  - Query params: 
+  - Query params:
     - ?expert=name
     - ?share=name
     - ?date_from=YYYY-MM-DD
@@ -241,7 +237,7 @@ GET /api/recommendations
 
 GET /api/recommendations/by-expert
   - Group recommendations by expert
-  
+
 GET /api/recommendations/by-share
   - Group recommendations by share/stock
 
@@ -305,7 +301,7 @@ stock-tracker-mvp/
 ├── backend/
 │   ├── src/
 │   │   ├── config/
-│   │   │   ├── database.js      # Supabase client setup
+│   │   │   ├── database.js      # PostgreSQL client setup
 │   │   │   ├── ollama.js        # Ollama API client
 │   │   │   └── index.js
 │   │   ├── services/
@@ -359,7 +355,7 @@ stock-tracker-mvp/
 4. ffmpeg extracts audio in chunks
 5. Each chunk sent to Whisper via Ollama for transcription
 6. Transcriptions accumulated and sent to LLM for analysis
-7. Extracted recommendations saved to Supabase
+7. Extracted recommendations saved to PostgreSQL
 8. Status updated throughout process
 ```
 
@@ -369,16 +365,16 @@ stock-tracker-mvp/
 const processLiveStream = async (youtubeUrl) => {
   const stream = await ytdlp.streamAudio(youtubeUrl);
   const chunker = new AudioChunker(30); // 30-second chunks
-  
+
   stream.pipe(chunker);
-  
+
   chunker.on('chunk', async (audioChunk, timestamp) => {
     // Transcribe chunk
     const transcript = await transcribeWithWhisper(audioChunk);
-    
+
     // Save transcript
     await saveTranscript(videoId, transcript, timestamp);
-    
+
     // Analyze every 5 chunks (2.5 minutes of content)
     if (shouldAnalyze(timestamp)) {
       const recentTranscripts = await getRecentTranscripts(videoId, 5);
@@ -402,9 +398,8 @@ const processLiveStream = async (youtubeUrl) => {
 NODE_ENV=development
 PORT=3001
 
-# Supabase
-SUPABASE_URL=https://rltobpjezlhnmzuyrsmk.supabase.co
-SUPABASE_ANON_KEY=sb_publishable_MvcFz47k547UdJuKhDLZcQ_PKEx5ncn
+# PostgreSQL
+DATABASE_URL=postgresql://sayitownit:sayitownit123@localhost:5432/sayitownit
 
 # Ollama
 OLLAMA_BASE_URL=https://ai-api.veldev.com
@@ -424,8 +419,8 @@ ANALYSIS_BATCH_CHUNKS=5
 2. **Can process a live YouTube stream**: Submit live URL → See recommendations appearing in real-time
 3. **Supports Hindi and English**: Correctly transcribes both languages
 4. **Extracts structured recommendations**: Expert, stock, prices, dates properly extracted
-5. **Data persisted in Supabase**: All data correctly saved and retrievable
-6. **Basic UI to view recommendations**: 
+5. **Data persisted in PostgreSQL**: All data correctly saved and retrievable
+6. **Basic UI to view recommendations**:
    - Filter by expert
    - Filter by share
    - Filter by date
@@ -446,9 +441,9 @@ Start with recorded videos before testing live streams.
 
 ## Instructions for Claude Code
 
-1. **Start with database setup**: Create tables in Supabase first
-2. **Build backend services in order**: 
-   - Supabase client
+1. **Start with database setup**: Create tables in PostgreSQL first
+2. **Build backend services in order**:
+   - PostgreSQL client
    - Ollama client (test connection)
    - Video download service
    - Transcription service

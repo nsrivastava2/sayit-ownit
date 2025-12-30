@@ -137,12 +137,7 @@ router.delete('/:id', async (req, res) => {
     queueService.cancelJob(id);
 
     // Delete from database (cascades to transcripts and recommendations)
-    const { error } = await db.supabase
-      .from('videos')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    await db.query('DELETE FROM videos WHERE id = $1', [id]);
 
     res.json({ success: true, message: 'Video deleted' });
   } catch (error) {

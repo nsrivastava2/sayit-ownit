@@ -1,224 +1,262 @@
-import { createClient } from '@supabase/supabase-js';
+import pg from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const { Pool } = pg;
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase configuration. Check SUPABASE_URL and SUPABASE_ANON_KEY in .env');
-}
+// PostgreSQL connection pool
+const pool = new Pool({
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'sayitownit',
+  user: process.env.DB_USER || 'sayitownit',
+  password: process.env.DB_PASSWORD || 'sayitownit123',
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Test connection on startup
+pool.query('SELECT NOW()')
+  .then(() => console.log('PostgreSQL connected successfully'))
+  .catch(err => console.error('PostgreSQL connection error:', err.message));
 
 // Helper functions for database operations
 export const db = {
   // Videos
   async createVideo(videoData) {
-    const { data, error } = await supabase
-      .from('videos')
-      .insert(videoData)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    const { youtube_url, title, channel_name, video_type, duration_seconds, language, status } = videoData;
+    const result = await pool.query(
+      `INSERT INTO videos (youtube_url, title, channel_name, video_type, duration_seconds, language, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [youtube_url, title, channel_name, video_type, duration_seconds, language, status || 'pending']
+    );
+    return result.rows[0];
   },
 
   async updateVideo(id, updates) {
-    const { data, error } = await supabase
-      .from('videos')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    const fields = [];
+    const values = [];
+    let paramIndex = 1;
+
+    for (const [key, value] of Object.entries(updates)) {
+      fields.push(`${key} = $${paramIndex}`);
+      values.push(value);
+      paramIndex++;
+    }
+
+    values.push(id);
+    const result = await pool.query(
+      `UPDATE videos SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      values
+    );
+    return result.rows[0];
   },
 
   async getVideo(id) {
-    const { data, error } = await supabase
-      .from('videos')
-      .select('*')
-      .eq('id', id)
-      .single();
-    if (error) throw error;
-    return data;
+    const result = await pool.query('SELECT * FROM videos WHERE id = $1', [id]);
+    return result.rows[0];
   },
 
   async getVideos({ status, limit = 20, offset = 0 }) {
-    let query = supabase
-      .from('videos')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    let query = 'SELECT * FROM videos';
+    const params = [];
+    let paramIndex = 1;
 
     if (status) {
-      query = query.eq('status', status);
+      query += ` WHERE status = $${paramIndex}`;
+      params.push(status);
+      paramIndex++;
     }
 
-    const { data, error, count } = await query;
-    if (error) throw error;
-    return { data, count };
+    query += ' ORDER BY created_at DESC';
+    query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, offset);
+
+    const result = await pool.query(query, params);
+
+    // Get total count
+    let countQuery = 'SELECT COUNT(*) FROM videos';
+    if (status) {
+      countQuery += ' WHERE status = $1';
+    }
+    const countResult = await pool.query(countQuery, status ? [status] : []);
+    const count = parseInt(countResult.rows[0].count);
+
+    return { data: result.rows, count };
   },
 
   async getVideoByUrl(youtubeUrl) {
-    const { data, error } = await supabase
-      .from('videos')
-      .select('*')
-      .eq('youtube_url', youtubeUrl)
-      .single();
-    if (error && error.code !== 'PGRST116') throw error;
-    return data;
+    const result = await pool.query(
+      'SELECT * FROM videos WHERE youtube_url = $1',
+      [youtubeUrl]
+    );
+    return result.rows[0] || null;
   },
 
   // Transcripts
   async createTranscript(transcriptData) {
-    const { data, error } = await supabase
-      .from('transcripts')
-      .insert(transcriptData)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    const { video_id, chunk_index, start_time_seconds, end_time_seconds, transcript_text, language_detected } = transcriptData;
+    const result = await pool.query(
+      `INSERT INTO transcripts (video_id, chunk_index, start_time_seconds, end_time_seconds, transcript_text, language_detected)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [video_id, chunk_index, start_time_seconds, end_time_seconds, transcript_text, language_detected]
+    );
+    return result.rows[0];
   },
 
   async getTranscriptsByVideo(videoId) {
-    const { data, error } = await supabase
-      .from('transcripts')
-      .select('*')
-      .eq('video_id', videoId)
-      .order('chunk_index', { ascending: true });
-    if (error) throw error;
-    return data;
+    const result = await pool.query(
+      'SELECT * FROM transcripts WHERE video_id = $1 ORDER BY chunk_index ASC',
+      [videoId]
+    );
+    return result.rows;
   },
 
   async getRecentTranscripts(videoId, count) {
-    const { data, error } = await supabase
-      .from('transcripts')
-      .select('*')
-      .eq('video_id', videoId)
-      .order('chunk_index', { ascending: false })
-      .limit(count);
-    if (error) throw error;
-    return data.reverse();
+    const result = await pool.query(
+      'SELECT * FROM transcripts WHERE video_id = $1 ORDER BY chunk_index DESC LIMIT $2',
+      [videoId, count]
+    );
+    return result.rows.reverse();
   },
 
   // Recommendations
   async createRecommendation(recommendationData) {
-    const { data, error } = await supabase
-      .from('recommendations')
-      .insert(recommendationData)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    const {
+      video_id, expert_name, recommendation_date, share_name, nse_symbol,
+      action, recommended_price, target_price, stop_loss, reason,
+      confidence_score, timestamp_in_video, raw_extract
+    } = recommendationData;
+
+    const result = await pool.query(
+      `INSERT INTO recommendations
+       (video_id, expert_name, recommendation_date, share_name, nse_symbol, action,
+        recommended_price, target_price, stop_loss, reason, confidence_score, timestamp_in_video, raw_extract)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       RETURNING *`,
+      [video_id, expert_name, recommendation_date, share_name, nse_symbol, action,
+       recommended_price, target_price, stop_loss, reason, confidence_score, timestamp_in_video, raw_extract]
+    );
+    return result.rows[0];
   },
 
   async createRecommendations(recommendations) {
     if (!recommendations.length) return [];
-    const { data, error } = await supabase
-      .from('recommendations')
-      .insert(recommendations)
-      .select();
-    if (error) throw error;
-    return data;
+
+    const results = [];
+    for (const rec of recommendations) {
+      const created = await this.createRecommendation(rec);
+      results.push(created);
+    }
+    return results;
   },
 
   async getRecommendations({ expert, share, dateFrom, dateTo, action, limit = 50, offset = 0 }) {
-    let query = supabase
-      .from('recommendations')
-      .select(`
-        *,
-        videos (
-          id,
-          youtube_url,
-          title,
-          channel_name
-        )
-      `, { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    // Build WHERE conditions
+    const conditions = ['1=1'];
+    const params = [];
+    let paramIndex = 1;
 
     if (expert) {
-      query = query.ilike('expert_name', `%${expert}%`);
+      conditions.push(`expert_name ILIKE $${paramIndex}`);
+      params.push(`%${expert}%`);
+      paramIndex++;
     }
     if (share) {
-      query = query.or(`share_name.ilike.%${share}%,nse_symbol.ilike.%${share}%`);
+      conditions.push(`(share_name ILIKE $${paramIndex} OR nse_symbol ILIKE $${paramIndex})`);
+      params.push(`%${share}%`);
+      paramIndex++;
     }
     if (dateFrom) {
-      query = query.gte('recommendation_date', dateFrom);
+      conditions.push(`recommendation_date >= $${paramIndex}`);
+      params.push(dateFrom);
+      paramIndex++;
     }
     if (dateTo) {
-      query = query.lte('recommendation_date', dateTo);
+      conditions.push(`recommendation_date <= $${paramIndex}`);
+      params.push(dateTo);
+      paramIndex++;
     }
     if (action) {
-      query = query.eq('action', action.toUpperCase());
+      conditions.push(`action = $${paramIndex}`);
+      params.push(action.toUpperCase());
+      paramIndex++;
     }
 
-    const { data, error, count } = await query;
-    if (error) throw error;
-    return { data, count };
+    const whereClause = conditions.join(' AND ');
+
+    // Get total count first
+    const countQuery = `SELECT COUNT(*) FROM recommendations WHERE ${whereClause}`;
+    const countResult = await pool.query(countQuery, params);
+    const count = parseInt(countResult.rows[0].count);
+
+    // Get paginated data with video info (need r. prefix for joined query)
+    const dataWhereClause = whereClause.replace(/expert_name/g, 'r.expert_name')
+      .replace(/share_name/g, 'r.share_name')
+      .replace(/nse_symbol/g, 'r.nse_symbol')
+      .replace(/recommendation_date/g, 'r.recommendation_date')
+      .replace(/action/g, 'r.action');
+
+    const dataQuery = `
+      SELECT r.*,
+             json_build_object(
+               'id', v.id,
+               'youtube_url', v.youtube_url,
+               'title', v.title,
+               'channel_name', v.channel_name
+             ) as videos
+      FROM recommendations r
+      LEFT JOIN videos v ON r.video_id = v.id
+      WHERE ${dataWhereClause}
+      ORDER BY r.created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    params.push(limit, offset);
+
+    const result = await pool.query(dataQuery, params);
+    return { data: result.rows, count };
   },
 
   async getRecommendationsByExpert() {
-    const { data, error } = await supabase
-      .from('recommendations')
-      .select('expert_name')
-      .order('expert_name');
-
-    if (error) throw error;
-
-    // Group and count
-    const grouped = data.reduce((acc, { expert_name }) => {
-      acc[expert_name] = (acc[expert_name] || 0) + 1;
-      return acc;
-    }, {});
-
-    return Object.entries(grouped).map(([name, count]) => ({ name, count }));
+    const result = await pool.query(`
+      SELECT expert_name as name, COUNT(*) as count
+      FROM recommendations
+      GROUP BY expert_name
+      ORDER BY count DESC
+    `);
+    return result.rows.map(row => ({ name: row.name, count: parseInt(row.count) }));
   },
 
   async getRecommendationsByShare() {
-    const { data, error } = await supabase
-      .from('recommendations')
-      .select('share_name, nse_symbol')
-      .order('share_name');
-
-    if (error) throw error;
-
-    // Group and count
-    const grouped = data.reduce((acc, { share_name, nse_symbol }) => {
-      const key = share_name;
-      if (!acc[key]) {
-        acc[key] = { name: share_name, symbol: nse_symbol, count: 0 };
-      }
-      acc[key].count++;
-      return acc;
-    }, {});
-
-    return Object.values(grouped);
+    const result = await pool.query(`
+      SELECT share_name as name, nse_symbol as symbol, COUNT(*) as count
+      FROM recommendations
+      GROUP BY share_name, nse_symbol
+      ORDER BY count DESC
+    `);
+    return result.rows.map(row => ({ name: row.name, symbol: row.symbol, count: parseInt(row.count) }));
   },
 
   async getExperts() {
-    const experts = await this.getRecommendationsByExpert();
-    return experts.sort((a, b) => b.count - a.count);
+    return this.getRecommendationsByExpert();
   },
 
   async getShares() {
-    const shares = await this.getRecommendationsByShare();
-    return shares.sort((a, b) => b.count - a.count);
+    return this.getRecommendationsByShare();
   },
 
   async getStats() {
     const [videosResult, recommendationsResult] = await Promise.all([
-      supabase.from('videos').select('id, status', { count: 'exact' }),
-      supabase.from('recommendations').select('id, expert_name, share_name, action', { count: 'exact' })
+      pool.query('SELECT id, status FROM videos'),
+      pool.query('SELECT id, expert_name, share_name, action FROM recommendations')
     ]);
 
-    if (videosResult.error) throw videosResult.error;
-    if (recommendationsResult.error) throw recommendationsResult.error;
-
-    const recommendations = recommendationsResult.data;
+    const videos = videosResult.rows;
+    const recommendations = recommendationsResult.rows;
     const uniqueExperts = new Set(recommendations.map(r => r.expert_name));
     const uniqueShares = new Set(recommendations.map(r => r.share_name));
     const actionCounts = recommendations.reduce((acc, r) => {
@@ -227,13 +265,54 @@ export const db = {
     }, {});
 
     return {
-      totalVideos: videosResult.count,
-      completedVideos: videosResult.data.filter(v => v.status === 'completed').length,
-      totalRecommendations: recommendationsResult.count,
+      totalVideos: videos.length,
+      completedVideos: videos.filter(v => v.status === 'completed').length,
+      totalRecommendations: recommendations.length,
       uniqueExperts: uniqueExperts.size,
       uniqueShares: uniqueShares.size,
       actionCounts
     };
+  },
+
+  // Get expert details with all recommendations
+  async getExpertRecommendations(expertName) {
+    const result = await pool.query(`
+      SELECT r.*,
+             json_build_object(
+               'id', v.id,
+               'youtube_url', v.youtube_url,
+               'title', v.title,
+               'channel_name', v.channel_name
+             ) as videos
+      FROM recommendations r
+      LEFT JOIN videos v ON r.video_id = v.id
+      WHERE r.expert_name ILIKE $1
+      ORDER BY r.recommendation_date DESC
+    `, [`%${expertName}%`]);
+    return result.rows;
+  },
+
+  // Get share details with all recommendations
+  async getShareRecommendations(shareName) {
+    const result = await pool.query(`
+      SELECT r.*,
+             json_build_object(
+               'id', v.id,
+               'youtube_url', v.youtube_url,
+               'title', v.title,
+               'channel_name', v.channel_name
+             ) as videos
+      FROM recommendations r
+      LEFT JOIN videos v ON r.video_id = v.id
+      WHERE r.share_name ILIKE $1 OR r.nse_symbol ILIKE $1
+      ORDER BY r.recommendation_date DESC
+    `, [`%${shareName}%`]);
+    return result.rows;
+  },
+
+  // Raw query access for complex operations
+  async query(text, params) {
+    return pool.query(text, params);
   }
 };
 
