@@ -24,7 +24,7 @@ export const videoService = {
   async getVideoInfo(youtubeUrl) {
     try {
       const { stdout } = await execAsync(
-        `yt-dlp --dump-json --no-download "${youtubeUrl}"`,
+        `yt-dlp --js-runtimes node --dump-json --no-download "${youtubeUrl}"`,
         { maxBuffer: 10 * 1024 * 1024 } // 10MB buffer for large metadata
       );
 
@@ -71,6 +71,7 @@ export const videoService = {
 
     return new Promise((resolve, reject) => {
       const args = [
+        '--js-runtimes', 'node',
         '-x', // Extract audio
         '--audio-format', 'wav',
         '--audio-quality', '0',
@@ -133,6 +134,7 @@ export const videoService = {
 
     // Start yt-dlp to pipe audio
     const ytdlpArgs = [
+      '--js-runtimes', 'node',
       '-f', 'bestaudio',
       '-o', '-', // Output to stdout
       youtubeUrl
