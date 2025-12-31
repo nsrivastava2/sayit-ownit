@@ -131,7 +131,12 @@ export const queueService = {
 
   /**
    * Process a single job
-   * Priority: Gemini Flash (direct video) > YouTube API + LLM > Groq Whisper + LLM
+   * Priority: YouTube Transcript (FREE) > Gemini Video (fallback)
+   *
+   * Optimized flow:
+   * 1. Try YouTube Transcript API first (free, instant if available)
+   * 2. If transcript exists → Analyze text with Gemini (cheaper)
+   * 3. If no transcript → Fall back to Gemini video analysis
    */
   async processJob(job) {
     console.log(`Processing job ${job.id}: ${job.youtubeUrl}`);
@@ -143,100 +148,97 @@ export const queueService = {
     let processingMethod = null;
     const tempDir = path.join(config.processing.tempDir, job.id);
 
-    // Method 1: Try Gemini URL-based analysis (fastest - no download needed)
-    // Only for videos under 1 hour (token limit ~1 million ≈ 1-2 hours video)
-    const videoDurationMinutes = (job.videoInfo?.duration || 0) / 60;
-    const maxUrlMethodDuration = 60; // 1 hour max for URL method
-
     // Get channel name for channel-specific prompt loading
     const channelName = job.videoInfo?.channelName || null;
+    console.log(`Using channel-specific prompt for: ${channelName || 'default'}`);
 
-    if (process.env.GEMINI_API_KEY && videoDurationMinutes <= maxUrlMethodDuration) {
-      try {
-        job.currentStep = 'analyzing_gemini_url';
-        job.progress = 10;
-        console.log(`Trying Gemini URL-based video analysis (Gemini 2.5 Flash)... [${Math.round(videoDurationMinutes)} min video]`);
-        console.log(`Using channel-specific prompt for: ${channelName || 'default'}`);
+    // Method 1: Try YouTube Transcript API first (FREE and instant)
+    try {
+      job.currentStep = 'fetching_transcript';
+      job.progress = 10;
+      console.log('Checking for available YouTube transcript (free method)...');
 
-        const result = await geminiVideoService.analyzeYouTubeVideoByUrl(job.youtubeUrl, channelName);
-        recommendations = result.recommendations;
-        processingMethod = 'gemini_url';
+      const transcriptData = await youtubeTranscriptService.fetchTranscript(job.youtubeUrl);
+      const chunks = youtubeTranscriptService.groupSegmentsIntoChunks(
+        transcriptData.segments,
+        config.processing.audioChunkSeconds || 30
+      );
 
-        console.log(`Gemini URL: Found ${recommendations.length} recommendations`);
-        job.progress = 80;
+      console.log(`YouTube Transcript found! ${transcriptData.segments.length} segments, ${chunks.length} chunks`);
+      job.progress = 30;
 
-      } catch (geminiUrlError) {
-        console.log(`Gemini URL method failed: ${geminiUrlError.message}`);
-        console.log('Falling back to YouTube Transcript + Gemini...');
+      // Save transcript chunks
+      job.currentStep = 'saving_transcript';
+      for (const chunk of chunks) {
+        await db.createTranscript({
+          video_id: job.videoId,
+          chunk_index: chunk.chunkIndex,
+          start_time_seconds: chunk.startTime,
+          end_time_seconds: chunk.endTime,
+          transcript_text: chunk.text,
+          language_detected: transcriptData.language || 'unknown'
+        });
       }
-    } else if (videoDurationMinutes > maxUrlMethodDuration) {
-      console.log(`Video too long (${Math.round(videoDurationMinutes)} min) for Gemini URL method, using YouTube Transcript + Gemini...`);
-    }
 
-    // Method 2: YouTube Transcript API + Gemini (primary for long videos, fallback for short)
-    if (recommendations.length === 0) {
-      try {
-        job.currentStep = 'fetching_transcript';
-        job.progress = 15;
-        console.log('Trying YouTube Transcript API...');
+      // Analyze transcript text with Gemini (much cheaper than video)
+      job.currentStep = 'analyzing_transcript';
+      job.progress = 40;
+      console.log('Analyzing transcript with Gemini (text-only, cost-effective)...');
 
-        const transcriptData = await youtubeTranscriptService.fetchTranscript(job.youtubeUrl);
-        const chunks = youtubeTranscriptService.groupSegmentsIntoChunks(
-          transcriptData.segments,
-          config.processing.audioChunkSeconds || 30
-        );
+      // Combine chunks into batches for Gemini analysis
+      const batchSize = 50; // ~25 minutes per batch
+      const allRecommendations = [];
 
-        console.log(`YouTube API: Got ${transcriptData.segments.length} segments, grouped into ${chunks.length} chunks`);
-        job.progress = 40;
+      for (let i = 0; i < chunks.length; i += batchSize) {
+        const batch = chunks.slice(i, i + batchSize);
+        const batchText = batch
+          .map(c => `[${formatTime(c.startTime)}-${formatTime(c.endTime)}] ${c.text}`)
+          .join('\n\n');
 
-        // Save transcript chunks
-        job.currentStep = 'saving_transcript';
-        for (const chunk of chunks) {
-          await db.createTranscript({
-            video_id: job.videoId,
-            chunk_index: chunk.chunkIndex,
-            start_time_seconds: chunk.startTime,
-            end_time_seconds: chunk.endTime,
-            transcript_text: chunk.text,
-            language_detected: transcriptData.language || 'unknown'
-          });
+        console.log(`Analyzing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)}...`);
+
+        try {
+          const batchRecs = await geminiVideoService.analyzeTranscriptWithGemini(batchText, channelName);
+          allRecommendations.push(...batchRecs);
+        } catch (batchError) {
+          console.log(`Batch ${Math.floor(i / batchSize) + 1} failed: ${batchError.message}`);
         }
 
-        // Analyze with Gemini
-        job.currentStep = 'analyzing_gemini';
-        job.progress = 50;
-        console.log('Analyzing transcript with Gemini...');
+        job.progress = 40 + Math.floor((i / chunks.length) * 40);
+      }
 
-        // Combine chunks into batches for Gemini analysis
-        const batchSize = 50; // ~25 minutes per batch
-        const allRecommendations = [];
+      recommendations = deduplicateRecommendations(allRecommendations);
+      processingMethod = 'youtube_transcript';
 
-        for (let i = 0; i < chunks.length; i += batchSize) {
-          const batch = chunks.slice(i, i + batchSize);
-          const batchText = batch
-            .map(c => `[${formatTime(c.startTime)}-${formatTime(c.endTime)}] ${c.text}`)
-            .join('\n\n');
+      console.log(`YouTube Transcript + Gemini: Found ${recommendations.length} recommendations`);
+      job.progress = 80;
 
-          console.log(`Analyzing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)}...`);
+    } catch (ytError) {
+      console.log(`YouTube Transcript not available: ${ytError.message}`);
+      console.log('Falling back to Gemini video analysis...');
 
-          try {
-            const batchRecs = await geminiVideoService.analyzeTranscriptWithGemini(batchText, channelName);
-            allRecommendations.push(...batchRecs);
-          } catch (batchError) {
-            console.log(`Batch ${Math.floor(i / batchSize) + 1} failed: ${batchError.message}`);
-          }
+      // Method 2: Gemini Video Analysis (fallback when no transcript)
+      const videoDurationMinutes = (job.videoInfo?.duration || 0) / 60;
+      const maxUrlMethodDuration = 60; // 1 hour max for URL method
 
-          job.progress = 50 + Math.floor((i / chunks.length) * 30);
+      if (process.env.GEMINI_API_KEY && videoDurationMinutes <= maxUrlMethodDuration) {
+        try {
+          job.currentStep = 'analyzing_video';
+          job.progress = 20;
+          console.log(`Using Gemini video analysis (Gemini 2.5 Flash)... [${Math.round(videoDurationMinutes)} min video]`);
+
+          const result = await geminiVideoService.analyzeYouTubeVideoByUrl(job.youtubeUrl, channelName);
+          recommendations = result.recommendations;
+          processingMethod = 'gemini_video';
+
+          console.log(`Gemini Video: Found ${recommendations.length} recommendations`);
+          job.progress = 80;
+
+        } catch (geminiError) {
+          console.log(`Gemini video analysis failed: ${geminiError.message}`);
         }
-
-        recommendations = deduplicateRecommendations(allRecommendations);
-        processingMethod = 'youtube_api_gemini';
-
-        console.log(`YouTube + Gemini: Found ${recommendations.length} recommendations`);
-        job.progress = 80;
-
-      } catch (ytError) {
-        console.log(`YouTube API failed: ${ytError.message}`);
+      } else if (videoDurationMinutes > maxUrlMethodDuration) {
+        console.log(`Video too long (${Math.round(videoDurationMinutes)} min) for Gemini video analysis and no transcript available`);
       }
     }
 
