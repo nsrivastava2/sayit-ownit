@@ -88,6 +88,96 @@ export const api = {
   getExportUrl(params = {}) {
     const query = new URLSearchParams(params).toString();
     return `${API_BASE}/recommendations/export${query ? `?${query}` : ''}`;
+  },
+
+  // ============================================
+  // Admin API - Expert Management
+  // ============================================
+
+  async getAdminExperts() {
+    return fetchApi('/admin/experts');
+  },
+
+  async getAdminExpert(id) {
+    return fetchApi(`/admin/experts/${id}`);
+  },
+
+  async createAdminExpert(data) {
+    return fetchApi('/admin/experts', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async updateAdminExpert(id, data) {
+    return fetchApi(`/admin/experts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async deleteAdminExpert(id) {
+    return fetchApi(`/admin/experts/${id}`, { method: 'DELETE' });
+  },
+
+  async addExpertAlias(expertId, alias) {
+    return fetchApi(`/admin/experts/${expertId}/aliases`, {
+      method: 'POST',
+      body: JSON.stringify({ alias })
+    });
+  },
+
+  async removeExpertAlias(aliasId) {
+    return fetchApi(`/admin/experts/aliases/${aliasId}`, { method: 'DELETE' });
+  },
+
+  async getPendingExperts() {
+    return fetchApi('/admin/experts/pending');
+  },
+
+  async resolvePendingExpert(pendingId, action, expertId = null, canonicalName = null) {
+    return fetchApi(`/admin/experts/pending/${pendingId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ action, expertId, canonicalName })
+    });
+  },
+
+  async clearExpertCache() {
+    return fetchApi('/admin/experts/cache/clear', { method: 'POST' });
+  },
+
+  // ============================================
+  // Admin API - Channel Management
+  // ============================================
+
+  async getAdminChannels() {
+    return fetchApi('/admin/channels');
+  },
+
+  async createAdminChannel(data) {
+    return fetchApi('/admin/channels', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async updateAdminChannel(id, data) {
+    return fetchApi(`/admin/channels/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async getPromptFiles() {
+    return fetchApi('/admin/channels/prompts');
+  },
+
+  async testChannelMatch(channelName) {
+    return fetchApi(`/admin/channels/test/${encodeURIComponent(channelName)}`);
+  },
+
+  async clearPromptCache() {
+    return fetchApi('/admin/channels/cache/clear', { method: 'POST' });
   }
 };
 

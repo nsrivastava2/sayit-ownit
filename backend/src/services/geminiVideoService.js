@@ -7,6 +7,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { spawn } from 'child_process';
+import { promptService } from './promptService.js';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_FILE_API_URL = 'https://generativelanguage.googleapis.com/upload/v1beta/files';
@@ -220,12 +221,13 @@ export const geminiVideoService = {
   /**
    * Analyze video with Gemini for stock recommendations
    * @param {Object} fileInfo - Uploaded file info from Gemini
+   * @param {string} channelName - Channel name for loading channel-specific prompt
    * @returns {Array} - Extracted recommendations
    */
-  async analyzeVideo(fileInfo) {
+  async analyzeVideo(fileInfo, channelName = null) {
     console.log('Sending video to Gemini for analysis...');
 
-    const prompt = this.buildAnalysisPrompt();
+    const prompt = await this.buildAnalysisPrompt(channelName);
 
     const response = await fetch(`${GEMINI_GENERATE_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -271,78 +273,13 @@ export const geminiVideoService = {
 
   /**
    * Build the prompt for Gemini video analysis
+   * @param {string} channelName - Channel name for loading channel-specific prompt
+   * @returns {Promise<string>} - The prompt content
    */
-  buildAnalysisPrompt() {
-    return `You are an expert at analyzing Indian stock market TV channel videos for ACTIONABLE EQUITY STOCK recommendations.
-
-Watch this entire video carefully, paying attention to BOTH:
-1. AUDIO: What experts are saying about stocks
-2. VISUAL: Text on screen showing expert names, stock tickers, prices, targets
-
-CRITICAL RULES - FOLLOW STRICTLY:
-
-1. ONLY extract recommendations for INDIAN EQUITY STOCKS listed on NSE/BSE
-   - Examples: Reliance, Tata Motors, HDFC Bank, Infosys, SBI, etc.
-
-2. DO NOT INCLUDE (STRICTLY EXCLUDE):
-   - Commodities: Gold, Silver, Crude Oil, Natural Gas, Copper, Zinc
-   - Indices: Nifty, Sensex, Bank Nifty, Nifty 50, Nifty IT
-   - Derivatives: Options (CE/PE), Futures, Call Options, Put Options
-   - Currencies: Dollar, Rupee, Euro
-   - Crypto: Bitcoin, Ethereum
-   - General market commentary without specific stock names
-   - Sector-level advice ("buy IT sector", "pharma looks good")
-   - Bullion/commodity investment shows
-
-3. ACTIONABLE RECOMMENDATIONS ONLY:
-   - Must have a clear BUY or SELL action with at least ONE price point
-   - HOLD without any price targets = DO NOT INCLUDE
-   - "Stock looks good" without specific action = DO NOT INCLUDE
-   - Vague mentions ("could be good", "might rise") = DO NOT INCLUDE
-
-4. REQUIRED FIELDS for a valid recommendation:
-   - share_name: Specific stock name (not sector)
-   - action: Must be "BUY" or "SELL" (ignore HOLD without targets)
-   - At least ONE of: recommended_price OR target_price OR stop_loss
-
-5. Look for these expert names:
-   - Anil Singhvi, Prakash Gaba, Sanjiv Bhasin, Ashwani Gujral
-   - Ashish Chaturmohta, Sudarshan Sukhani, Mitesh Thakkar
-   - Vijay Chopra, Rajat Bose, Sandeep Jain, etc.
-   - Names displayed on screen (title cards, lower thirds)
-   - If unclear, use "Unknown Expert"
-
-6. For prices, look at screen graphics showing:
-   - Entry/Buy Price (CMP, buy at)
-   - Target Price (lakshya, TGT)
-   - Stop Loss (stoploss, SL)
-
-7. Confidence levels:
-   - "high" = Clearly visible on screen AND spoken
-   - "medium" = Either visible OR spoken clearly
-   - "low" = Partially heard/seen
-
-Respond with a JSON array (empty if no valid stock recommendations):
-[
-  {
-    "expert_name": "Anil Singhvi",
-    "share_name": "Reliance Industries",
-    "nse_symbol": "RELIANCE",
-    "action": "BUY",
-    "recommended_price": 2850,
-    "target_price": 3100,
-    "stop_loss": 2750,
-    "reason": "Technical breakout",
-    "timestamp_seconds": 330,
-    "confidence": "high"
-  }
-]
-
-JSON Rules:
-- timestamp_seconds: NUMBER only (not string)
-- All prices: NUMBER or null (not strings or ranges)
-- action: "BUY" or "SELL" only
-- Return [] if no valid stock recommendations found`;
+  async buildAnalysisPrompt(channelName = null) {
+    // Load channel-specific prompt from markdown file
+    const promptContent = await promptService.loadPrompt(channelName);
+    return promptContent;
   },
 
   /**
@@ -432,13 +369,14 @@ JSON Rules:
    * Analyze YouTube video directly by URL (no download/upload needed)
    * Uses Gemini 2.5 Flash which accepts YouTube URLs directly
    * @param {string} youtubeUrl - YouTube video URL
+   * @param {string} channelName - Channel name for loading channel-specific prompt
    * @returns {Object} - Analysis results
    */
-  async analyzeYouTubeVideoByUrl(youtubeUrl) {
+  async analyzeYouTubeVideoByUrl(youtubeUrl, channelName = null) {
     console.log('Analyzing YouTube video directly via URL...');
     console.log(`Video: ${youtubeUrl}`);
 
-    const prompt = this.buildAnalysisPrompt();
+    const prompt = await this.buildAnalysisPrompt(channelName);
 
     const response = await fetch(`${GEMINI_GENERATE_URL_25}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -536,72 +474,24 @@ JSON Rules:
    * Analyze transcript text using Gemini (for YouTube Transcript API fallback)
    * Much more accurate than local Ollama for Hindi/Hinglish content
    * @param {string} transcriptText - Combined transcript text with timestamps
+   * @param {string} channelName - Channel name for loading channel-specific prompt
    * @returns {Array} - Extracted recommendations
    */
-  async analyzeTranscriptWithGemini(transcriptText) {
+  async analyzeTranscriptWithGemini(transcriptText, channelName = null) {
     console.log('Analyzing transcript with Gemini...');
 
-    const prompt = `You are an expert at analyzing Indian stock market TV channel transcripts for ACTIONABLE EQUITY STOCK recommendations.
+    // Load channel-specific prompt
+    const basePrompt = await promptService.loadPrompt(channelName);
 
-CRITICAL RULES - READ CAREFULLY:
-
-1. ONLY extract recommendations for INDIAN EQUITY STOCKS listed on NSE/BSE
-   - Examples: Reliance, Tata Motors, HDFC Bank, Infosys, SBI, etc.
-
-2. DO NOT INCLUDE (STRICTLY EXCLUDE):
-   - Commodities: Gold, Silver, Crude Oil, Natural Gas, Copper, Zinc
-   - Indices: Nifty, Sensex, Bank Nifty, Nifty 50, Nifty IT
-   - Derivatives: Options (CE/PE), Futures, Call Options, Put Options
-   - Currencies: Dollar, Rupee, Euro
-   - Crypto: Bitcoin, Ethereum
-   - General market commentary without specific stock names
-   - Sector-level advice ("buy IT sector", "pharma looks good")
-
-3. ACTIONABLE RECOMMENDATIONS ONLY:
-   - Must have a clear BUY or SELL action with at least ONE price point
-   - HOLD without any price targets = DO NOT INCLUDE
-   - "Stock looks good" without specific action = DO NOT INCLUDE
-   - Vague mentions ("could be good", "might rise") = DO NOT INCLUDE
-
-4. REQUIRED FIELDS for a valid recommendation:
-   - share_name: Specific stock name (not sector)
-   - action: Must be "BUY" or "SELL" (ignore HOLD without targets)
-   - At least ONE of: recommended_price OR target_price OR stop_loss
-
-5. Expert names to look for:
-   - Anil Singhvi, Prakash Gaba, Sanjiv Bhasin, Ashwani Gujral
-   - Ashish Chaturmohta, Sudarshan Sukhani, Mitesh Thakkar
-   - Vijay Chopra, Rajat Bose, Sandeep Jain, etc.
-   - If unclear, use "Unknown Expert"
+    // Add transcript-specific context
+    const prompt = `${basePrompt}
 
 TRANSCRIPT (Hindi/Hinglish - timestamps in [MM:SS-MM:SS] format):
 ---
 ${transcriptText}
 ---
 
-Extract ONLY actionable stock recommendations. Convert MM:SS to seconds (05:30 = 330).
-
-Return a JSON array (empty array if no valid recommendations found):
-[
-  {
-    "expert_name": "Anil Singhvi",
-    "share_name": "Reliance Industries",
-    "nse_symbol": "RELIANCE",
-    "action": "BUY",
-    "recommended_price": 2850,
-    "target_price": 3100,
-    "stop_loss": 2750,
-    "reason": "Technical breakout above 2800",
-    "timestamp_seconds": 330,
-    "confidence": "high"
-  }
-]
-
-Rules for JSON:
-- timestamp_seconds: NUMBER only (330, not "05:30")
-- All prices: NUMBER or null (2850, not "2850-2900")
-- action: "BUY" or "SELL" only (no HOLD without targets)
-- Return [] if no valid stock recommendations found`;
+Extract ONLY actionable stock recommendations. Convert MM:SS to seconds (05:30 = 330).`;
 
     const response = await fetch(`${GEMINI_GENERATE_URL_25}?key=${GEMINI_API_KEY}`, {
       method: 'POST',

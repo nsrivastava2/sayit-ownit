@@ -5,6 +5,7 @@ import { db, config } from '../config/index.js';
 import videoService from './videoService.js';
 import geminiVideoService from './geminiVideoService.js';
 import youtubeTranscriptService from './youtubeTranscriptService.js';
+import { expertService } from './expertService.js';
 
 /**
  * Job queue service for processing videos
@@ -147,13 +148,17 @@ export const queueService = {
     const videoDurationMinutes = (job.videoInfo?.duration || 0) / 60;
     const maxUrlMethodDuration = 60; // 1 hour max for URL method
 
+    // Get channel name for channel-specific prompt loading
+    const channelName = job.videoInfo?.channelName || null;
+
     if (process.env.GEMINI_API_KEY && videoDurationMinutes <= maxUrlMethodDuration) {
       try {
         job.currentStep = 'analyzing_gemini_url';
         job.progress = 10;
         console.log(`Trying Gemini URL-based video analysis (Gemini 2.5 Flash)... [${Math.round(videoDurationMinutes)} min video]`);
+        console.log(`Using channel-specific prompt for: ${channelName || 'default'}`);
 
-        const result = await geminiVideoService.analyzeYouTubeVideoByUrl(job.youtubeUrl);
+        const result = await geminiVideoService.analyzeYouTubeVideoByUrl(job.youtubeUrl, channelName);
         recommendations = result.recommendations;
         processingMethod = 'gemini_url';
 
@@ -215,7 +220,7 @@ export const queueService = {
           console.log(`Analyzing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)}...`);
 
           try {
-            const batchRecs = await geminiVideoService.analyzeTranscriptWithGemini(batchText);
+            const batchRecs = await geminiVideoService.analyzeTranscriptWithGemini(batchText, channelName);
             allRecommendations.push(...batchRecs);
           } catch (batchError) {
             console.log(`Batch ${Math.floor(i / batchSize) + 1} failed: ${batchError.message}`);
@@ -262,15 +267,22 @@ export const queueService = {
       throw new Error('All processing methods failed - no recommendations extracted');
     }
 
-    // Save recommendations to database
+    // Save recommendations to database with expert name resolution
     job.currentStep = 'saving_recommendations';
     job.progress = 90;
     const today = new Date().toISOString().split('T')[0];
 
     for (const rec of recommendations) {
+      // Resolve expert name using expertService (maps aliases to canonical names)
+      const expertResolution = await expertService.resolveExpertName(
+        rec.expert_name,
+        job.videoId,
+        rec.timestamp_seconds
+      );
+
       await db.createRecommendation({
         video_id: job.videoId,
-        expert_name: rec.expert_name,
+        expert_name: expertResolution.name, // Use resolved canonical name
         recommendation_date: today,
         share_name: rec.share_name,
         nse_symbol: rec.nse_symbol || geminiVideoService.mapToNSESymbol(rec.share_name),
@@ -283,6 +295,11 @@ export const queueService = {
         timestamp_in_video: rec.timestamp_seconds,
         raw_extract: JSON.stringify(rec)
       });
+
+      // Log if this is a new expert (added to pending)
+      if (expertResolution.isNew) {
+        console.log(`New expert detected: "${rec.expert_name}" - added to pending review`);
+      }
     }
 
     console.log(`Saved ${recommendations.length} recommendations (via ${processingMethod})`);

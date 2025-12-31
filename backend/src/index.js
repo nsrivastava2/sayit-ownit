@@ -10,6 +10,10 @@ import expertsRouter from './routes/experts.js';
 import sharesRouter from './routes/shares.js';
 import statsRouter from './routes/stats.js';
 
+// Import admin routes
+import adminExpertsRouter from './routes/admin/experts.js';
+import adminChannelsRouter from './routes/admin/channels.js';
+
 dotenv.config();
 
 const app = express();
@@ -39,6 +43,10 @@ app.use('/api/recommendations', recommendationsRouter);
 app.use('/api/experts', expertsRouter);
 app.use('/api/shares', sharesRouter);
 app.use('/api/stats', statsRouter);
+
+// Admin Routes
+app.use('/api/admin/experts', adminExpertsRouter);
+app.use('/api/admin/channels', adminChannelsRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

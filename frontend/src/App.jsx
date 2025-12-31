@@ -6,6 +6,8 @@ import Recommendations from './pages/Recommendations';
 import ExpertView from './pages/ExpertView';
 import ShareView from './pages/ShareView';
 import VideoDetails from './pages/VideoDetails';
+import ExpertManagement from './pages/admin/ExpertManagement';
+import ChannelManagement from './pages/admin/ChannelManagement';
 
 function App() {
   return (
@@ -17,6 +19,9 @@ function App() {
         <Route path="/experts/:name" element={<ExpertView />} />
         <Route path="/shares/:symbol" element={<ShareView />} />
         <Route path="/videos/:id" element={<VideoDetails />} />
+        {/* Admin Routes */}
+        <Route path="/admin/experts" element={<ExpertManagement />} />
+        <Route path="/admin/channels" element={<ChannelManagement />} />
       </Routes>
     </Layout>
   );

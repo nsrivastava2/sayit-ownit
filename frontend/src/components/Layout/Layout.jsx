@@ -9,7 +9,13 @@ function Layout({ children }) {
     { path: '/recommendations', label: 'Recommendations', icon: '📋' }
   ];
 
+  const adminNavItems = [
+    { path: '/admin/experts', label: 'Experts', icon: '👤' },
+    { path: '/admin/channels', label: 'Channels', icon: '📺' }
+  ];
+
   const isActive = (path) => location.pathname === path;
+  const isAdminSection = location.pathname.startsWith('/admin');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -31,6 +37,25 @@ function Layout({ children }) {
                     isActive(item.path)
                       ? 'bg-primary-100 text-primary-700'
                       : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <span className="mr-1">{item.icon}</span>
+                  {item.label}
+                </Link>
+              ))}
+
+              {/* Admin Section Divider */}
+              <span className="border-l border-gray-300 mx-2"></span>
+
+              {/* Admin Navigation */}
+              {adminNavItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive(item.path)
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'text-gray-500 hover:bg-gray-100'
                   }`}
                 >
                   <span className="mr-1">{item.icon}</span>
