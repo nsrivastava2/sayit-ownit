@@ -188,9 +188,9 @@ CREATE TABLE recommendation_outcomes (
 - Filter by outcome type
 
 **Deliverables:**
-- [ ] Daily price fetching working
-- [ ] Automatic outcome detection
-- [ ] Visual outcome indicators on UI
+- [x] Daily price fetching working
+- [x] Automatic outcome detection
+- [x] Visual outcome indicators on UI
 
 **Site Status:** ✅ Fully usable, now shows recommendation results
 
@@ -252,10 +252,10 @@ Volume_Credibility = MIN(100, total_recommendations * 2)
 - Leaderboard page `/experts/rankings`
 
 **Deliverables:**
-- [ ] Daily metrics calculation
-- [ ] Basic ranking system
-- [ ] Expert leaderboard page
-- [ ] Metrics displayed on expert profiles
+- [x] Daily metrics calculation (metricsService.js)
+- [x] Basic ranking system (50% win rate + 30% avg return + 20% volume)
+- [x] Expert leaderboard page (/leaderboard)
+- [x] Metrics displayed on expert profiles
 
 **Site Status:** ✅ Fully usable, experts now have performance data
 
