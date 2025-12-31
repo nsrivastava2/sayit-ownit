@@ -26,12 +26,12 @@ pool.query('SELECT NOW()')
 export const db = {
   // Videos
   async createVideo(videoData) {
-    const { youtube_url, title, channel_name, video_type, duration_seconds, language, status } = videoData;
+    const { youtube_url, title, channel_name, video_type, duration_seconds, language, status, publish_date } = videoData;
     const result = await pool.query(
-      `INSERT INTO videos (youtube_url, title, channel_name, video_type, duration_seconds, language, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO videos (youtube_url, title, channel_name, video_type, duration_seconds, language, status, publish_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [youtube_url, title, channel_name, video_type, duration_seconds, language, status || 'pending']
+      [youtube_url, title, channel_name, video_type, duration_seconds, language, status || 'pending', publish_date]
     );
     return result.rows[0];
   },

@@ -42,6 +42,12 @@ export const queueService = {
     console.log('Getting video info...');
     const videoInfo = await videoService.getVideoInfo(youtubeUrl);
 
+    // Parse publish date from yt-dlp format (YYYYMMDD) to YYYY-MM-DD
+    let publishDate = null;
+    if (videoInfo.uploadDate && videoInfo.uploadDate.length === 8) {
+      publishDate = `${videoInfo.uploadDate.slice(0, 4)}-${videoInfo.uploadDate.slice(4, 6)}-${videoInfo.uploadDate.slice(6, 8)}`;
+    }
+
     // Create video record
     const video = await db.createVideo({
       youtube_url: youtubeUrl,
@@ -50,7 +56,8 @@ export const queueService = {
       video_type: videoInfo.isLive ? 'live' : 'recorded',
       duration_seconds: videoInfo.duration,
       language: videoInfo.language,
-      status: 'pending'
+      status: 'pending',
+      publish_date: publishDate
     });
 
     // Create job
@@ -272,7 +279,12 @@ export const queueService = {
     // Save recommendations to database with expert name resolution
     job.currentStep = 'saving_recommendations';
     job.progress = 90;
-    const today = new Date().toISOString().split('T')[0];
+
+    // Get video's publish date for recommendation_date (fallback to today if not available)
+    const videoRecord = await db.getVideo(job.videoId);
+    const recommendationDate = videoRecord?.publish_date
+      ? new Date(videoRecord.publish_date).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0];
 
     for (const rec of recommendations) {
       // Resolve expert name using expertService (maps aliases to canonical names)
@@ -285,7 +297,7 @@ export const queueService = {
       await db.createRecommendation({
         video_id: job.videoId,
         expert_name: expertResolution.name, // Use resolved canonical name
-        recommendation_date: today,
+        recommendation_date: recommendationDate,
         share_name: rec.share_name,
         nse_symbol: rec.nse_symbol || geminiVideoService.mapToNSESymbol(rec.share_name),
         action: rec.action,
