@@ -73,7 +73,11 @@ export const api = {
 
   // Recommendations
   async getRecommendations(params = {}) {
-    const query = new URLSearchParams(params).toString();
+    // Filter out empty values before creating query string
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== '' && v !== null && v !== undefined)
+    );
+    const query = new URLSearchParams(cleanParams).toString();
     return fetchApi(`/recommendations${query ? `?${query}` : ''}`);
   },
 
