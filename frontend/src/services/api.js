@@ -136,6 +136,22 @@ export const api = {
   },
 
   // ============================================
+  // Leaderboard & Expert Metrics
+  // ============================================
+
+  async getLeaderboard(limit = 50) {
+    return fetchApi(`/prices/leaderboard?limit=${limit}`);
+  },
+
+  async getExpertMetrics(expertName) {
+    return fetchApi(`/prices/metrics/${encodeURIComponent(expertName)}`);
+  },
+
+  async getExpertMetricsHistory(expertName, days = 30) {
+    return fetchApi(`/prices/metrics/${encodeURIComponent(expertName)}/history?days=${days}`);
+  },
+
+  // ============================================
   // Admin API - Expert Management
   // ============================================
 

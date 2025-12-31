@@ -6,6 +6,7 @@ function ExpertView() {
   const { name } = useParams();
   const [expert, setExpert] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,9 +17,13 @@ function ExpertView() {
   async function loadExpert() {
     try {
       setLoading(true);
-      const data = await api.getExpert(name);
-      setExpert(data.expert);
-      setRecommendations(data.recommendations);
+      const [expertData, metricsData] = await Promise.all([
+        api.getExpert(name),
+        api.getExpertMetrics(name).catch(() => null)
+      ]);
+      setExpert(expertData.expert);
+      setRecommendations(expertData.recommendations);
+      setMetrics(metricsData?.metrics || null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -81,12 +86,50 @@ function ExpertView() {
                 {name.charAt(0)}
               </span>
               {name}
+              {/* Rank badge */}
+              {metrics?.rank_position && (
+                <span className="ml-3 inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-primary-100 text-primary-800">
+                  {metrics.rank_position === 1 ? '🥇' : metrics.rank_position === 2 ? '🥈' : metrics.rank_position === 3 ? '🥉' : '#'}{metrics.rank_position}
+                </span>
+              )}
             </h1>
             <p className="text-gray-500 mt-2">Stock Market Analyst</p>
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Performance Metrics (if available) */}
+        {metrics && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-200">
+            <div>
+              <p className="text-sm text-gray-500">Win Rate</p>
+              <p className={`text-2xl font-bold ${
+                parseFloat(metrics.overall_win_rate) >= 70 ? 'text-green-600' :
+                parseFloat(metrics.overall_win_rate) >= 50 ? 'text-yellow-600' : 'text-red-600'
+              }`}>
+                {metrics.overall_win_rate ? `${parseFloat(metrics.overall_win_rate).toFixed(1)}%` : '-'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Avg Return</p>
+              <p className={`text-2xl font-bold ${
+                parseFloat(metrics.avg_return_pct) > 0 ? 'text-green-600' :
+                parseFloat(metrics.avg_return_pct) < 0 ? 'text-red-600' : 'text-gray-900'
+              }`}>
+                {metrics.avg_return_pct ? `${parseFloat(metrics.avg_return_pct) >= 0 ? '+' : ''}${parseFloat(metrics.avg_return_pct).toFixed(2)}%` : '-'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Target Hits</p>
+              <p className="text-2xl font-bold text-green-600">{metrics.target_hit_count || 0}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">SL Hits</p>
+              <p className="text-2xl font-bold text-red-600">{metrics.sl_hit_count || 0}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Basic Stats */}
         {expert?.stats && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6 pt-6 border-t border-gray-200">
             <div>

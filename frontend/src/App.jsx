@@ -8,6 +8,7 @@ import Recommendations from './pages/Recommendations';
 import ExpertView from './pages/ExpertView';
 import ShareView from './pages/ShareView';
 import VideoDetails from './pages/VideoDetails';
+import Leaderboard from './pages/Leaderboard';
 import AdminLogin from './pages/admin/AdminLogin';
 import ExpertManagement from './pages/admin/ExpertManagement';
 import ChannelManagement from './pages/admin/ChannelManagement';
@@ -20,6 +21,7 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<Dashboard />} />
           <Route path="/recommendations" element={<Recommendations />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/experts/:name" element={<ExpertView />} />
           <Route path="/shares/:symbol" element={<ShareView />} />
           <Route path="/videos/:id" element={<VideoDetails />} />

@@ -9,7 +9,8 @@ function Layout({ children }) {
   // Public nav items (always visible)
   const publicNavItems = [
     { path: '/', label: 'Dashboard', icon: '📊' },
-    { path: '/recommendations', label: 'Recommendations', icon: '📋' }
+    { path: '/recommendations', label: 'Recommendations', icon: '📋' },
+    { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' }
   ];
 
   // Admin nav items (only visible when authenticated)
