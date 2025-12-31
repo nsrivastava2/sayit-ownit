@@ -4,6 +4,35 @@ import { db } from '../config/index.js';
 const router = express.Router();
 
 /**
+ * Format seconds to HH:MM:SS
+ */
+function formatTimestamp(seconds) {
+  if (!seconds) return null;
+  const s = parseInt(seconds);
+  const hrs = Math.floor(s / 3600);
+  const mins = Math.floor((s % 3600) / 60);
+  const secs = s % 60;
+  if (hrs > 0) {
+    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Add video reference fields to recommendation
+ */
+function enrichRecommendation(rec) {
+  const timestamp = parseInt(rec.timestamp_in_video) || 0;
+  const youtubeUrl = rec.videos?.youtube_url;
+
+  return {
+    ...rec,
+    timestamp_formatted: formatTimestamp(timestamp),
+    video_link_at_timestamp: youtubeUrl ? `${youtubeUrl}&t=${timestamp}s` : null
+  };
+}
+
+/**
  * GET /api/recommendations
  * List all recommendations with filters
  */
@@ -30,7 +59,7 @@ router.get('/', async (req, res) => {
     });
 
     res.json({
-      recommendations: data,
+      recommendations: data.map(enrichRecommendation),
       total: count,
       limit: parseInt(limit),
       offset: parseInt(offset)
@@ -91,7 +120,7 @@ router.get('/recent', async (req, res) => {
     });
 
     res.json({
-      recommendations: data
+      recommendations: data.map(enrichRecommendation)
     });
   } catch (error) {
     console.error('Error fetching recent recommendations:', error);
@@ -135,22 +164,27 @@ router.get('/export', async (req, res) => {
       'Stop Loss',
       'Reason',
       'Confidence',
-      'Source Video'
+      'Video Timestamp',
+      'Video Link'
     ];
 
-    const rows = data.map(rec => [
-      rec.recommendation_date,
-      rec.expert_name,
-      rec.share_name,
-      rec.nse_symbol || '',
-      rec.action,
-      rec.recommended_price || '',
-      rec.target_price || '',
-      rec.stop_loss || '',
-      (rec.reason || '').replace(/"/g, '""'),
-      rec.confidence_score,
-      rec.videos?.youtube_url || ''
-    ]);
+    const rows = data.map(rec => {
+      const enriched = enrichRecommendation(rec);
+      return [
+        rec.recommendation_date,
+        rec.expert_name,
+        rec.share_name,
+        rec.nse_symbol || '',
+        rec.action,
+        rec.recommended_price || '',
+        rec.target_price || '',
+        rec.stop_loss || '',
+        (rec.reason || '').replace(/"/g, '""'),
+        rec.confidence_score,
+        enriched.timestamp_formatted || '',
+        enriched.video_link_at_timestamp || ''
+      ];
+    });
 
     const csv = [
       headers.join(','),
