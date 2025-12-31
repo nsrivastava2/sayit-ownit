@@ -273,65 +273,76 @@ export const geminiVideoService = {
    * Build the prompt for Gemini video analysis
    */
   buildAnalysisPrompt() {
-    return `You are an expert at analyzing Indian stock market TV channel videos.
+    return `You are an expert at analyzing Indian stock market TV channel videos for ACTIONABLE EQUITY STOCK recommendations.
+
 Watch this entire video carefully, paying attention to BOTH:
 1. AUDIO: What experts are saying about stocks
 2. VISUAL: Text on screen showing expert names, stock tickers, prices, targets
 
-This is from an Indian financial TV channel where market experts discuss and recommend stocks.
-Languages: English and/or Hindi/Hinglish (mixed Hindi-English).
+CRITICAL RULES - FOLLOW STRICTLY:
 
-Extract ALL stock recommendations from this video. For each recommendation, identify:
+1. ONLY extract recommendations for INDIAN EQUITY STOCKS listed on NSE/BSE
+   - Examples: Reliance, Tata Motors, HDFC Bank, Infosys, SBI, etc.
 
-1. **Expert Name** - Who is giving the recommendation. Look for:
+2. DO NOT INCLUDE (STRICTLY EXCLUDE):
+   - Commodities: Gold, Silver, Crude Oil, Natural Gas, Copper, Zinc
+   - Indices: Nifty, Sensex, Bank Nifty, Nifty 50, Nifty IT
+   - Derivatives: Options (CE/PE), Futures, Call Options, Put Options
+   - Currencies: Dollar, Rupee, Euro
+   - Crypto: Bitcoin, Ethereum
+   - General market commentary without specific stock names
+   - Sector-level advice ("buy IT sector", "pharma looks good")
+   - Bullion/commodity investment shows
+
+3. ACTIONABLE RECOMMENDATIONS ONLY:
+   - Must have a clear BUY or SELL action with at least ONE price point
+   - HOLD without any price targets = DO NOT INCLUDE
+   - "Stock looks good" without specific action = DO NOT INCLUDE
+   - Vague mentions ("could be good", "might rise") = DO NOT INCLUDE
+
+4. REQUIRED FIELDS for a valid recommendation:
+   - share_name: Specific stock name (not sector)
+   - action: Must be "BUY" or "SELL" (ignore HOLD without targets)
+   - At least ONE of: recommended_price OR target_price OR stop_loss
+
+5. Look for these expert names:
+   - Anil Singhvi, Prakash Gaba, Sanjiv Bhasin, Ashwani Gujral
+   - Ashish Chaturmohta, Sudarshan Sukhani, Mitesh Thakkar
+   - Vijay Chopra, Rajat Bose, Sandeep Jain, etc.
    - Names displayed on screen (title cards, lower thirds)
-   - Names mentioned verbally
-   - Common experts: Anil Singhvi, Prakash Gaba, Sanjiv Bhasin, Ashish Chaturmohta, etc.
+   - If unclear, use "Unknown Expert"
 
-2. **Share/Stock Name** - Which stock is being recommended
-   - Look at text on screen showing stock names/tickers
-   - Listen for stock names mentioned
-   - Use NSE symbol if visible (e.g., RELIANCE, TATAMOTORS, HDFCBANK)
+6. For prices, look at screen graphics showing:
+   - Entry/Buy Price (CMP, buy at)
+   - Target Price (lakshya, TGT)
+   - Stop Loss (stoploss, SL)
 
-3. **Action** - BUY, SELL, or HOLD
-   - Hindi terms: "kharidna/kharido/buy karo" = BUY, "becho/sell karo" = SELL
-
-4. **Prices** - Look carefully at screen graphics showing:
-   - Entry/Buy Price
-   - Target Price (lakshya)
-   - Stop Loss (stoploss/SL)
-
-5. **Timestamp** - When in the video this recommendation appears (in seconds from start)
-
-6. **Reason** - Brief reasoning if given
-
-7. **Confidence** - Your confidence in this extraction:
+7. Confidence levels:
    - "high" = Clearly visible on screen AND spoken
    - "medium" = Either visible OR spoken clearly
    - "low" = Partially heard/seen
 
-IMPORTANT:
-- Extract EVERY stock recommendation you can find
-- Pay special attention to text overlays showing prices and targets
-- Include recommendations even if some fields are missing
-- DO NOT include general market commentary without specific stocks
-- Return empty array if no recommendations found
-
-Respond with a JSON array in this exact format:
+Respond with a JSON array (empty if no valid stock recommendations):
 [
   {
-    "expert_name": "string or null",
-    "share_name": "string",
-    "nse_symbol": "string or null",
-    "action": "BUY|SELL|HOLD",
-    "recommended_price": number or null,
-    "target_price": number or null,
-    "stop_loss": number or null,
-    "reason": "string or null",
-    "timestamp_seconds": number,
-    "confidence": "low|medium|high"
+    "expert_name": "Anil Singhvi",
+    "share_name": "Reliance Industries",
+    "nse_symbol": "RELIANCE",
+    "action": "BUY",
+    "recommended_price": 2850,
+    "target_price": 3100,
+    "stop_loss": 2750,
+    "reason": "Technical breakout",
+    "timestamp_seconds": 330,
+    "confidence": "high"
   }
-]`;
+]
+
+JSON Rules:
+- timestamp_seconds: NUMBER only (not string)
+- All prices: NUMBER or null (not strings or ranges)
+- action: "BUY" or "SELL" only
+- Return [] if no valid stock recommendations found`;
   },
 
   /**
@@ -347,9 +358,47 @@ Respond with a JSON array in this exact format:
         return [];
       }
 
+      // Items to exclude (commodities, indices, derivatives)
+      const excludePatterns = [
+        /\bgold\b/i, /\bsilver\b/i, /\bcrude\b/i, /\bnatural gas\b/i,
+        /\bcopper\b/i, /\bzinc\b/i, /\baluminium\b/i, /\blead\b/i,
+        /\bnifty\b/i, /\bsensex\b/i, /\bbank nifty\b/i, /\bnifty\s*(50|100|it|bank|fin)/i,
+        /\b(call|put)\s*option/i, /\bfutures?\b/i, /\b(ce|pe)\b/i,
+        /\bdollar\b/i, /\brupee\b/i, /\beur\b/i, /\bbitcoin\b/i, /\bethererum\b/i,
+        /\bbullion\b/i, /\bcommodity\b/i, /\bcommodities\b/i
+      ];
+
       // Validate and clean each recommendation
       return recommendations
-        .filter(r => r && r.share_name && r.action)
+        .filter(r => {
+          // Must have share_name and action
+          if (!r || !r.share_name || !r.action) return false;
+
+          // Must have at least one price for actionable recommendations
+          const hasPrice = r.recommended_price || r.target_price || r.stop_loss;
+          if (!hasPrice) {
+            console.log(`Filtered out: ${r.share_name} - no price data`);
+            return false;
+          }
+
+          // Exclude commodities, indices, derivatives
+          const shareName = r.share_name.toLowerCase();
+          for (const pattern of excludePatterns) {
+            if (pattern.test(shareName) || pattern.test(r.nse_symbol || '')) {
+              console.log(`Filtered out: ${r.share_name} - excluded category`);
+              return false;
+            }
+          }
+
+          // Only accept BUY or SELL (not HOLD without prices)
+          const action = (r.action || '').toUpperCase().trim();
+          if (action === 'HOLD' && !r.target_price) {
+            console.log(`Filtered out: ${r.share_name} - HOLD without target`);
+            return false;
+          }
+
+          return true;
+        })
         .map(r => ({
           expert_name: r.expert_name || 'Unknown Expert',
           share_name: this.normalizeShareName(r.share_name),
@@ -492,50 +541,67 @@ Respond with a JSON array in this exact format:
   async analyzeTranscriptWithGemini(transcriptText) {
     console.log('Analyzing transcript with Gemini...');
 
-    const prompt = `You are an expert at analyzing Indian stock market TV channel transcripts.
-Extract ALL stock recommendations from the following transcript.
+    const prompt = `You are an expert at analyzing Indian stock market TV channel transcripts for ACTIONABLE EQUITY STOCK recommendations.
 
-The transcript is from a financial TV channel where market experts discuss stocks.
-Languages: English and/or Hindi/Hinglish (mixed Hindi-English).
+CRITICAL RULES - READ CAREFULLY:
 
-Timestamps are in format [MM:SS-MM:SS] before each segment. Use the START time for timestamp_seconds.
+1. ONLY extract recommendations for INDIAN EQUITY STOCKS listed on NSE/BSE
+   - Examples: Reliance, Tata Motors, HDFC Bank, Infosys, SBI, etc.
 
-Extract EVERY stock recommendation. For each, identify:
-1. **Expert Name** - Look for names like Anil Singhvi, Prakash Gaba, Sanjiv Bhasin, etc.
-2. **Share/Stock Name** - Use NSE symbol if known (RELIANCE, TATAMOTORS, HDFCBANK)
-3. **Action** - BUY, SELL, or HOLD
-   - Hindi: "kharidna/kharido/buy karo" = BUY, "becho/sell karo" = SELL
-4. **Prices** - Entry price, target price, stop loss (if mentioned)
-5. **Timestamp** - START time in SECONDS (convert MM:SS to seconds, e.g., 05:30 = 330)
-6. **Confidence** - high/medium/low based on clarity
+2. DO NOT INCLUDE (STRICTLY EXCLUDE):
+   - Commodities: Gold, Silver, Crude Oil, Natural Gas, Copper, Zinc
+   - Indices: Nifty, Sensex, Bank Nifty, Nifty 50, Nifty IT
+   - Derivatives: Options (CE/PE), Futures, Call Options, Put Options
+   - Currencies: Dollar, Rupee, Euro
+   - Crypto: Bitcoin, Ethereum
+   - General market commentary without specific stock names
+   - Sector-level advice ("buy IT sector", "pharma looks good")
 
-IMPORTANT:
-- timestamp_seconds MUST be a NUMBER (e.g., 330), NOT a string like "05:30"
-- All price fields MUST be numbers or null, NOT strings or ranges
-- Return valid JSON only
+3. ACTIONABLE RECOMMENDATIONS ONLY:
+   - Must have a clear BUY or SELL action with at least ONE price point
+   - HOLD without any price targets = DO NOT INCLUDE
+   - "Stock looks good" without specific action = DO NOT INCLUDE
+   - Vague mentions ("could be good", "might rise") = DO NOT INCLUDE
 
-TRANSCRIPT:
+4. REQUIRED FIELDS for a valid recommendation:
+   - share_name: Specific stock name (not sector)
+   - action: Must be "BUY" or "SELL" (ignore HOLD without targets)
+   - At least ONE of: recommended_price OR target_price OR stop_loss
+
+5. Expert names to look for:
+   - Anil Singhvi, Prakash Gaba, Sanjiv Bhasin, Ashwani Gujral
+   - Ashish Chaturmohta, Sudarshan Sukhani, Mitesh Thakkar
+   - Vijay Chopra, Rajat Bose, Sandeep Jain, etc.
+   - If unclear, use "Unknown Expert"
+
+TRANSCRIPT (Hindi/Hinglish - timestamps in [MM:SS-MM:SS] format):
 ---
 ${transcriptText}
 ---
 
-Return ONLY a JSON array:
+Extract ONLY actionable stock recommendations. Convert MM:SS to seconds (05:30 = 330).
+
+Return a JSON array (empty array if no valid recommendations found):
 [
   {
-    "expert_name": "string or null",
-    "share_name": "string",
-    "nse_symbol": "string or null",
+    "expert_name": "Anil Singhvi",
+    "share_name": "Reliance Industries",
+    "nse_symbol": "RELIANCE",
     "action": "BUY",
-    "recommended_price": 850.50,
-    "target_price": 920,
-    "stop_loss": 820,
-    "reason": "string or null",
+    "recommended_price": 2850,
+    "target_price": 3100,
+    "stop_loss": 2750,
+    "reason": "Technical breakout above 2800",
     "timestamp_seconds": 330,
     "confidence": "high"
   }
 ]
 
-If no recommendations, return: []`;
+Rules for JSON:
+- timestamp_seconds: NUMBER only (330, not "05:30")
+- All prices: NUMBER or null (2850, not "2850-2900")
+- action: "BUY" or "SELL" only (no HOLD without targets)
+- Return [] if no valid stock recommendations found`;
 
     const response = await fetch(`${GEMINI_GENERATE_URL_25}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
