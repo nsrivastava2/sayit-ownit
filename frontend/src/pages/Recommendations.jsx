@@ -87,6 +87,22 @@ function Recommendations() {
     HOLD: 'bg-yellow-100 text-yellow-800'
   };
 
+  // Format seconds as MM:SS
+  function formatTimestamp(seconds) {
+    if (!seconds && seconds !== 0) return null;
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // Generate YouTube URL with timestamp
+  function getYouTubeUrlWithTimestamp(url, seconds) {
+    if (!url) return null;
+    if (!seconds && seconds !== 0) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}t=${Math.floor(seconds)}`;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -286,12 +302,26 @@ function Recommendations() {
                     </td>
                     <td className="px-4 py-3">
                       {rec.videos && (
-                        <Link
-                          to={`/videos/${rec.video_id}`}
-                          className="text-xs text-primary-600 hover:text-primary-800"
-                        >
-                          View video
-                        </Link>
+                        <div className="flex flex-col space-y-1">
+                          {rec.timestamp_in_video !== null && rec.videos.youtube_url ? (
+                            <a
+                              href={getYouTubeUrlWithTimestamp(rec.videos.youtube_url, rec.timestamp_in_video)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary-600 hover:text-primary-800 flex items-center"
+                            >
+                              <span className="mr-1">▶</span>
+                              {formatTimestamp(rec.timestamp_in_video)}
+                            </a>
+                          ) : (
+                            <Link
+                              to={`/videos/${rec.video_id}`}
+                              className="text-xs text-primary-600 hover:text-primary-800"
+                            >
+                              View video
+                            </Link>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>

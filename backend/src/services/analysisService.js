@@ -37,6 +37,7 @@ export const analysisService = {
 
   /**
    * Build the prompt for LLM analysis
+   * @param {string} transcriptText - Transcript text (may include [MM:SS-MM:SS] timestamps)
    */
   buildPrompt(transcriptText) {
     return `You are an expert at analyzing Indian stock market TV channel transcripts.
@@ -44,6 +45,9 @@ Your task is to extract stock recommendations from the following transcript.
 
 The transcript is from a financial TV channel where market experts discuss stocks.
 Languages used: English and/or Hindi (may contain Hinglish - mixed Hindi-English).
+
+IMPORTANT: The transcript includes timestamps in format [MM:SS-MM:SS] before each segment.
+When you find a recommendation, note the timestamp of the segment where it appears.
 
 Extract ALL stock recommendations mentioned. For each recommendation, identify:
 1. Expert Name - Who is giving the recommendation (look for names like Anil Singhvi, Prakash Gaba, etc.)
@@ -53,7 +57,8 @@ Extract ALL stock recommendations mentioned. For each recommendation, identify:
 5. Target Price - Expected price target (if mentioned)
 6. Stop Loss - Stop loss level (if mentioned)
 7. Reason - Brief reason for the recommendation (if given)
-8. Confidence - Your confidence in this extraction (low/medium/high)
+8. Timestamp - The START time in seconds where this recommendation appears (from the [MM:SS-...] marker)
+9. Confidence - Your confidence in this extraction (low/medium/high)
 
 Common Hindi/Hinglish terms to look for:
 - "kharidna" / "kharido" / "buy karo" = BUY
@@ -85,6 +90,7 @@ Respond ONLY in valid JSON format as an array of recommendations. No explanation
     "target_price": number or null,
     "stop_loss": number or null,
     "reason": "string or null",
+    "timestamp_seconds": number or null,
     "confidence": "low|medium|high"
   }
 ]
@@ -125,6 +131,7 @@ If no recommendations found, return empty array: []`;
           target_price: this.parsePrice(r.target_price),
           stop_loss: this.parsePrice(r.stop_loss),
           reason: r.reason || null,
+          timestamp_seconds: typeof r.timestamp_seconds === 'number' ? Math.floor(r.timestamp_seconds) : null,
           confidence_score: this.confidenceToScore(r.confidence)
         }));
     } catch (error) {
@@ -180,13 +187,27 @@ If no recommendations found, return empty array: []`;
   },
 
   /**
+   * Format seconds as MM:SS
+   */
+  formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  },
+
+  /**
    * Analyze multiple transcript chunks and aggregate recommendations
    */
   async analyzeTranscriptBatch(transcripts, options = {}) {
-    // Combine transcripts with some context
+    // Combine transcripts with timestamps for context
     const combinedText = transcripts
-      .map(t => t.text || t.transcript_text || '')
-      .join('\n\n---\n\n');
+      .map(t => {
+        const text = t.text || t.transcript_text || '';
+        const startTime = t.startTime ?? t.start_time_seconds ?? 0;
+        const endTime = t.endTime ?? t.end_time_seconds ?? startTime + 30;
+        return `[${this.formatTime(startTime)}-${this.formatTime(endTime)}] ${text}`;
+      })
+      .join('\n\n');
 
     if (combinedText.trim().length < 100) {
       return [];

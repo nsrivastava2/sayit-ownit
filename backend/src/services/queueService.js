@@ -235,6 +235,7 @@ export const queueService = {
         stop_loss: rec.stop_loss,
         reason: rec.reason,
         confidence_score: rec.confidence_score,
+        timestamp_in_video: rec.timestamp_seconds,
         raw_extract: JSON.stringify(rec)
       });
     }
@@ -305,6 +306,7 @@ export const queueService = {
               stop_loss: rec.stop_loss,
               reason: rec.reason,
               confidence_score: rec.confidence_score,
+              timestamp_in_video: rec.timestamp_seconds,
               raw_extract: JSON.stringify(rec)
             });
           }
@@ -339,6 +341,7 @@ export const queueService = {
           stop_loss: rec.stop_loss,
           reason: rec.reason,
           confidence_score: rec.confidence_score,
+          timestamp_in_video: rec.timestamp_seconds,
           raw_extract: JSON.stringify(rec)
         });
       }
