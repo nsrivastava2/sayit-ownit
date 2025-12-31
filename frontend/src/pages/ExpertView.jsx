@@ -48,6 +48,20 @@ function ExpertView() {
     HOLD: 'bg-yellow-100 text-yellow-800'
   };
 
+  // Format timestamp as MM:SS or HH:MM:SS
+  const formatTimestamp = (seconds) => {
+    if (!seconds && seconds !== 0) return null;
+    const secs = parseInt(seconds);
+    const hours = Math.floor(secs / 3600);
+    const mins = Math.floor((secs % 3600) / 60);
+    const remainingSecs = secs % 60;
+
+    if (hours > 0) {
+      return `${hours}:${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${remainingSecs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="space-y-6">
       {/* Back link */}
@@ -121,6 +135,7 @@ function ExpertView() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stop Loss</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -154,6 +169,20 @@ function ExpertView() {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={rec.reason}>
                       {rec.reason || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {rec.videos?.youtube_url ? (
+                        <a
+                          href={`${rec.videos.youtube_url}${rec.videos.youtube_url.includes('?') ? '&' : '?'}t=${rec.timestamp_in_video || 0}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary-600 hover:text-primary-800 flex items-center whitespace-nowrap"
+                          title={rec.videos.title}
+                        >
+                          <span className="mr-1">▶</span>
+                          {formatTimestamp(rec.timestamp_in_video)}
+                        </a>
+                      ) : '-'}
                     </td>
                   </tr>
                 ))}

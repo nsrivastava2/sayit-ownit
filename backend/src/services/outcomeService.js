@@ -43,7 +43,8 @@ export const outcomeService = {
       return null;
     }
 
-    const entryPrice = recommended_price || latestPrice.close_price;
+    // Use parseFloat for numeric values - PostgreSQL returns DECIMAL as strings
+    const entryPrice = parseFloat(recommended_price) || parseFloat(latestPrice.close_price);
     const recDate = new Date(recommendation_date);
     const priceDate = new Date(latestPrice.price_date);
     const daysHeld = Math.floor((priceDate - recDate) / (1000 * 60 * 60 * 24));
@@ -68,8 +69,8 @@ export const outcomeService = {
         const priceDate = new Date(price.price_date);
         const daysSinceRec = Math.floor((priceDate - recDate) / (1000 * 60 * 60 * 24));
 
-        // Check target hit
-        if (target_price && price.high_price >= target_price) {
+        // Check target hit (use parseFloat for numeric comparison - PostgreSQL returns DECIMAL as string)
+        if (target_price && parseFloat(price.high_price) >= parseFloat(target_price)) {
           return {
             outcome_type: OUTCOME_TYPES.TARGET_HIT,
             outcome_date: price.price_date,
@@ -79,8 +80,8 @@ export const outcomeService = {
           };
         }
 
-        // Check stop loss hit
-        if (stop_loss && price.low_price <= stop_loss) {
+        // Check stop loss hit (use parseFloat for numeric comparison)
+        if (stop_loss && parseFloat(price.low_price) <= parseFloat(stop_loss)) {
           return {
             outcome_type: OUTCOME_TYPES.SL_HIT,
             outcome_date: price.price_date,
@@ -113,8 +114,8 @@ export const outcomeService = {
         const priceDate = new Date(price.price_date);
         const daysSinceRec = Math.floor((priceDate - recDate) / (1000 * 60 * 60 * 24));
 
-        // For SELL, target is lower price
-        if (target_price && price.low_price <= target_price) {
+        // For SELL, target is lower price (use parseFloat for numeric comparison)
+        if (target_price && parseFloat(price.low_price) <= parseFloat(target_price)) {
           return {
             outcome_type: OUTCOME_TYPES.TARGET_HIT,
             outcome_date: price.price_date,
@@ -124,8 +125,8 @@ export const outcomeService = {
           };
         }
 
-        // For SELL, stop loss is higher price
-        if (stop_loss && price.high_price >= stop_loss) {
+        // For SELL, stop loss is higher price (use parseFloat for numeric comparison)
+        if (stop_loss && parseFloat(price.high_price) >= parseFloat(stop_loss)) {
           return {
             outcome_type: OUTCOME_TYPES.SL_HIT,
             outcome_date: price.price_date,
@@ -166,17 +167,21 @@ export const outcomeService = {
 
   /**
    * Calculate return percentage
+   * Uses parseFloat to handle PostgreSQL DECIMAL strings
    */
   calculateReturn(entryPrice, exitPrice, isShort = false) {
-    if (!entryPrice || entryPrice === 0) return 0;
+    const entry = parseFloat(entryPrice);
+    const exit = parseFloat(exitPrice);
+
+    if (!entry || entry === 0 || isNaN(entry) || isNaN(exit)) return 0;
 
     if (isShort) {
       // For short/sell positions, profit when price goes down
-      return ((entryPrice - exitPrice) / entryPrice * 100).toFixed(4);
+      return ((entry - exit) / entry * 100).toFixed(4);
     }
 
     // For long/buy positions
-    return ((exitPrice - entryPrice) / entryPrice * 100).toFixed(4);
+    return ((exit - entry) / entry * 100).toFixed(4);
   },
 
   /**

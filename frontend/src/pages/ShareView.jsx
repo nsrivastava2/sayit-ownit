@@ -60,6 +60,20 @@ function ShareView() {
     SMALL_CAP: 'Small Cap'
   };
 
+  // Format timestamp as MM:SS or HH:MM:SS
+  const formatTimestamp = (seconds) => {
+    if (!seconds && seconds !== 0) return null;
+    const secs = parseInt(seconds);
+    const hours = Math.floor(secs / 3600);
+    const mins = Math.floor((secs % 3600) / 60);
+    const remainingSecs = secs % 60;
+
+    if (hours > 0) {
+      return `${hours}:${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${remainingSecs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="space-y-6">
       {/* Back link */}
@@ -230,11 +244,11 @@ function ShareView() {
                             href={videoUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                            className="text-sm text-blue-600 hover:text-blue-800 flex items-center whitespace-nowrap"
                             title={rec.videos?.title}
                           >
                             <span className="mr-1">▶</span>
-                            Video
+                            {formatTimestamp(rec.timestamp_in_video)}
                           </a>
                         ) : (
                           <span className="text-sm text-gray-400">-</span>
