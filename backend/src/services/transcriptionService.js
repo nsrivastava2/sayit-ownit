@@ -86,7 +86,7 @@ export const transcriptionService = {
 
     try {
       await execAsync(
-        `whisper "${audioPath}" --model medium --output_dir "${outputDir}" --output_format json ${langArg}`,
+        `whisper "${audioPath}" --model large-v3 --output_dir "${outputDir}" --output_format json ${langArg}`,
         { timeout: 600000 } // 10 minute timeout
       );
 
@@ -150,7 +150,7 @@ export const transcriptionService = {
     try {
       console.log(`Running faster-whisper transcription on ${audioPath}`);
       const { stdout, stderr } = await execAsync(
-        `python3 "${scriptPath}" "${audioPath}" --model medium ${langArg}`,
+        `python3 "${scriptPath}" "${audioPath}" --model large-v3 ${langArg}`,
         { timeout: 600000, maxBuffer: 50 * 1024 * 1024 }
       );
 
@@ -237,7 +237,7 @@ export const transcriptionService = {
     try {
       console.log(`Batch transcribing chunks in ${chunksDir} using GPU...`);
       const { stdout, stderr } = await execAsync(
-        `python3 "${scriptPath}" "${chunksDir}" --model medium ${langArg}`,
+        `python3 "${scriptPath}" "${chunksDir}" --model large-v3 ${langArg}`,
         { timeout: 3600000, maxBuffer: 100 * 1024 * 1024 } // 1 hour timeout for long videos
       );
 

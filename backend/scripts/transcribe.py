@@ -66,7 +66,7 @@ def transcribe_audio(audio_path, model_name, language, device, compute_type):
 def main():
     parser = argparse.ArgumentParser(description='Transcribe audio using faster-whisper')
     parser.add_argument('audio_path', help='Path to the audio file')
-    parser.add_argument('--model', default='medium', help='Model size (tiny, base, small, medium, large-v2, large-v3)')
+    parser.add_argument('--model', default='large-v3', help='Model size (tiny, base, small, medium, large-v2, large-v3)')
     parser.add_argument('--language', default=None, help='Language code (e.g., en, hi) or None for auto-detect')
     parser.add_argument('--device', default='auto', help='Device to use (auto, cpu, cuda)')
     parser.add_argument('--compute-type', default='auto', help='Compute type (auto, int8, float16, float32)')

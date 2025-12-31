@@ -28,7 +28,7 @@ for lib_path in [nvjitlink_lib_path, cublas_lib_path, cudnn_lib_path]:
 def main():
     parser = argparse.ArgumentParser(description='Batch transcribe audio using faster-whisper')
     parser.add_argument('audio_dir', help='Directory containing audio chunks (chunk_XXX.wav)')
-    parser.add_argument('--model', default='medium', help='Model size (tiny, base, small, medium, large-v2, large-v3)')
+    parser.add_argument('--model', default='large-v3', help='Model size (tiny, base, small, medium, large-v2, large-v3)')
     parser.add_argument('--language', default=None, help='Language code (e.g., en, hi) or None for auto-detect')
     parser.add_argument('--device', default='auto', help='Device to use (auto, cpu, cuda)')
     parser.add_argument('--compute-type', default='auto', help='Compute type (auto, int8, float16, float32)')
