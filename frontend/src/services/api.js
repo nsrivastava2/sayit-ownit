@@ -107,6 +107,24 @@ export const api = {
     return fetchApi(`/shares/${encodeURIComponent(symbol)}`);
   },
 
+  // Stocks (Master data)
+  async searchStocks(query, limit = 20) {
+    return fetchApi(`/stocks/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+  },
+
+  async getStockSectors() {
+    return fetchApi('/stocks/sectors');
+  },
+
+  async getStocks(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return fetchApi(`/stocks${query ? `?${query}` : ''}`);
+  },
+
+  async getStock(symbol) {
+    return fetchApi(`/stocks/${encodeURIComponent(symbol)}`);
+  },
+
   // Export
   getExportUrl(params = {}) {
     const query = new URLSearchParams(params).toString();

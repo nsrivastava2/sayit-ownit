@@ -1,5 +1,6 @@
 import express from 'express';
 import { db } from '../config/index.js';
+import stockService from '../services/stockService.js';
 
 const router = express.Router();
 
@@ -24,11 +25,15 @@ router.get('/', async (req, res) => {
 /**
  * GET /api/shares/:symbol
  * Get share details with all recommendations
+ * Now includes stock master data (sector, market cap, company name)
  */
 router.get('/:symbol', async (req, res) => {
   try {
     const { symbol } = req.params;
     const { limit = 50, offset = 0 } = req.query;
+
+    // Try to get stock from master table first
+    const stock = await stockService.getStockBySymbol(symbol);
 
     const { data, count } = await db.getRecommendations({
       share: symbol,
@@ -55,8 +60,14 @@ router.get('/:symbol', async (req, res) => {
 
     res.json({
       share: {
-        name: data[0]?.share_name || symbol,
-        symbol: data[0]?.nse_symbol || symbol,
+        // From stock master table (if available)
+        name: stock?.company_name || data[0]?.share_name || symbol,
+        symbol: stock?.symbol || data[0]?.nse_symbol || symbol,
+        sector: stock?.sector || null,
+        industry: stock?.industry || null,
+        marketCapCategory: stock?.market_cap_category || null,
+        isin: stock?.isin || null,
+        // Computed stats
         stats,
         uniqueExperts: expertsSet.size,
         experts: Array.from(expertsSet)

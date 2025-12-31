@@ -29,7 +29,7 @@ function ShareView() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -48,6 +48,18 @@ function ShareView() {
     HOLD: 'bg-yellow-100 text-yellow-800'
   };
 
+  const marketCapColors = {
+    LARGE_CAP: 'bg-blue-100 text-blue-800',
+    MID_CAP: 'bg-purple-100 text-purple-800',
+    SMALL_CAP: 'bg-orange-100 text-orange-800'
+  };
+
+  const marketCapLabels = {
+    LARGE_CAP: 'Large Cap',
+    MID_CAP: 'Mid Cap',
+    SMALL_CAP: 'Small Cap'
+  };
+
   return (
     <div className="space-y-6">
       {/* Back link */}
@@ -62,18 +74,41 @@ function ShareView() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {share?.name || symbol}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {share?.name || symbol}
+              </h1>
+              {share?.marketCapCategory && (
+                <span
+                  className={`px-2 py-1 text-xs font-semibold rounded-full ${marketCapColors[share.marketCapCategory] || 'bg-gray-100 text-gray-800'}`}
+                  data-testid="market-cap-badge"
+                >
+                  {marketCapLabels[share.marketCapCategory] || share.marketCapCategory}
+                </span>
+              )}
+            </div>
             {share?.symbol && (
               <p className="text-lg text-gray-500 mt-1">NSE: {share.symbol}</p>
             )}
+            {/* Sector and Industry */}
+            <div className="flex items-center gap-4 mt-2">
+              {share?.sector && (
+                <span className="text-sm text-gray-600" data-testid="stock-sector">
+                  <span className="font-medium">Sector:</span> {share.sector}
+                </span>
+              )}
+              {share?.industry && (
+                <span className="text-sm text-gray-600">
+                  <span className="font-medium">Industry:</span> {share.industry}
+                </span>
+              )}
+            </div>
           </div>
           <a
             href={`https://www.nseindia.com/get-quotes/equity?symbol=${share?.symbol || symbol}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-primary-600 hover:text-primary-800"
+            className="text-sm text-blue-600 hover:text-blue-800"
           >
             View on NSE →
           </a>
@@ -84,7 +119,9 @@ function ShareView() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6 pt-6 border-t border-gray-200">
             <div>
               <p className="text-sm text-gray-500">Total Recommendations</p>
-              <p className="text-2xl font-bold text-gray-900">{share.stats.totalRecommendations}</p>
+              <p className="text-2xl font-bold text-gray-900" data-testid="total-recommendations">
+                {share.stats.totalRecommendations}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">BUY Calls</p>
@@ -165,7 +202,7 @@ function ShareView() {
                       <td className="px-4 py-3">
                         <Link
                           to={`/experts/${encodeURIComponent(rec.expert_name)}`}
-                          className="text-sm font-medium text-primary-600 hover:text-primary-800"
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
                         >
                           {rec.expert_name}
                         </Link>
@@ -193,7 +230,7 @@ function ShareView() {
                             href={videoUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-primary-600 hover:text-primary-800 flex items-center"
+                            className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
                             title={rec.videos?.title}
                           >
                             <span className="mr-1">▶</span>

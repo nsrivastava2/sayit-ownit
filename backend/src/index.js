@@ -9,6 +9,7 @@ import videosRouter from './routes/videos.js';
 import recommendationsRouter from './routes/recommendations.js';
 import expertsRouter from './routes/experts.js';
 import sharesRouter from './routes/shares.js';
+import stocksRouter from './routes/stocks.js';
 import statsRouter from './routes/stats.js';
 import authRouter from './routes/auth.js';
 
@@ -54,6 +55,7 @@ app.use('/api/videos', videosRouter);
 app.use('/api/recommendations', recommendationsRouter);
 app.use('/api/experts', expertsRouter);
 app.use('/api/shares', sharesRouter);
+app.use('/api/stocks', stocksRouter);
 app.use('/api/stats', statsRouter);
 
 // Protected Admin Routes
