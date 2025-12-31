@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
+import OutcomeBadge from '../components/OutcomeBadge';
 
 function ExpertView() {
   const { name } = useParams();
@@ -177,7 +178,7 @@ function ExpertView() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entry</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stop Loss</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Outcome</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                 </tr>
               </thead>
@@ -210,8 +211,12 @@ function ExpertView() {
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={rec.reason}>
-                      {rec.reason || '-'}
+                    <td className="px-4 py-3">
+                      <OutcomeBadge
+                        outcome={rec.outcome}
+                        status={rec.status}
+                        returnPct={rec.outcome?.return_percentage}
+                      />
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {rec.videos?.youtube_url ? (

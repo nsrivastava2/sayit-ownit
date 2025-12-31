@@ -306,9 +306,17 @@ export const db = {
                'youtube_url', v.youtube_url,
                'title', v.title,
                'channel_name', v.channel_name
-             ) as videos
+             ) as videos,
+             json_build_object(
+               'outcome_type', ro.outcome_type,
+               'outcome_date', ro.outcome_date,
+               'outcome_price', ro.outcome_price,
+               'return_percentage', ro.return_percentage,
+               'days_held', ro.days_held
+             ) as outcome
       FROM recommendations r
       LEFT JOIN videos v ON r.video_id = v.id
+      LEFT JOIN recommendation_outcomes ro ON r.id = ro.recommendation_id
       WHERE r.expert_name ILIKE $1
       ORDER BY r.recommendation_date DESC
     `, [`%${expertName}%`]);
@@ -324,9 +332,17 @@ export const db = {
                'youtube_url', v.youtube_url,
                'title', v.title,
                'channel_name', v.channel_name
-             ) as videos
+             ) as videos,
+             json_build_object(
+               'outcome_type', ro.outcome_type,
+               'outcome_date', ro.outcome_date,
+               'outcome_price', ro.outcome_price,
+               'return_percentage', ro.return_percentage,
+               'days_held', ro.days_held
+             ) as outcome
       FROM recommendations r
       LEFT JOIN videos v ON r.video_id = v.id
+      LEFT JOIN recommendation_outcomes ro ON r.id = ro.recommendation_id
       WHERE r.share_name ILIKE $1 OR r.nse_symbol ILIKE $1
       ORDER BY r.recommendation_date DESC
     `, [`%${shareName}%`]);
