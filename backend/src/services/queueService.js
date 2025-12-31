@@ -3,13 +3,12 @@ import path from 'path';
 import fs from 'fs/promises';
 import { db, config } from '../config/index.js';
 import videoService from './videoService.js';
+import geminiVideoService from './geminiVideoService.js';
 import youtubeTranscriptService from './youtubeTranscriptService.js';
-import groqTranscriptionService from './groqTranscriptionService.js';
-import analysisService from './analysisService.js';
 
 /**
  * Job queue service for processing videos
- * Uses YouTube Transcript API with Groq Whisper fallback
+ * Priority: Gemini URL (≤1hr videos) > YouTube Transcript API + Gemini
  */
 
 // In-memory job store
@@ -130,89 +129,142 @@ export const queueService = {
   },
 
   /**
-   * Process a single job - tries YouTube API first, falls back to Groq
+   * Process a single job
+   * Priority: Gemini Flash (direct video) > YouTube API + LLM > Groq Whisper + LLM
    */
   async processJob(job) {
     console.log(`Processing job ${job.id}: ${job.youtubeUrl}`);
 
     job.status = 'processing';
-    job.currentStep = 'fetching_transcript';
     await db.updateVideo(job.videoId, { status: 'processing' });
 
-    let transcriptData = null;
-    let chunks = null;
-    let transcriptionMethod = null;
+    let recommendations = [];
+    let processingMethod = null;
+    const tempDir = path.join(config.processing.tempDir, job.id);
 
-    // Try YouTube Transcript API first
-    try {
-      job.progress = 10;
-      console.log('Trying YouTube Transcript API...');
+    // Method 1: Try Gemini URL-based analysis (fastest - no download needed)
+    // Only for videos under 1 hour (token limit ~1 million ≈ 1-2 hours video)
+    const videoDurationMinutes = (job.videoInfo?.duration || 0) / 60;
+    const maxUrlMethodDuration = 60; // 1 hour max for URL method
 
-      transcriptData = await youtubeTranscriptService.fetchTranscript(job.youtubeUrl);
-      chunks = youtubeTranscriptService.groupSegmentsIntoChunks(
-        transcriptData.segments,
-        config.processing.audioChunkSeconds || 30
-      );
-      transcriptionMethod = 'youtube_api';
-
-      console.log(`YouTube API: Got ${transcriptData.segments.length} segments, grouped into ${chunks.length} chunks`);
-      job.progress = 40;
-
-    } catch (ytError) {
-      console.log(`YouTube API failed: ${ytError.message}`);
-      console.log('Falling back to Groq Whisper transcription...');
-
-      // Fallback to Groq
-      job.currentStep = 'transcribing_groq';
-      job.progress = 15;
-
-      const tempDir = path.join(config.processing.tempDir, job.id);
-      await fs.mkdir(tempDir, { recursive: true });
-
+    if (process.env.GEMINI_API_KEY && videoDurationMinutes <= maxUrlMethodDuration) {
       try {
-        transcriptData = await groqTranscriptionService.transcribeVideo(job.youtubeUrl, tempDir);
-        chunks = groqTranscriptionService.groupSegmentsIntoChunks(
+        job.currentStep = 'analyzing_gemini_url';
+        job.progress = 10;
+        console.log(`Trying Gemini URL-based video analysis (Gemini 2.5 Flash)... [${Math.round(videoDurationMinutes)} min video]`);
+
+        const result = await geminiVideoService.analyzeYouTubeVideoByUrl(job.youtubeUrl);
+        recommendations = result.recommendations;
+        processingMethod = 'gemini_url';
+
+        console.log(`Gemini URL: Found ${recommendations.length} recommendations`);
+        job.progress = 80;
+
+      } catch (geminiUrlError) {
+        console.log(`Gemini URL method failed: ${geminiUrlError.message}`);
+        console.log('Falling back to YouTube Transcript + Gemini...');
+      }
+    } else if (videoDurationMinutes > maxUrlMethodDuration) {
+      console.log(`Video too long (${Math.round(videoDurationMinutes)} min) for Gemini URL method, using YouTube Transcript + Gemini...`);
+    }
+
+    // Method 2: YouTube Transcript API + Gemini (primary for long videos, fallback for short)
+    if (recommendations.length === 0) {
+      try {
+        job.currentStep = 'fetching_transcript';
+        job.progress = 15;
+        console.log('Trying YouTube Transcript API...');
+
+        const transcriptData = await youtubeTranscriptService.fetchTranscript(job.youtubeUrl);
+        const chunks = youtubeTranscriptService.groupSegmentsIntoChunks(
           transcriptData.segments,
           config.processing.audioChunkSeconds || 30
         );
-        transcriptionMethod = 'groq_whisper';
 
-        console.log(`Groq Whisper: Got ${transcriptData.segments.length} segments, grouped into ${chunks.length} chunks`);
+        console.log(`YouTube API: Got ${transcriptData.segments.length} segments, grouped into ${chunks.length} chunks`);
+        job.progress = 40;
+
+        // Save transcript chunks
+        job.currentStep = 'saving_transcript';
+        for (const chunk of chunks) {
+          await db.createTranscript({
+            video_id: job.videoId,
+            chunk_index: chunk.chunkIndex,
+            start_time_seconds: chunk.startTime,
+            end_time_seconds: chunk.endTime,
+            transcript_text: chunk.text,
+            language_detected: transcriptData.language || 'unknown'
+          });
+        }
+
+        // Analyze with Gemini
+        job.currentStep = 'analyzing_gemini';
         job.progress = 50;
+        console.log('Analyzing transcript with Gemini...');
 
-      } finally {
-        // Cleanup temp directory
-        await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+        // Combine chunks into batches for Gemini analysis
+        const batchSize = 50; // ~25 minutes per batch
+        const allRecommendations = [];
+
+        for (let i = 0; i < chunks.length; i += batchSize) {
+          const batch = chunks.slice(i, i + batchSize);
+          const batchText = batch
+            .map(c => `[${formatTime(c.startTime)}-${formatTime(c.endTime)}] ${c.text}`)
+            .join('\n\n');
+
+          console.log(`Analyzing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)}...`);
+
+          try {
+            const batchRecs = await geminiVideoService.analyzeTranscriptWithGemini(batchText);
+            allRecommendations.push(...batchRecs);
+          } catch (batchError) {
+            console.log(`Batch ${Math.floor(i / batchSize) + 1} failed: ${batchError.message}`);
+          }
+
+          job.progress = 50 + Math.floor((i / chunks.length) * 30);
+        }
+
+        recommendations = deduplicateRecommendations(allRecommendations);
+        processingMethod = 'youtube_api_gemini';
+
+        console.log(`YouTube + Gemini: Found ${recommendations.length} recommendations`);
+        job.progress = 80;
+
+      } catch (ytError) {
+        console.log(`YouTube API failed: ${ytError.message}`);
       }
     }
 
-    if (!chunks || chunks.length === 0) {
-      throw new Error('No transcript data available from any source');
+    // Helper function to format time
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
-    // Save transcript chunks to database
-    job.currentStep = 'saving_transcript';
-    for (const chunk of chunks) {
-      await db.createTranscript({
-        video_id: job.videoId,
-        chunk_index: chunk.chunkIndex,
-        start_time_seconds: chunk.startTime,
-        end_time_seconds: chunk.endTime,
-        transcript_text: chunk.text,
-        language_detected: transcriptData.language || 'unknown'
-      });
+    // Helper function to deduplicate recommendations
+    function deduplicateRecommendations(recs) {
+      const seen = new Map();
+      for (const rec of recs) {
+        const key = `${(rec.share_name || '').toLowerCase()}-${rec.action}`;
+        if (!seen.has(key) || rec.confidence_score > seen.get(key).confidence_score) {
+          seen.set(key, rec);
+        }
+      }
+      return Array.from(seen.values());
     }
 
-    job.progress = 60;
+    // Cleanup temp directory
+    await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
 
-    // Analyze for recommendations
-    job.currentStep = 'analyzing';
-    console.log('Analyzing transcripts for recommendations...');
-
-    const recommendations = await analysisService.analyzeTranscriptBatch(chunks);
-    job.progress = 90;
+    // Check if we got any results
+    if (recommendations.length === 0 && !processingMethod) {
+      throw new Error('All processing methods failed - no recommendations extracted');
+    }
 
     // Save recommendations to database
+    job.currentStep = 'saving_recommendations';
+    job.progress = 90;
     const today = new Date().toISOString().split('T')[0];
 
     for (const rec of recommendations) {
@@ -221,7 +273,7 @@ export const queueService = {
         expert_name: rec.expert_name,
         recommendation_date: today,
         share_name: rec.share_name,
-        nse_symbol: rec.nse_symbol || analysisService.mapToNSESymbol(rec.share_name),
+        nse_symbol: rec.nse_symbol || geminiVideoService.mapToNSESymbol(rec.share_name),
         action: rec.action,
         recommended_price: rec.recommended_price,
         target_price: rec.target_price,
@@ -233,7 +285,7 @@ export const queueService = {
       });
     }
 
-    console.log(`Saved ${recommendations.length} recommendations (via ${transcriptionMethod})`);
+    console.log(`Saved ${recommendations.length} recommendations (via ${processingMethod})`);
 
     // Mark as completed
     job.status = 'completed';
@@ -244,7 +296,7 @@ export const queueService = {
       processed_at: new Date().toISOString()
     });
 
-    console.log(`Job ${job.id} completed successfully using ${transcriptionMethod}`);
+    console.log(`Job ${job.id} completed successfully using ${processingMethod}`);
   },
 
   /**
