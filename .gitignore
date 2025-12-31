@@ -26,3 +26,16 @@ Thumbs.db
 
 # Test
 coverage/
+
+# Playwright MCP screenshots
+.playwright-mcp/
+
+# Root test/setup scripts (contain credentials)
+run-schema.js
+setup-db.js
+test-regions.js
+/package.json
+/package-lock.json
+
+# Sample/test data
+documentation/sample*.md
