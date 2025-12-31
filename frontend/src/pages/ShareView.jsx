@@ -150,39 +150,62 @@ function ShareView() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stop Loss</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {recommendations.map((rec) => (
-                  <tr key={rec.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-900">{rec.recommendation_date}</td>
-                    <td className="px-4 py-3">
-                      <Link
-                        to={`/experts/${encodeURIComponent(rec.expert_name)}`}
-                        className="text-sm font-medium text-primary-600 hover:text-primary-800"
-                      >
-                        {rec.expert_name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${actionColors[rec.action]}`}>
-                        {rec.action}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {rec.recommended_price ? `₹${rec.recommended_price}` : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {rec.target_price ? `₹${rec.target_price}` : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={rec.reason}>
-                      {rec.reason || '-'}
-                    </td>
-                  </tr>
-                ))}
+                {recommendations.map((rec) => {
+                  const videoUrl = rec.videos?.youtube_url
+                    ? `${rec.videos.youtube_url}${rec.videos.youtube_url.includes('?') ? '&' : '?'}t=${rec.timestamp_in_video || 0}`
+                    : null;
+
+                  return (
+                    <tr key={rec.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm text-gray-900">{rec.recommendation_date}</td>
+                      <td className="px-4 py-3">
+                        <Link
+                          to={`/experts/${encodeURIComponent(rec.expert_name)}`}
+                          className="text-sm font-medium text-primary-600 hover:text-primary-800"
+                        >
+                          {rec.expert_name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${actionColors[rec.action]}`}>
+                          {rec.action}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {rec.recommended_price ? `₹${rec.recommended_price}` : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {rec.target_price ? `₹${rec.target_price}` : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={rec.reason}>
+                        {rec.reason || '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        {videoUrl ? (
+                          <a
+                            href={videoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary-600 hover:text-primary-800 flex items-center"
+                            title={rec.videos?.title}
+                          >
+                            <span className="mr-1">▶</span>
+                            Video
+                          </a>
+                        ) : (
+                          <span className="text-sm text-gray-400">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

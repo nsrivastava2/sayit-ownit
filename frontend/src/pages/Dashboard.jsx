@@ -33,6 +33,19 @@ function RecommendationRow({ rec }) {
     HOLD: 'bg-yellow-100 text-yellow-800'
   };
 
+  // Build YouTube URL with timestamp
+  const getVideoUrl = () => {
+    if (!rec.videos?.youtube_url) return null;
+    const url = rec.videos.youtube_url;
+    const timestamp = rec.timestamp_in_video;
+    if (timestamp) {
+      return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
+    }
+    return url;
+  };
+
+  const videoUrl = getVideoUrl();
+
   return (
     <tr className="hover:bg-gray-50">
       <td className="px-4 py-3 text-sm text-gray-900">{rec.recommendation_date}</td>
@@ -65,6 +78,22 @@ function RecommendationRow({ rec }) {
       </td>
       <td className="px-4 py-3 text-sm text-gray-600">
         {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
+      </td>
+      <td className="px-4 py-3">
+        {videoUrl ? (
+          <a
+            href={videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-primary-600 hover:text-primary-800 flex items-center"
+            title={rec.videos?.title}
+          >
+            <span className="mr-1">▶</span>
+            Video
+          </a>
+        ) : (
+          <span className="text-sm text-gray-400">-</span>
+        )}
       </td>
     </tr>
   );
@@ -288,6 +317,7 @@ function Dashboard() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stop Loss</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
