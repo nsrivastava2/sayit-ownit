@@ -20,7 +20,7 @@
     "pg": "^8.11.3",
     "uuid": "^9.0.1",
     "xlsx": "^0.18.5",
-    "yahoo-finance2": "^3.10.2"
+    "yahoo-finance2": "^2.11.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
