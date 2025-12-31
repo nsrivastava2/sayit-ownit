@@ -313,6 +313,42 @@ export const db = {
   // Raw query access for complex operations
   async query(text, params) {
     return pool.query(text, params);
+  },
+
+  // ============================================
+  // Admin Session Management
+  // ============================================
+
+  async createAdminSession(data) {
+    const result = await pool.query(
+      `INSERT INTO admin_sessions (session_token, expires_at, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [data.session_token, data.expires_at, data.ip_address, data.user_agent]
+    );
+    return result.rows[0];
+  },
+
+  async getAdminSession(token) {
+    const result = await pool.query(
+      'SELECT * FROM admin_sessions WHERE session_token = $1',
+      [token]
+    );
+    return result.rows[0];
+  },
+
+  async deleteAdminSession(token) {
+    await pool.query(
+      'DELETE FROM admin_sessions WHERE session_token = $1',
+      [token]
+    );
+  },
+
+  async cleanupExpiredSessions() {
+    const result = await pool.query(
+      'DELETE FROM admin_sessions WHERE expires_at < NOW()'
+    );
+    return result.rowCount;
   }
 };
 

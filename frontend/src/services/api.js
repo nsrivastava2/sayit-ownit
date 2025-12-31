@@ -3,6 +3,7 @@ const API_BASE = '/api';
 async function fetchApi(endpoint, options = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
+    credentials: 'include', // Required for sending/receiving cookies
     headers: {
       'Content-Type': 'application/json',
       ...options.headers
@@ -18,7 +19,29 @@ async function fetchApi(endpoint, options = {}) {
 }
 
 export const api = {
+  // ============================================
+  // Authentication
+  // ============================================
+
+  async adminLogin(password) {
+    return fetchApi('/auth/admin-login', {
+      method: 'POST',
+      body: JSON.stringify({ password })
+    });
+  },
+
+  async getAdminStatus() {
+    return fetchApi('/auth/admin-status');
+  },
+
+  async adminLogout() {
+    return fetchApi('/auth/admin-logout', { method: 'POST' });
+  },
+
+  // ============================================
   // Stats
+  // ============================================
+
   async getStats() {
     return fetchApi('/stats');
   },

@@ -1,4 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard';
 import AddVideo from './pages/AddVideo';
@@ -6,24 +8,38 @@ import Recommendations from './pages/Recommendations';
 import ExpertView from './pages/ExpertView';
 import ShareView from './pages/ShareView';
 import VideoDetails from './pages/VideoDetails';
+import AdminLogin from './pages/admin/AdminLogin';
 import ExpertManagement from './pages/admin/ExpertManagement';
 import ChannelManagement from './pages/admin/ChannelManagement';
 
 function App() {
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/add" element={<AddVideo />} />
-        <Route path="/recommendations" element={<Recommendations />} />
-        <Route path="/experts/:name" element={<ExpertView />} />
-        <Route path="/shares/:symbol" element={<ShareView />} />
-        <Route path="/videos/:id" element={<VideoDetails />} />
-        {/* Admin Routes */}
-        <Route path="/admin/experts" element={<ExpertManagement />} />
-        <Route path="/admin/channels" element={<ChannelManagement />} />
-      </Routes>
-    </Layout>
+    <AuthProvider>
+      <Layout>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/recommendations" element={<Recommendations />} />
+          <Route path="/experts/:name" element={<ExpertView />} />
+          <Route path="/shares/:symbol" element={<ShareView />} />
+          <Route path="/videos/:id" element={<VideoDetails />} />
+
+          {/* Admin Login (public) */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+
+          {/* Protected Admin Routes */}
+          <Route path="/add" element={
+            <ProtectedRoute><AddVideo /></ProtectedRoute>
+          } />
+          <Route path="/admin/experts" element={
+            <ProtectedRoute><ExpertManagement /></ProtectedRoute>
+          } />
+          <Route path="/admin/channels" element={
+            <ProtectedRoute><ChannelManagement /></ProtectedRoute>
+          } />
+        </Routes>
+      </Layout>
+    </AuthProvider>
   );
 }
 

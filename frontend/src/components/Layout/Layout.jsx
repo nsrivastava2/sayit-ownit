@@ -1,21 +1,30 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 function Layout({ children }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, loading, logout } = useAuth();
 
-  const navItems = [
+  // Public nav items (always visible)
+  const publicNavItems = [
     { path: '/', label: 'Dashboard', icon: '📊' },
-    { path: '/add', label: 'Add Video', icon: '➕' },
     { path: '/recommendations', label: 'Recommendations', icon: '📋' }
   ];
 
+  // Admin nav items (only visible when authenticated)
   const adminNavItems = [
+    { path: '/add', label: 'Add Video', icon: '➕' },
     { path: '/admin/experts', label: 'Experts', icon: '👤' },
     { path: '/admin/channels', label: 'Channels', icon: '📺' }
   ];
 
   const isActive = (path) => location.pathname === path;
-  const isAdminSection = location.pathname.startsWith('/admin');
+
+  async function handleLogout() {
+    await logout();
+    navigate('/');
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -28,14 +37,15 @@ function Layout({ children }) {
               <span className="text-xl font-bold text-gray-900">SayIt OwnIt</span>
             </Link>
 
-            <nav className="flex space-x-1">
-              {navItems.map((item) => (
+            <nav className="flex items-center space-x-1">
+              {/* Public Navigation */}
+              {publicNavItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive(item.path)
-                      ? 'bg-primary-100 text-primary-700'
+                      ? 'bg-blue-100 text-blue-700'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
@@ -44,24 +54,55 @@ function Layout({ children }) {
                 </Link>
               ))}
 
-              {/* Admin Section Divider */}
-              <span className="border-l border-gray-300 mx-2"></span>
+              {/* Admin Section (only visible when authenticated) */}
+              {!loading && isAuthenticated && (
+                <>
+                  {/* Divider */}
+                  <span className="border-l border-gray-300 mx-2 h-6"></span>
 
-              {/* Admin Navigation */}
-              {adminNavItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'text-gray-500 hover:bg-gray-100'
-                  }`}
-                >
-                  <span className="mr-1">{item.icon}</span>
-                  {item.label}
-                </Link>
-              ))}
+                  {/* Admin Navigation */}
+                  {adminNavItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isActive(item.path)
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'text-gray-500 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span className="mr-1">{item.icon}</span>
+                      {item.label}
+                    </Link>
+                  ))}
+
+                  {/* Logout Button */}
+                  <button
+                    onClick={handleLogout}
+                    data-testid="logout-button"
+                    className="ml-2 px-4 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    🚪 Logout
+                  </button>
+                </>
+              )}
+
+              {/* Login Link (only visible when NOT authenticated) */}
+              {!loading && !isAuthenticated && (
+                <>
+                  <span className="border-l border-gray-300 mx-2 h-6"></span>
+                  <Link
+                    to="/admin/login"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isActive('/admin/login')
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    🔐 Admin
+                  </Link>
+                </>
+              )}
             </nav>
           </div>
         </div>
