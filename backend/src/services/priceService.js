@@ -43,7 +43,10 @@ export const priceService = {
       return {
         symbol,
         exchange,
-        date: new Date(quote.regularMarketTime * 1000),
+        // regularMarketTime is already a Date object in yahoo-finance2 v2
+        date: quote.regularMarketTime instanceof Date
+          ? quote.regularMarketTime
+          : new Date(quote.regularMarketTime * 1000),
         open: quote.regularMarketOpen,
         high: quote.regularMarketDayHigh,
         low: quote.regularMarketDayLow,
