@@ -155,7 +155,7 @@ export const db = {
     return results;
   },
 
-  async getRecommendations({ expert, share, dateFrom, dateTo, action, limit = 50, offset = 0 }) {
+  async getRecommendations({ expert, share, dateFrom, dateTo, action, status, outcome, limit = 50, offset = 0 }) {
     // Build WHERE conditions
     const conditions = ['1=1'];
     const params = [];
@@ -186,6 +186,11 @@ export const db = {
       params.push(action.toUpperCase());
       paramIndex++;
     }
+    if (status) {
+      conditions.push(`status = $${paramIndex}`);
+      params.push(status.toUpperCase());
+      paramIndex++;
+    }
 
     const whereClause = conditions.join(' AND ');
 
@@ -194,12 +199,22 @@ export const db = {
     const countResult = await pool.query(countQuery, params);
     const count = parseInt(countResult.rows[0].count);
 
-    // Get paginated data with video info (need r. prefix for joined query)
+    // Get paginated data with video info and outcome (need r. prefix for joined query)
     const dataWhereClause = whereClause.replace(/expert_name/g, 'r.expert_name')
       .replace(/share_name/g, 'r.share_name')
       .replace(/nse_symbol/g, 'r.nse_symbol')
       .replace(/recommendation_date/g, 'r.recommendation_date')
-      .replace(/action/g, 'r.action');
+      .replace(/action(?![_])/g, 'r.action')
+      .replace(/status/g, 'r.status');
+
+    // Build outcome filter if specified
+    let outcomeJoin = 'LEFT JOIN recommendation_outcomes ro ON r.id = ro.recommendation_id';
+    let outcomeCondition = '';
+    if (outcome) {
+      outcomeCondition = ` AND ro.outcome_type = $${paramIndex}`;
+      params.push(outcome.toUpperCase());
+      paramIndex++;
+    }
 
     const dataQuery = `
       SELECT r.*,
@@ -208,10 +223,18 @@ export const db = {
                'youtube_url', v.youtube_url,
                'title', v.title,
                'channel_name', v.channel_name
-             ) as videos
+             ) as videos,
+             json_build_object(
+               'outcome_type', ro.outcome_type,
+               'outcome_date', ro.outcome_date,
+               'outcome_price', ro.outcome_price,
+               'return_percentage', ro.return_percentage,
+               'days_held', ro.days_held
+             ) as outcome
       FROM recommendations r
       LEFT JOIN videos v ON r.video_id = v.id
-      WHERE ${dataWhereClause}
+      ${outcomeJoin}
+      WHERE ${dataWhereClause}${outcomeCondition}
       ORDER BY r.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;

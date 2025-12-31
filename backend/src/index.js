@@ -12,6 +12,7 @@ import sharesRouter from './routes/shares.js';
 import stocksRouter from './routes/stocks.js';
 import statsRouter from './routes/stats.js';
 import authRouter from './routes/auth.js';
+import pricesRouter from './routes/prices.js';
 
 // Import admin routes
 import adminExpertsRouter from './routes/admin/experts.js';
@@ -19,6 +20,9 @@ import adminChannelsRouter from './routes/admin/channels.js';
 
 // Import middleware
 import { adminAuth } from './middleware/adminAuth.js';
+
+// Import jobs
+import { initPriceUpdateJob } from './jobs/priceUpdateJob.js';
 
 dotenv.config();
 
@@ -57,6 +61,7 @@ app.use('/api/experts', expertsRouter);
 app.use('/api/shares', sharesRouter);
 app.use('/api/stocks', stocksRouter);
 app.use('/api/stats', statsRouter);
+app.use('/api/prices', pricesRouter);
 
 // Protected Admin Routes
 app.use('/api/admin/experts', adminAuth, adminExpertsRouter);
@@ -88,6 +93,10 @@ async function startServer() {
     console.warn('Warning: Could not connect to Ollama. LLM analysis will fail.');
   }
 
+  // Initialize scheduled jobs
+  console.log('Initializing scheduled jobs...');
+  initPriceUpdateJob();
+
   app.listen(PORT, () => {
     console.log(`
 ╔═══════════════════════════════════════════════════════════╗
@@ -96,6 +105,7 @@ async function startServer() {
 ║  Server running on http://localhost:${PORT}                  ║
 ║  Environment: ${config.nodeEnv.padEnd(42)}║
 ║  Ollama: ${ollamaConnected ? 'Connected'.padEnd(47) : 'Not connected (LLM features disabled)'.padEnd(47)}║
+║  Price Job: Scheduled (Mon-Fri 6PM IST)                   ║
 ╚═══════════════════════════════════════════════════════════╝
     `);
   });

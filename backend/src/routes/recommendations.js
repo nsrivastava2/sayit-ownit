@@ -35,6 +35,7 @@ function enrichRecommendation(rec) {
 /**
  * GET /api/recommendations
  * List all recommendations with filters
+ * Supports: expert, share, date_from, date_to, action, status, outcome
  */
 router.get('/', async (req, res) => {
   try {
@@ -44,6 +45,8 @@ router.get('/', async (req, res) => {
       date_from,
       date_to,
       action,
+      status,
+      outcome,
       limit = 50,
       offset = 0
     } = req.query;
@@ -54,6 +57,8 @@ router.get('/', async (req, res) => {
       dateFrom: date_from,
       dateTo: date_to,
       action,
+      status,
+      outcome,
       limit: parseInt(limit),
       offset: parseInt(offset)
     });

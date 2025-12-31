@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
+import OutcomeBadge from '../components/OutcomeBadge';
 
 function Recommendations() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -16,6 +17,8 @@ function Recommendations() {
     expert: searchParams.get('expert') || '',
     share: searchParams.get('share') || '',
     action: searchParams.get('action') || '',
+    status: searchParams.get('status') || '',
+    outcome: searchParams.get('outcome') || '',
     date_from: searchParams.get('date_from') || '',
     date_to: searchParams.get('date_to') || '',
     page: parseInt(searchParams.get('page') || '1')
@@ -38,6 +41,8 @@ function Recommendations() {
           expert: filters.expert,
           share: filters.share,
           action: filters.action,
+          status: filters.status,
+          outcome: filters.outcome,
           date_from: filters.date_from,
           date_to: filters.date_to,
           limit,
@@ -130,7 +135,7 @@ function Recommendations() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Expert filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Expert</label>
@@ -180,6 +185,37 @@ function Recommendations() {
             </select>
           </div>
 
+          {/* Status filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select
+              value={filters.status}
+              onChange={(e) => updateFilter('status', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            >
+              <option value="">All Status</option>
+              <option value="ACTIVE">Active</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          {/* Outcome filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Outcome</label>
+            <select
+              value={filters.outcome}
+              onChange={(e) => updateFilter('outcome', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            >
+              <option value="">All Outcomes</option>
+              <option value="TARGET_HIT">Target Hit</option>
+              <option value="SL_HIT">Stop Loss Hit</option>
+              <option value="EXPIRED">Expired</option>
+            </select>
+          </div>
+
           {/* Date from */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
@@ -201,17 +237,19 @@ function Recommendations() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             />
           </div>
-        </div>
 
-        {/* Clear filters */}
-        {(filters.expert || filters.share || filters.action || filters.date_from || filters.date_to) && (
-          <button
-            onClick={clearFilters}
-            className="mt-4 text-sm text-primary-600 hover:text-primary-800"
-          >
-            Clear all filters
-          </button>
-        )}
+          {/* Clear filters button */}
+          <div className="flex items-end">
+            {(filters.expert || filters.share || filters.action || filters.status || filters.outcome || filters.date_from || filters.date_to) && (
+              <button
+                onClick={clearFilters}
+                className="w-full px-3 py-2 text-sm text-primary-600 hover:text-primary-800 border border-primary-300 rounded-lg hover:bg-primary-50"
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Results table */}
@@ -248,7 +286,7 @@ function Recommendations() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entry Price</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stop Loss</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Confidence</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Outcome</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                 </tr>
               </thead>
@@ -289,16 +327,12 @@ function Recommendations() {
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm">
-                      <div className="flex items-center">
-                        <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                          <div
-                            className="bg-primary-500 h-2 rounded-full"
-                            style={{ width: `${(rec.confidence_score || 0.5) * 100}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-gray-600">{Math.round((rec.confidence_score || 0.5) * 100)}%</span>
-                      </div>
+                    <td className="px-4 py-3">
+                      <OutcomeBadge
+                        outcome={rec.outcome}
+                        status={rec.status}
+                        returnPct={rec.outcome?.return_percentage}
+                      />
                     </td>
                     <td className="px-4 py-3">
                       {rec.videos && (
