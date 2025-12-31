@@ -282,9 +282,18 @@ export const queueService = {
 
     // Get video's publish date for recommendation_date (fallback to today if not available)
     const videoRecord = await db.getVideo(job.videoId);
-    const recommendationDate = videoRecord?.publish_date
-      ? new Date(videoRecord.publish_date).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0];
+    let recommendationDate;
+    if (videoRecord?.publish_date) {
+      // PostgreSQL returns Date in local timezone, use local date methods to avoid UTC shift
+      const pubDate = videoRecord.publish_date instanceof Date
+        ? videoRecord.publish_date
+        : new Date(videoRecord.publish_date);
+      // Use local date components to get correct date string
+      recommendationDate = `${pubDate.getFullYear()}-${String(pubDate.getMonth() + 1).padStart(2, '0')}-${String(pubDate.getDate()).padStart(2, '0')}`;
+    } else {
+      const today = new Date();
+      recommendationDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    }
 
     for (const rec of recommendations) {
       // Resolve expert name using expertService (maps aliases to canonical names)
