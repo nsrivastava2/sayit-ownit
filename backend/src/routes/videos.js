@@ -1,14 +1,16 @@
 import express from 'express';
 import { db } from '../config/index.js';
 import queueService from '../services/queueService.js';
+import { adminAuth } from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
 /**
  * POST /api/videos/process
  * Start processing a YouTube video
+ * Protected: Requires admin authentication
  */
-router.post('/process', async (req, res) => {
+router.post('/process', adminAuth, async (req, res) => {
   try {
     const { youtube_url } = req.body;
 

@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { config, ollama } from './config/index.js';
 
@@ -9,18 +10,26 @@ import recommendationsRouter from './routes/recommendations.js';
 import expertsRouter from './routes/experts.js';
 import sharesRouter from './routes/shares.js';
 import statsRouter from './routes/stats.js';
+import authRouter from './routes/auth.js';
 
 // Import admin routes
 import adminExpertsRouter from './routes/admin/experts.js';
 import adminChannelsRouter from './routes/admin/channels.js';
+
+// Import middleware
+import { adminAuth } from './middleware/adminAuth.js';
 
 dotenv.config();
 
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true // Required for cookies
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 // Request logging
 app.use((req, res, next) => {
@@ -37,16 +46,19 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API Routes
+// Auth Routes (public)
+app.use('/api/auth', authRouter);
+
+// Public API Routes
 app.use('/api/videos', videosRouter);
 app.use('/api/recommendations', recommendationsRouter);
 app.use('/api/experts', expertsRouter);
 app.use('/api/shares', sharesRouter);
 app.use('/api/stats', statsRouter);
 
-// Admin Routes
-app.use('/api/admin/experts', adminExpertsRouter);
-app.use('/api/admin/channels', adminChannelsRouter);
+// Protected Admin Routes
+app.use('/api/admin/experts', adminAuth, adminExpertsRouter);
+app.use('/api/admin/channels', adminAuth, adminChannelsRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
