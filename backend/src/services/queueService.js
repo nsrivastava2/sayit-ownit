@@ -205,7 +205,7 @@ export const queueService = {
         console.log(`Analyzing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)}...`);
 
         try {
-          const batchRecs = await geminiVideoService.analyzeTranscriptWithGemini(batchText, channelName);
+          const batchRecs = await geminiVideoService.analyzeTranscriptWithGemini(batchText, channelName, job.videoInfo?.title);
           allRecommendations.push(...batchRecs);
         } catch (batchError) {
           console.log(`Batch ${Math.floor(i / batchSize) + 1} failed: ${batchError.message}`);

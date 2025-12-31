@@ -475,18 +475,27 @@ export const geminiVideoService = {
    * Much more accurate than local Ollama for Hindi/Hinglish content
    * @param {string} transcriptText - Combined transcript text with timestamps
    * @param {string} channelName - Channel name for loading channel-specific prompt
+   * @param {string} videoTitle - Video title (helps identify expert from title like "Anil Singhvi's Pick")
    * @returns {Array} - Extracted recommendations
    */
-  async analyzeTranscriptWithGemini(transcriptText, channelName = null) {
+  async analyzeTranscriptWithGemini(transcriptText, channelName = null, videoTitle = null) {
     console.log('Analyzing transcript with Gemini...');
 
     // Load channel-specific prompt
     const basePrompt = await promptService.loadPrompt(channelName);
 
+    // Add video title context if available (helps identify expert from title)
+    const videoContext = videoTitle
+      ? `VIDEO TITLE: "${videoTitle}"
+IMPORTANT: If the video title contains an expert's name (e.g., "Anil Singhvi's Pick", "Sandeep Jain's Stock"), use that person as the expert_name for recommendations in this video, unless a DIFFERENT expert is explicitly introduced in the transcript speaking about a specific stock.
+
+`
+      : '';
+
     // Add transcript-specific context
     const prompt = `${basePrompt}
 
-TRANSCRIPT (Hindi/Hinglish - timestamps in [MM:SS-MM:SS] format):
+${videoContext}TRANSCRIPT (Hindi/Hinglish - timestamps in [MM:SS-MM:SS] format):
 ---
 ${transcriptText}
 ---
