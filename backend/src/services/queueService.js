@@ -1,12 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import fs from 'fs/promises';
 import { db, config } from '../config/index.js';
 import videoService from './videoService.js';
 import youtubeTranscriptService from './youtubeTranscriptService.js';
+import groqTranscriptionService from './groqTranscriptionService.js';
 import analysisService from './analysisService.js';
 
 /**
  * Job queue service for processing videos
- * Uses YouTube Transcript API for fetching transcripts
+ * Uses YouTube Transcript API with Groq Whisper fallback
  */
 
 // In-memory job store
@@ -127,7 +130,7 @@ export const queueService = {
   },
 
   /**
-   * Process a single job using YouTube Transcript API
+   * Process a single job - tries YouTube API first, falls back to Groq
    */
   async processJob(job) {
     console.log(`Processing job ${job.id}: ${job.youtubeUrl}`);
@@ -136,85 +139,112 @@ export const queueService = {
     job.currentStep = 'fetching_transcript';
     await db.updateVideo(job.videoId, { status: 'processing' });
 
+    let transcriptData = null;
+    let chunks = null;
+    let transcriptionMethod = null;
+
+    // Try YouTube Transcript API first
     try {
-      // Step 1: Fetch transcript from API
       job.progress = 10;
-      console.log('Fetching transcript from YouTube Transcript API...');
+      console.log('Trying YouTube Transcript API...');
 
-      const transcriptData = await youtubeTranscriptService.fetchTranscript(job.youtubeUrl);
-      job.progress = 40;
-
-      console.log(`Fetched transcript with ${transcriptData.segments.length} segments`);
-
-      // Step 2: Group segments into chunks for analysis
-      job.currentStep = 'processing_transcript';
-      const chunks = youtubeTranscriptService.groupSegmentsIntoChunks(
+      transcriptData = await youtubeTranscriptService.fetchTranscript(job.youtubeUrl);
+      chunks = youtubeTranscriptService.groupSegmentsIntoChunks(
         transcriptData.segments,
         config.processing.audioChunkSeconds || 30
       );
+      transcriptionMethod = 'youtube_api';
 
-      console.log(`Grouped into ${chunks.length} chunks`);
+      console.log(`YouTube API: Got ${transcriptData.segments.length} segments, grouped into ${chunks.length} chunks`);
+      job.progress = 40;
 
-      // Step 3: Save transcript chunks to database
-      for (const chunk of chunks) {
-        await db.createTranscript({
-          video_id: job.videoId,
-          chunk_index: chunk.chunkIndex,
-          start_time_seconds: chunk.startTime,
-          end_time_seconds: chunk.endTime,
-          transcript_text: chunk.text,
-          language_detected: transcriptData.language
-        });
+    } catch (ytError) {
+      console.log(`YouTube API failed: ${ytError.message}`);
+      console.log('Falling back to Groq Whisper transcription...');
+
+      // Fallback to Groq
+      job.currentStep = 'transcribing_groq';
+      job.progress = 15;
+
+      const tempDir = path.join(config.processing.tempDir, job.id);
+      await fs.mkdir(tempDir, { recursive: true });
+
+      try {
+        transcriptData = await groqTranscriptionService.transcribeVideo(job.youtubeUrl, tempDir);
+        chunks = groqTranscriptionService.groupSegmentsIntoChunks(
+          transcriptData.segments,
+          config.processing.audioChunkSeconds || 30
+        );
+        transcriptionMethod = 'groq_whisper';
+
+        console.log(`Groq Whisper: Got ${transcriptData.segments.length} segments, grouped into ${chunks.length} chunks`);
+        job.progress = 50;
+
+      } finally {
+        // Cleanup temp directory
+        await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
       }
-
-      job.progress = 60;
-
-      // Step 4: Analyze for recommendations
-      job.currentStep = 'analyzing';
-      console.log('Analyzing transcripts for recommendations...');
-
-      const recommendations = await analysisService.analyzeTranscriptBatch(chunks);
-      job.progress = 90;
-
-      // Step 5: Save recommendations to database
-      const today = new Date().toISOString().split('T')[0];
-
-      for (const rec of recommendations) {
-        await db.createRecommendation({
-          video_id: job.videoId,
-          expert_name: rec.expert_name,
-          recommendation_date: today,
-          share_name: rec.share_name,
-          nse_symbol: rec.nse_symbol || analysisService.mapToNSESymbol(rec.share_name),
-          action: rec.action,
-          recommended_price: rec.recommended_price,
-          target_price: rec.target_price,
-          stop_loss: rec.stop_loss,
-          reason: rec.reason,
-          confidence_score: rec.confidence_score,
-          timestamp_in_video: rec.timestamp_seconds,
-          raw_extract: JSON.stringify(rec)
-        });
-      }
-
-      console.log(`Saved ${recommendations.length} recommendations`);
-
-      // Mark as completed
-      job.status = 'completed';
-      job.progress = 100;
-      job.currentStep = 'completed';
-      await db.updateVideo(job.videoId, {
-        status: 'completed',
-        processed_at: new Date().toISOString()
-      });
-
-      console.log(`Job ${job.id} completed successfully`);
-
-    } catch (error) {
-      // If transcript API fails, mark video as failed
-      console.error('Failed to process video:', error.message);
-      throw error;
     }
+
+    if (!chunks || chunks.length === 0) {
+      throw new Error('No transcript data available from any source');
+    }
+
+    // Save transcript chunks to database
+    job.currentStep = 'saving_transcript';
+    for (const chunk of chunks) {
+      await db.createTranscript({
+        video_id: job.videoId,
+        chunk_index: chunk.chunkIndex,
+        start_time_seconds: chunk.startTime,
+        end_time_seconds: chunk.endTime,
+        transcript_text: chunk.text,
+        language_detected: transcriptData.language || 'unknown'
+      });
+    }
+
+    job.progress = 60;
+
+    // Analyze for recommendations
+    job.currentStep = 'analyzing';
+    console.log('Analyzing transcripts for recommendations...');
+
+    const recommendations = await analysisService.analyzeTranscriptBatch(chunks);
+    job.progress = 90;
+
+    // Save recommendations to database
+    const today = new Date().toISOString().split('T')[0];
+
+    for (const rec of recommendations) {
+      await db.createRecommendation({
+        video_id: job.videoId,
+        expert_name: rec.expert_name,
+        recommendation_date: today,
+        share_name: rec.share_name,
+        nse_symbol: rec.nse_symbol || analysisService.mapToNSESymbol(rec.share_name),
+        action: rec.action,
+        recommended_price: rec.recommended_price,
+        target_price: rec.target_price,
+        stop_loss: rec.stop_loss,
+        reason: rec.reason,
+        confidence_score: rec.confidence_score,
+        timestamp_in_video: rec.timestamp_seconds,
+        raw_extract: JSON.stringify(rec)
+      });
+    }
+
+    console.log(`Saved ${recommendations.length} recommendations (via ${transcriptionMethod})`);
+
+    // Mark as completed
+    job.status = 'completed';
+    job.progress = 100;
+    job.currentStep = 'completed';
+    await db.updateVideo(job.videoId, {
+      status: 'completed',
+      processed_at: new Date().toISOString()
+    });
+
+    console.log(`Job ${job.id} completed successfully using ${transcriptionMethod}`);
   },
 
   /**

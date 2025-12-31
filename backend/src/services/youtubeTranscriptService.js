@@ -4,7 +4,7 @@
  */
 
 const API_URL = 'https://www.youtube-transcript.io/api/transcripts';
-const API_KEY = '69549434ad7691e8b9471601';
+const API_KEY = process.env.YOUTUBE_TRANSCRIPT_API_KEY;
 
 export const youtubeTranscriptService = {
   /**
