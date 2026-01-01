@@ -41,9 +41,8 @@ function Layout({ children }) {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
-              <img src="/logo.svg" alt="SayIt OwnIt" className="h-10 w-10" />
-              <span className="text-xl font-bold text-gray-900">SayIt OwnIt</span>
+            <Link to="/" className="flex items-center">
+              <img src="/logo-full.svg" alt="SayIt OwnIt" className="h-12" />
             </Link>
 
             <nav className="flex items-center space-x-1">
