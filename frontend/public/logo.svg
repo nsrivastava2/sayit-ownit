@@ -1,41 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
   <defs>
-    <!-- Gradient for the main icon -->
-    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2563eb"/>
-      <stop offset="100%" style="stop-color:#0891b2"/>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#1e40af"/>
     </linearGradient>
-    <!-- Gradient for the checkmark -->
-    <linearGradient id="successGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="greenGrad" x1="0%" y1="100%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#10b981"/>
       <stop offset="100%" style="stop-color:#059669"/>
     </linearGradient>
   </defs>
 
-  <!-- Background circle -->
-  <circle cx="100" cy="100" r="90" fill="url(#primaryGradient)"/>
+  <!-- Background -->
+  <rect x="2" y="2" width="44" height="44" rx="10" fill="url(#blueGrad)"/>
 
-  <!-- Speech bubble shape (represents "SayIt") -->
-  <path d="M50 65 L150 65 Q165 65 165 80 L165 120 Q165 135 150 135 L115 135 L100 155 L100 135 L50 135 Q35 135 35 120 L35 80 Q35 65 50 65 Z"
-        fill="white"
-        opacity="0.95"/>
+  <!-- Microphone body -->
+  <rect x="18" y="8" width="12" height="18" rx="6" fill="white"/>
 
-  <!-- Upward trending stock chart arrow (represents market/tracking) -->
-  <path d="M55 115 L75 95 L95 105 L130 70"
-        stroke="url(#primaryGradient)"
-        stroke-width="6"
+  <!-- Microphone grille lines -->
+  <line x1="20" y1="12" x2="28" y2="12" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="20" y1="15" x2="28" y2="15" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="20" y1="18" x2="28" y2="18" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="20" y1="21" x2="28" y2="21" stroke="#cbd5e1" stroke-width="1"/>
+
+  <!-- Microphone stand arc -->
+  <path d="M14 22 Q14 30 24 30 Q34 30 34 22"
+        stroke="white"
+        stroke-width="2.5"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Microphone stand vertical -->
+  <line x1="24" y1="30" x2="24" y2="35" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Stock chart line (upward trend) -->
+  <path d="M8 40 L16 36 L26 38 L40 28"
+        stroke="url(#greenGrad)"
+        stroke-width="3"
         stroke-linecap="round"
         stroke-linejoin="round"
         fill="none"/>
 
-  <!-- Arrow head -->
-  <polygon points="130,70 118,78 125,85" fill="url(#primaryGradient)"/>
-
-  <!-- Checkmark badge (represents "OwnIt" - accountability) -->
-  <circle cx="155" cy="55" r="25" fill="url(#successGradient)"/>
-  <path d="M143 55 L151 63 L167 47"
-        stroke="white"
-        stroke-width="4"
+  <!-- Arrow tip on chart -->
+  <path d="M36 26 L40 28 L38 32"
+        stroke="url(#greenGrad)"
+        stroke-width="3"
         stroke-linecap="round"
         stroke-linejoin="round"
         fill="none"/>

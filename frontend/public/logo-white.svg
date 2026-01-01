@@ -1,39 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
   <defs>
-    <linearGradient id="whiteGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffffff"/>
-      <stop offset="100%" style="stop-color:#e2e8f0"/>
-    </linearGradient>
-    <linearGradient id="lightSuccessGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="chartWhite" x1="0%" y1="100%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#34d399"/>
       <stop offset="100%" style="stop-color:#10b981"/>
     </linearGradient>
   </defs>
 
-  <!-- Transparent background - for use on dark surfaces -->
+  <!-- White version for dark backgrounds - no background -->
 
-  <!-- Speech bubble shape (represents "SayIt") -->
-  <path d="M50 65 L150 65 Q165 65 165 80 L165 120 Q165 135 150 135 L115 135 L100 155 L100 135 L50 135 Q35 135 35 120 L35 80 Q35 65 50 65 Z"
-        fill="white"
-        opacity="0.95"/>
+  <!-- Microphone -->
+  <rect x="18" y="8" width="12" height="18" rx="6" fill="white"/>
+  <line x1="20" y1="12" x2="28" y2="12" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="20" y1="15" x2="28" y2="15" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="20" y1="18" x2="28" y2="18" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="20" y1="21" x2="28" y2="21" stroke="#e2e8f0" stroke-width="1"/>
 
-  <!-- Upward trending stock chart arrow -->
-  <path d="M55 115 L75 95 L95 105 L130 70"
-        stroke="#2563eb"
-        stroke-width="6"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        fill="none"/>
+  <path d="M14 22 Q14 30 24 30 Q34 30 34 22" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <line x1="24" y1="30" x2="24" y2="35" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
 
-  <!-- Arrow head -->
-  <polygon points="130,70 118,78 125,85" fill="#2563eb"/>
-
-  <!-- Checkmark badge -->
-  <circle cx="155" cy="55" r="25" fill="url(#lightSuccessGradient)"/>
-  <path d="M143 55 L151 63 L167 47"
-        stroke="white"
-        stroke-width="4"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        fill="none"/>
+  <!-- Chart -->
+  <path d="M8 40 L16 36 L26 38 L40 28" stroke="url(#chartWhite)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M36 26 L40 28 L38 32" stroke="url(#chartWhite)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>
