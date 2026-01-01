@@ -7,6 +7,7 @@ import FloatingVideoPlayer from '../components/FloatingVideoPlayer';
 import { useVideoPlayer } from '../hooks/useVideoPlayer';
 import { SectorBreakdownChart, MonthlyReturnsChart, WinRateChart } from '../components/charts';
 import { useUser } from '../contexts/UserContext';
+import PortfolioSimulator from '../components/PortfolioSimulator';
 
 function ExpertView() {
   const { name } = useParams();
@@ -360,6 +361,14 @@ function ExpertView() {
           <SectorBreakdownChart sectors={sectors} loading={chartsLoading} />
         </div>
       </div>
+
+      {/* Portfolio Simulator */}
+      {expertId && (
+        <PortfolioSimulator
+          expertId={expertId}
+          expertName={expert?.name || name}
+        />
+      )}
 
       {/* Recommendations table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

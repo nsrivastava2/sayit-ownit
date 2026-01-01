@@ -405,6 +405,32 @@ export const api = {
 
   async validateAllRecommendations() {
     return fetchApi('/admin/recommendations/validate-all', { method: 'POST' });
+  },
+
+  // ============================================
+  // Portfolio Simulation API
+  // ============================================
+
+  async runSimulation(params) {
+    return fetchApi('/simulations/run', {
+      method: 'POST',
+      body: JSON.stringify(params)
+    });
+  },
+
+  async getSimulation(id) {
+    return fetchApi(`/simulations/${id}`);
+  },
+
+  async getSimulationPreview(expertId, startDate = null, endDate = null, capital = 100000) {
+    const params = new URLSearchParams({ capital });
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    return fetchApi(`/simulations/preview/${expertId}?${params}`);
+  },
+
+  async getUserSimulations(limit = 20) {
+    return fetchApi(`/simulations/user/history?limit=${limit}`);
   }
 };
 

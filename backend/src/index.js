@@ -23,6 +23,7 @@ import authRouter from './routes/auth.js';
 import userAuthRouter from './routes/userAuth.js';
 import userRouter from './routes/user.js';
 import pricesRouter from './routes/prices.js';
+import simulationsRouter from './routes/simulations.js';
 
 // Import admin routes
 import adminExpertsRouter from './routes/admin/experts.js';
@@ -97,6 +98,7 @@ app.use('/api/shares', sharesRouter);
 app.use('/api/stocks', stocksRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/prices', pricesRouter);
+app.use('/api/simulations', simulationsRouter);
 
 // Protected Admin Routes
 app.use('/api/admin/experts', adminAuth, adminExpertsRouter);
