@@ -82,182 +82,225 @@ function ExpertView() {
         ← Back to Recommendations
       </Link>
 
-      {/* Expert header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-start gap-6">
-          {/* Profile Picture */}
-          <div className="flex-shrink-0">
-            {expert?.profile_picture_url ? (
-              <img
-                src={expert.profile_picture_url}
-                alt={expert?.name || name}
-                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-              />
-            ) : null}
-            <div className={`w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 text-3xl font-bold ${expert?.profile_picture_url ? 'hidden' : ''}`}>
-              {(expert?.name || name).charAt(0)}
+      {/* Expert Profile Card */}
+      <div className="bg-gradient-to-br from-primary-50 to-white rounded-xl shadow-lg border border-primary-100 overflow-hidden">
+        {/* Top Banner */}
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 h-20"></div>
+
+        <div className="px-6 pb-6">
+          {/* Profile Header - Overlapping the banner */}
+          <div className="flex flex-col md:flex-row gap-6 -mt-12">
+            {/* Profile Picture */}
+            <div className="flex-shrink-0">
+              {expert?.profile_picture_url ? (
+                <img
+                  src={expert.profile_picture_url}
+                  alt={expert?.name || name}
+                  className="w-28 h-28 rounded-xl object-cover border-4 border-white shadow-lg"
+                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                />
+              ) : null}
+              <div className={`w-28 h-28 bg-white rounded-xl border-4 border-white shadow-lg flex items-center justify-center text-primary-600 text-4xl font-bold ${expert?.profile_picture_url ? 'hidden' : ''}`}>
+                {(expert?.name || name).charAt(0)}
+              </div>
+            </div>
+
+            {/* Name & Badges */}
+            <div className="flex-1 pt-14 md:pt-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900">{expert?.name || name}</h1>
+                {metrics?.rank_position && (
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow">
+                    {metrics.rank_position === 1 ? '🥇' : metrics.rank_position === 2 ? '🥈' : metrics.rank_position === 3 ? '🥉' : '#'}{metrics.rank_position}
+                  </span>
+                )}
+                {expert?.profile_enriched_at && (
+                  <span className="px-2.5 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">✓ Verified Profile</span>
+                )}
+              </div>
+              <p className="text-lg text-gray-600 mt-1">{expert?.specialization || 'Stock Market Analyst'}</p>
             </div>
           </div>
 
-          {/* Name & Basic Info */}
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">{expert?.name || name}</h1>
-              {metrics?.rank_position && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-primary-100 text-primary-800">
-                  {metrics.rank_position === 1 ? '🥇' : metrics.rank_position === 2 ? '🥈' : metrics.rank_position === 3 ? '🥉' : '#'}{metrics.rank_position}
-                </span>
-              )}
-              {expert?.profile_enriched_at && (
-                <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded">✓ Verified</span>
-              )}
+          {/* Bio / Experience Summary */}
+          {(expert?.experience_summary || expert?.bio) && (
+            <div className="mt-6 p-4 bg-white rounded-lg border border-gray-100">
+              <p className="text-gray-700 leading-relaxed">{expert.experience_summary || expert.bio}</p>
             </div>
+          )}
 
-            <p className="text-gray-600 mt-1">{expert?.specialization || 'Stock Market Analyst'}</p>
-
-            {/* Experience Summary */}
-            {expert?.experience_summary && (
-              <p className="text-gray-600 mt-2 text-sm">{expert.experience_summary}</p>
-            )}
-
-            {/* Social Links */}
-            {(expert?.twitter_handle || expert?.linkedin_url || expert?.youtube_channel || expert?.website_url) && (
-              <div className="flex gap-4 mt-3">
-                {expert.twitter_handle && (
-                  <a href={`https://twitter.com/${expert.twitter_handle.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline flex items-center gap-1">
-                    <span>🐦</span> {expert.twitter_handle}
+          {/* Info Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            {/* Social Links Card */}
+            <div className="bg-white rounded-lg border border-gray-100 p-4">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Connect</h3>
+              <div className="space-y-2">
+                {expert?.twitter_handle ? (
+                  <a href={`https://twitter.com/${expert.twitter_handle.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
+                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 transition-colors">
+                    <span className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-500">𝕏</span>
+                    <span className="text-gray-700">{expert.twitter_handle}</span>
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-3 p-2 text-gray-400">
+                    <span className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">𝕏</span>
+                    <span>Twitter not available</span>
+                  </div>
+                )}
+                {expert?.linkedin_url ? (
+                  <a href={expert.linkedin_url} target="_blank" rel="noopener noreferrer"
+                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 transition-colors">
+                    <span className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">in</span>
+                    <span className="text-gray-700">LinkedIn Profile</span>
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-3 p-2 text-gray-400">
+                    <span className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 text-sm font-bold">in</span>
+                    <span>LinkedIn not available</span>
+                  </div>
+                )}
+                {expert?.youtube_channel && (
+                  <a href={expert.youtube_channel} target="_blank" rel="noopener noreferrer"
+                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-red-50 transition-colors">
+                    <span className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white">▶</span>
+                    <span className="text-gray-700">YouTube Channel</span>
                   </a>
                 )}
-                {expert.linkedin_url && (
-                  <a href={expert.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-700 hover:underline flex items-center gap-1">
-                    <span>💼</span> LinkedIn
-                  </a>
-                )}
-                {expert.youtube_channel && (
-                  <a href={expert.youtube_channel} target="_blank" rel="noopener noreferrer" className="text-sm text-red-600 hover:underline flex items-center gap-1">
-                    <span>📺</span> YouTube
-                  </a>
-                )}
-                {expert.website_url && (
-                  <a href={expert.website_url} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-600 hover:underline flex items-center gap-1">
-                    <span>🌐</span> Website
+                {expert?.website_url && (
+                  <a href={expert.website_url} target="_blank" rel="noopener noreferrer"
+                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <span className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white">🌐</span>
+                    <span className="text-gray-700">Website</span>
                   </a>
                 )}
               </div>
-            )}
-
-            {/* Current Associations & Certifications */}
-            <div className="flex flex-wrap gap-4 mt-3">
-              {expert?.current_associations?.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">Associated with:</span>
-                  {expert.current_associations.map((assoc, i) => (
-                    <span key={i} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">{assoc}</span>
-                  ))}
-                </div>
-              )}
-              {expert?.certifications?.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">Certifications:</span>
-                  {expert.certifications.map((cert, i) => (
-                    <span key={i} className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">{cert}</span>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* Education */}
-            {expert?.education && (
-              <p className="text-xs text-gray-500 mt-2">📚 {expert.education}</p>
-            )}
+            {/* Credentials Card */}
+            <div className="bg-white rounded-lg border border-gray-100 p-4">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Credentials</h3>
+              <div className="space-y-3">
+                {expert?.current_associations?.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Associated with</p>
+                    <div className="flex flex-wrap gap-1">
+                      {expert.current_associations.map((assoc, i) => (
+                        <span key={i} className="px-2.5 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">{assoc}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {expert?.certifications?.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Certifications</p>
+                    <div className="flex flex-wrap gap-1">
+                      {expert.certifications.map((cert, i) => (
+                        <span key={i} className="px-2.5 py-1 text-sm bg-green-100 text-green-800 rounded-full">{cert}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {expert?.education && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Education</p>
+                    <p className="text-sm text-gray-700">{expert.education}</p>
+                  </div>
+                )}
+                {!expert?.current_associations?.length && !expert?.certifications?.length && !expert?.education && (
+                  <p className="text-gray-400 text-sm">No credentials information available</p>
+                )}
+              </div>
+            </div>
           </div>
+
+          {/* Warnings */}
+          {expert?.warnings?.length > 0 && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm font-semibold text-red-800 mb-2">⚠️ Important Notices</p>
+              <ul className="text-sm text-red-700 space-y-1">
+                {expert.warnings.map((warning, i) => (
+                  <li key={i}>• {warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Sources */}
+          {expert?.enrichment_sources?.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <p className="text-xs text-gray-500">
+                Sources: {expert.enrichment_sources.map((src, i) => (
+                  <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline mr-2">
+                    [{i + 1}]
+                  </a>
+                ))}
+                <span className="text-gray-400 ml-2">
+                  Last updated: {new Date(expert.profile_enriched_at).toLocaleDateString()}
+                </span>
+              </p>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Warnings */}
-        {expert?.warnings?.length > 0 && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm font-medium text-red-800 mb-1">⚠️ Important Notices</p>
-            <ul className="text-sm text-red-700 space-y-1">
-              {expert.warnings.map((warning, i) => (
-                <li key={i}>• {warning}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Sources */}
-        {expert?.enrichment_sources?.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
-              Sources: {expert.enrichment_sources.map((src, i) => (
-                <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline mr-2">
-                  [{i + 1}]
-                </a>
-              ))}
-              <span className="text-gray-400 ml-2">
-                Last updated: {new Date(expert.profile_enriched_at).toLocaleDateString()}
-              </span>
-            </p>
-          </div>
-        )}
-
-        {/* Performance Metrics (if available) */}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {/* Performance Metrics */}
         {metrics && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-200">
-            <div>
-              <p className="text-sm text-gray-500">Win Rate</p>
-              <p className={`text-2xl font-bold ${
+          <>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
+              <p className="text-sm text-gray-500 mb-1">Win Rate</p>
+              <p className={`text-3xl font-bold ${
                 parseFloat(metrics.overall_win_rate) >= 70 ? 'text-green-600' :
                 parseFloat(metrics.overall_win_rate) >= 50 ? 'text-yellow-600' : 'text-red-600'
               }`}>
                 {metrics.overall_win_rate ? `${parseFloat(metrics.overall_win_rate).toFixed(1)}%` : '-'}
               </p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Avg Return</p>
-              <p className={`text-2xl font-bold ${
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
+              <p className="text-sm text-gray-500 mb-1">Avg Return</p>
+              <p className={`text-3xl font-bold ${
                 parseFloat(metrics.avg_return_pct) > 0 ? 'text-green-600' :
                 parseFloat(metrics.avg_return_pct) < 0 ? 'text-red-600' : 'text-gray-900'
               }`}>
-                {metrics.avg_return_pct ? `${parseFloat(metrics.avg_return_pct) >= 0 ? '+' : ''}${parseFloat(metrics.avg_return_pct).toFixed(2)}%` : '-'}
+                {metrics.avg_return_pct ? `${parseFloat(metrics.avg_return_pct) >= 0 ? '+' : ''}${parseFloat(metrics.avg_return_pct).toFixed(1)}%` : '-'}
               </p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Target Hits</p>
-              <p className="text-2xl font-bold text-green-600">{metrics.target_hit_count || 0}</p>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
+              <p className="text-sm text-gray-500 mb-1">Target Hits</p>
+              <p className="text-3xl font-bold text-green-600">{metrics.target_hit_count || 0}</p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">SL Hits</p>
-              <p className="text-2xl font-bold text-red-600">{metrics.sl_hit_count || 0}</p>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
+              <p className="text-sm text-gray-500 mb-1">SL Hits</p>
+              <p className="text-3xl font-bold text-red-600">{metrics.sl_hit_count || 0}</p>
             </div>
-          </div>
+          </>
         )}
 
         {/* Basic Stats */}
         {expert?.stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6 pt-6 border-t border-gray-200">
-            <div>
-              <p className="text-sm text-gray-500">Total Recommendations</p>
-              <p className="text-2xl font-bold text-gray-900">{expert.stats.totalRecommendations}</p>
+          <>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
+              <p className="text-sm text-gray-500 mb-1">Total Picks</p>
+              <p className="text-3xl font-bold text-gray-900">{expert.stats.totalRecommendations}</p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">BUY Calls</p>
-              <p className="text-2xl font-bold text-green-600">{expert.stats.buyCount}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">SELL Calls</p>
-              <p className="text-2xl font-bold text-red-600">{expert.stats.sellCount}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">HOLD Calls</p>
-              <p className="text-2xl font-bold text-yellow-600">{expert.stats.holdCount}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Avg. Confidence</p>
-              <p className="text-2xl font-bold text-gray-900">{(expert.stats.avgConfidence * 100).toFixed(0)}%</p>
-            </div>
-          </div>
+            {!metrics && (
+              <>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
+                  <p className="text-sm text-gray-500 mb-1">BUY Calls</p>
+                  <p className="text-3xl font-bold text-green-600">{expert.stats.buyCount}</p>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
+                  <p className="text-sm text-gray-500 mb-1">SELL Calls</p>
+                  <p className="text-3xl font-bold text-red-600">{expert.stats.sellCount}</p>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center">
+                  <p className="text-sm text-gray-500 mb-1">HOLD Calls</p>
+                  <p className="text-3xl font-bold text-yellow-600">{expert.stats.holdCount}</p>
+                </div>
+              </>
+            )}
+          </>
         )}
       </div>
 

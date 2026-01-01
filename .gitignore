@@ -39,3 +39,4 @@ test-regions.js
 
 # Sample/test data
 documentation/sample*.md
+backend/src/uploads/
