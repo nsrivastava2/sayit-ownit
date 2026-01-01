@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Expert Profiles - Comprehensive performance analytics and recommendation history for financial TV experts">
+    <title>Expert Profiles - SayIt OwnIt</title>
+    <link rel="stylesheet" href="../css/main.css">
+  
+  <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fsayitowni3190back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.12"></script>
+  <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2"></script>
+  </head>
+<body class="bg-background">
+    <!-- Navigation Header -->
+    <header class="bg-surface border-b border-border sticky top-0 z-navigation">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SayIt OwnIt Logo">
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0891B2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="20" cy="20" r="18" fill="url(#logoGradient)" opacity="0.1"/>
+                        <path d="M20 8C13.373 8 8 13.373 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 13.373 26.627 8 20 8ZM20 14C21.105 14 22 14.895 22 16V24C22 25.105 21.105 26 20 26C18.895 26 18 25.105 18 24V16C18 14.895 18.895 14 20 14Z" fill="url(#logoGradient)"/>
+                        <circle cx="20" cy="16" r="2" fill="#FFFFFF"/>
+                    </svg>
+                    <span class="text-xl font-heading font-bold text-primary">SayIt OwnIt</span>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="dashboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Dashboard</a>
+                    <a href="expert_profiles.html" class="px-4 py-2 rounded-md text-sm font-medium bg-primary/10 text-primary">Experts</a>
+                    <a href="expert_leaderboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Leaderboard</a>
+                    <a href="portfolio_simulator.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Simulator</a>
+                    <a href="live_portfolio_tracker.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Portfolio</a>
+                    <a href="stock_watchlist.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Watchlist</a>
+                </div>
+
+                <!-- User Profile -->
+                <div class="flex items-center gap-4">
+                    <button class="relative touch-target" aria-label="Notifications">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_147fb0931-1767277137488.png" alt="Notification bell icon" class="w-6 h-6">
+                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-error text-white text-xs rounded-full flex items-center justify-center font-medium">3</span>
+                    </button>
+                    <div class="flex items-center gap-3">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_16e7b66b9-1766496824802.png" alt="User profile avatar" class="w-10 h-10 rounded-full object-cover border-2 border-primary" onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;">
+                        <div class="hidden lg:block">
+                            <p class="text-sm font-medium text-text-primary">Rajesh Kumar</p>
+                            <p class="text-xs text-text-secondary">Pro Member</p>
+                        </div>
+                    </div>
+                    <!-- Mobile Menu Button -->
+                    <button class="md:hidden touch-target" id="mobileMenuBtn" aria-label="Toggle mobile menu">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_117a4830d-1764671721354.png" alt="Menu icon" class="w-6 h-6">
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div id="mobileMenu" class="hidden md:hidden pb-4 border-t border-border mt-2 pt-4">
+                <div class="flex flex-col gap-2">
+                    <a href="dashboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Dashboard</a>
+                    <a href="expert_profiles.html" class="px-4 py-2 rounded-md text-sm font-medium bg-primary/10 text-primary">Experts</a>
+                    <a href="expert_leaderboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Leaderboard</a>
+                    <a href="portfolio_simulator.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Simulator</a>
+                    <a href="live_portfolio_tracker.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Portfolio</a>
+                    <a href="stock_watchlist.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Watchlist</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Breadcrumb Navigation -->
+        <nav class="flex items-center gap-2 text-sm text-text-secondary mb-6" aria-label="Breadcrumb">
+            <a href="dashboard.html" class="hover:text-primary transition-colors">Dashboard</a>
+            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b2e43af8-1767004442024.png" alt="Breadcrumb separator" class="w-4 h-4">
+            <a href="expert_profiles.html" class="hover:text-primary transition-colors">Experts</a>
+            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b2e43af8-1767004442024.png" alt="Breadcrumb separator" class="w-4 h-4">
+            <span class="text-text-primary font-medium">Anil Singhvi</span>
+        </nav>
+
+        <!-- Expert Profile Header -->
+        <section class="card mb-8">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Expert Photo & Basic Info -->
+                <div class="flex flex-col sm:flex-row gap-6 lg:w-1/3">
+                    <div class="relative">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_148aa2381-1763291944113.png" alt="Anil Singhvi - Technical Analyst profile photo" class="w-32 h-32 rounded-xl object-cover border-4 border-secondary shadow-md" onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;">
+                        <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-success rounded-full border-4 border-surface flex items-center justify-center">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1f5e1da58-1767074237760.png" alt="Verified expert badge" class="w-5 h-5">
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <h1 class="text-3xl font-heading font-bold text-text-primary mb-2">Anil Singhvi</h1>
+                        <p class="text-text-secondary mb-4">Technical Analyst & Market Strategist</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="badge bg-primary-100 text-primary-700">Technical Analysis</span>
+                            <span class="badge bg-secondary-100 text-secondary-700">Intraday Trading</span>
+                            <span class="badge bg-accent-100 text-accent-700">Swing Trading</span>
+                        </div>
+                        <!-- Social Links -->
+                        <div class="flex items-center gap-3">
+                            <a href="javascript:void(0)" class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors" aria-label="Twitter profile">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_10f514364-1767277138884.png" alt="Twitter icon" class="w-5 h-5">
+                            </a>
+                            <a href="javascript:void(0)" class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors" aria-label="LinkedIn profile">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1af6dabac-1767277133734.png" alt="LinkedIn icon" class="w-5 h-5">
+                            </a>
+                            <a href="javascript:void(0)" class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors" aria-label="YouTube channel">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1681d2d7a-1767277137318.png" alt="YouTube icon" class="w-5 h-5">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="p-4 rounded-lg bg-success/5 border border-success/20">
+                        <div class="flex items-center gap-2 mb-2">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_143365b28-1767277134429.png" alt="Trophy icon" class="w-5 h-5">
+                            <p class="text-xs text-text-secondary">Win Rate</p>
+                        </div>
+                        <p class="text-2xl font-bold text-success data-value">78.5%</p>
+                        <p class="text-xs text-text-tertiary mt-1">156 of 199 wins</p>
+                    </div>
+
+                    <div class="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                        <div class="flex items-center gap-2 mb-2">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_129361b2f-1767125748084.png" alt="Trending up icon" class="w-5 h-5">
+                            <p class="text-xs text-text-secondary">Avg Return</p>
+                        </div>
+                        <p class="text-2xl font-bold text-primary data-value">+24.5%</p>
+                        <p class="text-xs text-text-tertiary mt-1">Per recommendation</p>
+                    </div>
+
+                    <div class="p-4 rounded-lg bg-secondary/5 border border-secondary/20">
+                        <div class="flex items-center gap-2 mb-2">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1d794a921-1767008749737.png" alt="Chart line icon" class="w-5 h-5">
+                            <p class="text-xs text-text-secondary">Total Calls</p>
+                        </div>
+                        <p class="text-2xl font-bold text-secondary data-value">199</p>
+                        <p class="text-xs text-text-tertiary mt-1">Since Jan 2024</p>
+                    </div>
+
+                    <div class="p-4 rounded-lg bg-accent/5 border border-accent/20">
+                        <div class="flex items-center gap-2 mb-2">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_162cfe286-1766199602828.png" alt="Followers icon" class="w-5 h-5">
+                            <p class="text-xs text-text-secondary">Followers</p>
+                        </div>
+                        <p class="text-2xl font-bold text-accent data-value">12,458</p>
+                        <p class="text-xs text-text-tertiary mt-1">Active users</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expert Bio & Follow Button -->
+            <div class="mt-8 pt-8 border-t border-border">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-heading font-bold text-text-primary mb-3">About the Expert</h3>
+                        <p class="text-text-secondary leading-relaxed">
+                            Anil Singhvi is a renowned technical analyst with over 20 years of experience in Indian stock markets. Known for his accurate intraday and swing trading calls, he specializes in chart pattern analysis and momentum trading strategies. His recommendations are featured regularly on Zee Business and have helped thousands of retail investors achieve consistent returns.
+                        </p>
+                    </div>
+                    <div class="flex flex-col gap-3 sm:ml-6">
+                        <button id="followBtn" class="btn btn-primary whitespace-nowrap">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_172dbc958-1766945065418.png" alt="Follow icon" class="w-5 h-5 mr-2">
+                            Follow Expert
+                        </button>
+                        <p class="text-xs text-text-secondary text-center">
+                            <span class="font-semibold text-primary data-value">3 of 5</span> follows used
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Performance Charts Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Accuracy Trend Chart -->
+            <div class="card">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-heading font-bold text-text-primary">Accuracy Trend</h3>
+                    <div class="flex items-center gap-2">
+                        <button class="px-3 py-1.5 text-sm rounded-md bg-primary text-primary-foreground font-medium">6M</button>
+                        <button class="px-3 py-1.5 text-sm rounded-md text-text-secondary hover:bg-surface-elevated transition-colors">1Y</button>
+                        <button class="px-3 py-1.5 text-sm rounded-md text-text-secondary hover:bg-surface-elevated transition-colors">All</button>
+                    </div>
+                </div>
+                <div class="relative h-64" role="img" aria-label="Line chart showing expert accuracy trend over 6 months">
+                    <svg width="100%" height="100%" viewBox="0 0 600 256" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="accuracyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:0.3" />
+                                <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:0.05" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Grid Lines -->
+                        <line x1="0" y1="51" x2="600" y2="51" stroke="#E2E8F0" stroke-width="1"/>
+                        <line x1="0" y1="102" x2="600" y2="102" stroke="#E2E8F0" stroke-width="1"/>
+                        <line x1="0" y1="153" x2="600" y2="153" stroke="#E2E8F0" stroke-width="1"/>
+                        <line x1="0" y1="204" x2="600" y2="204" stroke="#E2E8F0" stroke-width="1"/>
+                        <!-- Area Fill -->
+                        <path d="M 0 180 L 100 160 L 200 140 L 300 120 L 400 100 L 500 90 L 600 80 L 600 256 L 0 256 Z" fill="url(#accuracyGradient)"/>
+                        <!-- Line -->
+                        <path d="M 0 180 L 100 160 L 200 140 L 300 120 L 400 100 L 500 90 L 600 80" stroke="#1E40AF" stroke-width="3" fill="none"/>
+                        <!-- Data Points -->
+                        <circle cx="0" cy="180" r="4" fill="#1E40AF"/>
+                        <circle cx="100" cy="160" r="4" fill="#1E40AF"/>
+                        <circle cx="200" cy="140" r="4" fill="#1E40AF"/>
+                        <circle cx="300" cy="120" r="4" fill="#1E40AF"/>
+                        <circle cx="400" cy="100" r="4" fill="#1E40AF"/>
+                        <circle cx="500" cy="90" r="4" fill="#1E40AF"/>
+                        <circle cx="600" cy="80" r="4" fill="#1E40AF"/>
+                    </svg>
+                    <!-- X-axis Labels -->
+                    <div class="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-text-tertiary px-2">
+                        <span>Aug</span>
+                        <span>Sep</span>
+                        <span>Oct</span>
+                        <span>Nov</span>
+                        <span>Dec</span>
+                        <span>Jan</span>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-text-secondary">Current Win Rate</p>
+                        <p class="text-lg font-bold text-success data-value">78.5%</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-text-secondary">Trend</p>
+                        <p class="text-lg font-bold text-success">+5.2%</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sector-wise Performance -->
+            <div class="card">
+                <h3 class="text-xl font-heading font-bold text-text-primary mb-6">Sector-wise Success Rate</h3>
+                <div class="space-y-4">
+                    <!-- IT Sector -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-text-primary">IT & Technology</span>
+                            <span class="text-sm font-bold text-success data-value">85%</span>
+                        </div>
+                        <div class="w-full h-2 bg-border rounded-full overflow-hidden">
+                            <div class="h-full bg-success rounded-full" style="width: 85%"></div>
+                        </div>
+                        <p class="text-xs text-text-tertiary mt-1">34 recommendations</p>
+                    </div>
+
+                    <!-- Banking Sector -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-text-primary">Banking & Finance</span>
+                            <span class="text-sm font-bold text-success data-value">78%</span>
+                        </div>
+                        <div class="w-full h-2 bg-border rounded-full overflow-hidden">
+                            <div class="h-full bg-success rounded-full" style="width: 78%"></div>
+                        </div>
+                        <p class="text-xs text-text-tertiary mt-1">45 recommendations</p>
+                    </div>
+
+                    <!-- Pharma Sector -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-text-primary">Pharmaceuticals</span>
+                            <span class="text-sm font-bold text-success data-value">72%</span>
+                        </div>
+                        <div class="w-full h-2 bg-border rounded-full overflow-hidden">
+                            <div class="h-full bg-success rounded-full" style="width: 72%"></div>
+                        </div>
+                        <p class="text-xs text-text-tertiary mt-1">28 recommendations</p>
+                    </div>
+
+                    <!-- Auto Sector -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-text-primary">Automobile</span>
+                            <span class="text-sm font-bold text-warning data-value">68%</span>
+                        </div>
+                        <div class="w-full h-2 bg-border rounded-full overflow-hidden">
+                            <div class="h-full bg-warning rounded-full" style="width: 68%"></div>
+                        </div>
+                        <p class="text-xs text-text-tertiary mt-1">22 recommendations</p>
+                    </div>
+
+                    <!-- Energy Sector -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-text-primary">Energy & Power</span>
+                            <span class="text-sm font-bold text-success data-value">81%</span>
+                        </div>
+                        <div class="w-full h-2 bg-border rounded-full overflow-hidden">
+                            <div class="h-full bg-success rounded-full" style="width: 81%"></div>
+                        </div>
+                        <p class="text-xs text-text-tertiary mt-1">31 recommendations</p>
+                    </div>
+
+                    <!-- FMCG Sector -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-text-primary">FMCG</span>
+                            <span class="text-sm font-bold text-warning data-value">65%</span>
+                        </div>
+                        <div class="w-full h-2 bg-border rounded-full overflow-hidden">
+                            <div class="h-full bg-warning rounded-full" style="width: 65%"></div>
+                        </div>
+                        <p class="text-xs text-text-tertiary mt-1">19 recommendations</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recommendations History Section -->
+        <section class="card">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-2xl font-heading font-bold text-text-primary mb-2">Recommendation History</h2>
+                    <p class="text-text-secondary">Complete track record with verified outcomes</p>
+                </div>
+                <button class="btn btn-outline" id="exportBtn">
+                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_146cfa0c8-1764649038136.png" alt="Download icon" class="w-5 h-5 mr-2">
+                    Export CSV
+                </button>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div class="mb-6 p-6 rounded-lg bg-surface-elevated border border-border">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-heading font-bold text-text-primary">Advanced Filters</h3>
+                    <button id="resetFilters" class="text-sm text-primary font-medium hover:text-primary-700 inline-flex items-center gap-1">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1aeddefea-1767123354722.png" alt="Reset icon" class="w-4 h-4">
+                        Reset
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Date Range Filter -->
+                    <div>
+                        <label class="label">Date Range</label>
+                        <select class="input w-full" id="dateFilter">
+                            <option value="all">All Time</option>
+                            <option value="1m">Last Month</option>
+                            <option value="3m">Last 3 Months</option>
+                            <option value="6m" selected>Last 6 Months</option>
+                            <option value="1y">Last Year</option>
+                        </select>
+                    </div>
+
+                    <!-- Sector Filter -->
+                    <div>
+                        <label class="label">Sector</label>
+                        <select class="input w-full" id="sectorFilter">
+                            <option value="all">All Sectors</option>
+                            <option value="it">IT & Technology</option>
+                            <option value="banking">Banking & Finance</option>
+                            <option value="pharma">Pharmaceuticals</option>
+                            <option value="auto">Automobile</option>
+                            <option value="energy">Energy & Power</option>
+                            <option value="fmcg">FMCG</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Type Filter -->
+                    <div>
+                        <label class="label">Action Type</label>
+                        <select class="input w-full" id="actionFilter">
+                            <option value="all">All Actions</option>
+                            <option value="buy">Buy</option>
+                            <option value="sell">Sell</option>
+                            <option value="hold">Hold</option>
+                        </select>
+                    </div>
+
+                    <!-- Outcome Filter -->
+                    <div>
+                        <label class="label">Outcome</label>
+                        <select class="input w-full" id="outcomeFilter">
+                            <option value="all">All Outcomes</option>
+                            <option value="target">Target Hit</option>
+                            <option value="stoploss">Stop Loss Hit</option>
+                            <option value="active">Active</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desktop Table View -->
+            <div class="hidden lg:block overflow-x-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="w-32">Date</th>
+                            <th class="w-32">Stock</th>
+                            <th class="w-24">Action</th>
+                            <th class="w-28">Entry Price</th>
+                            <th class="w-28">Target</th>
+                            <th class="w-28">Stop Loss</th>
+                            <th class="w-28">Exit Price</th>
+                            <th class="w-24">Return</th>
+                            <th class="w-32">Outcome</th>
+                            <th class="w-32">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recommendationsTable">
+                        <!-- Recommendation 1 -->
+                        <tr>
+                            <td class="text-sm text-text-secondary">28 Dec 2025</td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-text-primary">RELIANCE</span>
+                                    <span class="badge bg-secondary-100 text-secondary-700 text-xs">Energy</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-success">BUY</span></td>
+                            <td class="font-mono text-text-primary data-value">₹2,745</td>
+                            <td class="font-mono text-success data-value">₹2,850</td>
+                            <td class="font-mono text-error data-value">₹2,620</td>
+                            <td class="font-mono text-text-primary data-value">₹2,798</td>
+                            <td class="font-mono text-success data-value">+1.9%</td>
+                            <td><span class="badge badge-success">Target Hit</span></td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Watch video">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Add to watchlist">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Simulate trade">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_17b9a80ad-1766846720017.png" alt="Calculator icon" class="w-5 h-5">
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Recommendation 2 -->
+                        <tr>
+                            <td class="text-sm text-text-secondary">26 Dec 2025</td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-text-primary">TCS</span>
+                                    <span class="badge bg-primary-100 text-primary-700 text-xs">IT</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-success">BUY</span></td>
+                            <td class="font-mono text-text-primary data-value">₹3,985</td>
+                            <td class="font-mono text-success data-value">₹4,200</td>
+                            <td class="font-mono text-error data-value">₹3,850</td>
+                            <td class="font-mono text-text-primary data-value">₹4,012</td>
+                            <td class="font-mono text-success data-value">+0.7%</td>
+                            <td><span class="badge bg-warning-100 text-warning-700">Active</span></td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Watch video">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Add to watchlist">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Simulate trade">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_17b9a80ad-1766846720017.png" alt="Calculator icon" class="w-5 h-5">
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Recommendation 3 -->
+                        <tr>
+                            <td class="text-sm text-text-secondary">24 Dec 2025</td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-text-primary">HDFC BANK</span>
+                                    <span class="badge bg-accent-100 text-accent-700 text-xs">Banking</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-success">BUY</span></td>
+                            <td class="font-mono text-text-primary data-value">₹1,645</td>
+                            <td class="font-mono text-success data-value">₹1,750</td>
+                            <td class="font-mono text-error data-value">₹1,580</td>
+                            <td class="font-mono text-text-primary data-value">₹1,728</td>
+                            <td class="font-mono text-success data-value">+5.0%</td>
+                            <td><span class="badge badge-success">Target Hit</span></td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Watch video">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Add to watchlist">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Simulate trade">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_17b9a80ad-1766846720017.png" alt="Calculator icon" class="w-5 h-5">
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Recommendation 4 -->
+                        <tr>
+                            <td class="text-sm text-text-secondary">22 Dec 2025</td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-text-primary">INFY</span>
+                                    <span class="badge bg-primary-100 text-primary-700 text-xs">IT</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-error">SELL</span></td>
+                            <td class="font-mono text-text-primary data-value">₹1,598</td>
+                            <td class="font-mono text-success data-value">₹1,520</td>
+                            <td class="font-mono text-error data-value">₹1,650</td>
+                            <td class="font-mono text-text-primary data-value">₹1,542</td>
+                            <td class="font-mono text-success data-value">+3.5%</td>
+                            <td><span class="badge badge-success">Target Hit</span></td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Watch video">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Add to watchlist">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Simulate trade">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_17b9a80ad-1766846720017.png" alt="Calculator icon" class="w-5 h-5">
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Recommendation 5 -->
+                        <tr>
+                            <td class="text-sm text-text-secondary">20 Dec 2025</td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-text-primary">MARUTI</span>
+                                    <span class="badge bg-success-100 text-success-700 text-xs">Auto</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-success">BUY</span></td>
+                            <td class="font-mono text-text-primary data-value">₹12,450</td>
+                            <td class="font-mono text-success data-value">₹13,200</td>
+                            <td class="font-mono text-error data-value">₹12,100</td>
+                            <td class="font-mono text-text-primary data-value">₹12,085</td>
+                            <td class="font-mono text-error data-value">-2.9%</td>
+                            <td><span class="badge badge-error">Stop Loss Hit</span></td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Watch video">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Add to watchlist">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Simulate trade">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_17b9a80ad-1766846720017.png" alt="Calculator icon" class="w-5 h-5">
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Recommendation 6 -->
+                        <tr>
+                            <td class="text-sm text-text-secondary">18 Dec 2025</td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-text-primary">SUNPHARMA</span>
+                                    <span class="badge bg-error-100 text-error-700 text-xs">Pharma</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-success">BUY</span></td>
+                            <td class="font-mono text-text-primary data-value">₹1,485</td>
+                            <td class="font-mono text-success data-value">₹1,580</td>
+                            <td class="font-mono text-error data-value">₹1,420</td>
+                            <td class="font-mono text-text-primary data-value">₹1,562</td>
+                            <td class="font-mono text-success data-value">+5.2%</td>
+                            <td><span class="badge badge-success">Target Hit</span></td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Watch video">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Add to watchlist">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-5 h-5">
+                                    </button>
+                                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Simulate trade">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_17b9a80ad-1766846720017.png" alt="Calculator icon" class="w-5 h-5">
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Card View -->
+            <div class="lg:hidden space-y-4" id="mobileRecommendations">
+                <!-- Mobile Card 1 -->
+                <div class="p-4 rounded-lg border border-border bg-surface-elevated">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-bold text-text-primary">RELIANCE</span>
+                                <span class="badge badge-success text-xs">BUY</span>
+                            </div>
+                            <span class="badge bg-secondary-100 text-secondary-700 text-xs">Energy</span>
+                        </div>
+                        <span class="text-xs text-text-secondary">28 Dec 2025</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <p class="text-xs text-text-secondary">Entry</p>
+                            <p class="font-mono font-semibold text-text-primary data-value">₹2,745</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary">Exit</p>
+                            <p class="font-mono font-semibold text-text-primary data-value">₹2,798</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary">Target</p>
+                            <p class="font-mono font-semibold text-success data-value">₹2,850</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary">Return</p>
+                            <p class="font-mono font-semibold text-success data-value">+1.9%</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-3 border-t border-border">
+                        <span class="badge badge-success">Target Hit</span>
+                        <div class="flex items-center gap-2">
+                            <button class="touch-target p-2 hover:bg-surface rounded-md transition-colors" aria-label="Watch video">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-5 h-5">
+                            </button>
+                            <button class="touch-target p-2 hover:bg-surface rounded-md transition-colors" aria-label="Add to watchlist">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-5 h-5">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Card 2 -->
+                <div class="p-4 rounded-lg border border-border bg-surface-elevated">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-bold text-text-primary">TCS</span>
+                                <span class="badge badge-success text-xs">BUY</span>
+                            </div>
+                            <span class="badge bg-primary-100 text-primary-700 text-xs">IT</span>
+                        </div>
+                        <span class="text-xs text-text-secondary">26 Dec 2025</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <p class="text-xs text-text-secondary">Entry</p>
+                            <p class="font-mono font-semibold text-text-primary data-value">₹3,985</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary">Current</p>
+                            <p class="font-mono font-semibold text-text-primary data-value">₹4,012</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary">Target</p>
+                            <p class="font-mono font-semibold text-success data-value">₹4,200</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary">Return</p>
+                            <p class="font-mono font-semibold text-success data-value">+0.7%</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-3 border-t border-border">
+                        <span class="badge bg-warning-100 text-warning-700">Active</span>
+                        <div class="flex items-center gap-2">
+                            <button class="touch-target p-2 hover:bg-surface rounded-md transition-colors" aria-label="Watch video">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-5 h-5">
+                            </button>
+                            <button class="touch-target p-2 hover:bg-surface rounded-md transition-colors" aria-label="Add to watchlist">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-5 h-5">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Card 3 -->
+                <div class="p-4 rounded-lg border border-border bg-surface-elevated">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-bold text-text-primary">HDFC BANK</span>
+                                <span class="badge badge-success text-xs">BUY</span>
+                            </div>
+                            <span class="badge bg-accent-100 text-accent-700 text-xs">Banking</span>
+                        </div>
+                        <span class="text-xs text-text-secondary">24 Dec 2025</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <p class="text-xs text-text-secondary">Entry</p>
+                            <p class="font-mono font-semibold text-text-primary data-value">₹1,645</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary">Exit</p>
+                            <p class="font-mono font-semibold text-text-primary data-value">₹1,728</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary">Target</p>
+                            <p class="font-mono font-semibold text-success data-value">₹1,750</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary">Return</p>
+                            <p class="font-mono font-semibold text-success data-value">+5.0%</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-3 border-t border-border">
+                        <span class="badge badge-success">Target Hit</span>
+                        <div class="flex items-center gap-2">
+                            <button class="touch-target p-2 hover:bg-surface rounded-md transition-colors" aria-label="Watch video">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-5 h-5">
+                            </button>
+                            <button class="touch-target p-2 hover:bg-surface rounded-md transition-colors" aria-label="Add to watchlist">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-5 h-5">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex items-center justify-between mt-6 pt-6 border-t border-border">
+                <p class="text-sm text-text-secondary">Showing <span class="font-semibold text-text-primary">1-6</span> of <span class="font-semibold text-text-primary">199</span> recommendations</p>
+                <div class="flex items-center gap-2">
+                    <button class="touch-target p-2 rounded-md border border-border hover:bg-surface-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled aria-label="Previous page">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12a800bef-1765225109277.png" alt="Previous icon" class="w-5 h-5">
+                    </button>
+                    <button class="touch-target px-4 py-2 rounded-md bg-primary text-primary-foreground font-medium">1</button>
+                    <button class="touch-target px-4 py-2 rounded-md text-text-secondary hover:bg-surface-elevated transition-colors">2</button>
+                    <button class="touch-target px-4 py-2 rounded-md text-text-secondary hover:bg-surface-elevated transition-colors">3</button>
+                    <span class="px-2 text-text-tertiary">...</span>
+                    <button class="touch-target px-4 py-2 rounded-md text-text-secondary hover:bg-surface-elevated transition-colors">34</button>
+                    <button class="touch-target p-2 rounded-md border border-border hover:bg-surface-elevated transition-colors" aria-label="Next page">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_125f820bf-1766427641023.png" alt="Next icon" class="w-5 h-5">
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions Section -->
+        <section class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <a href="portfolio_simulator.html" class="card hover:shadow-lg transition-all">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_17b9a80ad-1766846720017.png" alt="Calculator icon" class="w-6 h-6">
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-text-primary mb-2">Simulate Portfolio</h3>
+                        <p class="text-sm text-text-secondary">Test this expert's recommendations with virtual capital</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="stock_watchlist.html" class="card hover:shadow-lg transition-all">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-6 h-6">
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-text-primary mb-2">Create Watchlist</h3>
+                        <p class="text-sm text-text-secondary">Track stocks from this expert's recommendations</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="expert_leaderboard.html" class="card hover:shadow-lg transition-all">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_143365b28-1767277134429.png" alt="Trophy icon" class="w-6 h-6">
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-text-primary mb-2">Compare Experts</h3>
+                        <p class="text-sm text-text-secondary">See how this expert ranks against others</p>
+                    </div>
+                </div>
+            </a>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface border-t border-border mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SayIt OwnIt Logo">
+                        <defs>
+                            <linearGradient id="footerLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0891B2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="20" cy="20" r="18" fill="url(#footerLogoGradient)" opacity="0.1"/>
+                        <path d="M20 8C13.373 8 8 13.373 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 13.373 26.627 8 20 8ZM20 14C21.105 14 22 14.895 22 16V24C22 25.105 21.105 26 20 26C18.895 26 18 25.105 18 24V16C18 14.895 18.895 14 20 14Z" fill="url(#footerLogoGradient)"/>
+                        <circle cx="20" cy="16" r="2" fill="#FFFFFF"/>
+                    </svg>
+                    <span class="font-heading font-bold text-primary">SayIt OwnIt</span>
+                </div>
+                <p class="text-sm text-text-secondary">© 2026 SayIt OwnIt. All Rights Reserved.</p>
+                <div class="flex items-center gap-4">
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Privacy</a>
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Terms</a>
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Follow button toggle
+        const followBtn = document.getElementById('followBtn');
+        let isFollowing = false;
+
+        followBtn.addEventListener('click', () => {
+            isFollowing = !isFollowing;
+            if (isFollowing) {
+                followBtn.innerHTML = `
+                    <img src="https://api.iconify.design/mdi/check.svg?color=%23FFFFFF" alt="Following icon" class="w-5 h-5 mr-2">
+                    Following
+                `;
+                followBtn.classList.remove('btn-primary');
+                followBtn.classList.add('btn-secondary');
+            } else {
+                followBtn.innerHTML = `
+                    <img src="https://api.iconify.design/mdi/account-plus.svg?color=%23FFFFFF" alt="Follow icon" class="w-5 h-5 mr-2">
+                    Follow Expert
+                `;
+                followBtn.classList.remove('btn-secondary');
+                followBtn.classList.add('btn-primary');
+            }
+        });
+
+        // Filter functionality
+        const dateFilter = document.getElementById('dateFilter');
+        const sectorFilter = document.getElementById('sectorFilter');
+        const actionFilter = document.getElementById('actionFilter');
+        const outcomeFilter = document.getElementById('outcomeFilter');
+        const resetFilters = document.getElementById('resetFilters');
+
+        function applyFilters() {
+            // In a real application, this would filter the table data
+            console.log('Filters applied:', {
+                date: dateFilter.value,
+                sector: sectorFilter.value,
+                action: actionFilter.value,
+                outcome: outcomeFilter.value
+            });
+        }
+
+        dateFilter.addEventListener('change', applyFilters);
+        sectorFilter.addEventListener('change', applyFilters);
+        actionFilter.addEventListener('change', applyFilters);
+        outcomeFilter.addEventListener('change', applyFilters);
+
+        resetFilters.addEventListener('click', () => {
+            dateFilter.value = '6m';
+            sectorFilter.value = 'all';
+            actionFilter.value = 'all';
+            outcomeFilter.value = 'all';
+            applyFilters();
+        });
+
+        // CSV Export functionality
+        const exportBtn = document.getElementById('exportBtn');
+
+        exportBtn.addEventListener('click', () => {
+            // Mock CSV data
+            const csvContent = `Date,Stock,Action,Entry Price,Target,Stop Loss,Exit Price,Return,Outcome
+28 Dec 2025,RELIANCE,BUY,₹2745,₹2850,₹2620,₹2798,+1.9%,Target Hit
+26 Dec 2025,TCS,BUY,₹3985,₹4200,₹3850,₹4012,+0.7%,Active
+24 Dec 2025,HDFC BANK,BUY,₹1645,₹1750,₹1580,₹1728,+5.0%,Target Hit
+22 Dec 2025,INFY,SELL,₹1598,₹1520,₹1650,₹1542,+3.5%,Target Hit
+20 Dec 2025,MARUTI,BUY,₹12450,₹13200,₹12100,₹12085,-2.9%,Stop Loss Hit
+18 Dec 2025,SUNPHARMA,BUY,₹1485,₹1580,₹1420,₹1562,+5.2%,Target Hit`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'anil_singhvi_recommendations.csv');
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Simulate real-time price updates for active positions
+        function updateActivePrices() {
+            const activeRows = document.querySelectorAll('tbody tr');
+            activeRows.forEach(row => {
+                const outcomeCell = row.querySelector('td:nth-child(9) .badge');
+                if (outcomeCell && outcomeCell.textContent.includes('Active')) {
+                    // Add subtle animation to indicate live data
+                    const exitPriceCell = row.querySelector('td:nth-child(7)');
+                    if (exitPriceCell) {
+                        exitPriceCell.style.transition = 'color 0.3s ease';
+                    }
+                }
+            });
+        }
+
+        // Update active prices every 30 seconds
+        setInterval(updateActivePrices, 30000);
+    </script>
+<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
+</body>
+</html>

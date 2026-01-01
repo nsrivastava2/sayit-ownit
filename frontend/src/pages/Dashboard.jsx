@@ -4,87 +4,184 @@ import api from '../services/api';
 import FloatingVideoPlayer from '../components/FloatingVideoPlayer';
 import { useVideoPlayer } from '../hooks/useVideoPlayer';
 
-function StatCard({ title, value, icon, color = 'primary' }) {
-  const colors = {
-    primary: 'bg-primary-100 text-primary-700',
-    green: 'bg-green-100 text-green-700',
-    yellow: 'bg-yellow-100 text-yellow-700',
-    red: 'bg-red-100 text-red-700',
-    purple: 'bg-purple-100 text-purple-700'
-  };
+// Icon components for stat cards
+const VideoIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+  </svg>
+);
 
+const LightbulbIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+  </svg>
+);
+
+const UserIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  </svg>
+);
+
+const ChartIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+  </svg>
+);
+
+const ArrowRightIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+  </svg>
+);
+
+const PlayIcon = () => (
+  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M8 5v14l11-7z" />
+  </svg>
+);
+
+function StatCard({ title, value, icon: Icon, colorClass, badgeText, link, linkText }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
+    <div className="card stagger-item">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`stat-card-icon ${colorClass}`}>
+          <Icon />
         </div>
-        <div className={`p-3 rounded-lg ${colors[color]}`}>
-          <span className="text-2xl">{icon}</span>
-        </div>
+        {badgeText && (
+          <span className="badge badge-primary">{badgeText}</span>
+        )}
       </div>
+      <h3 className="stat-card-value mb-1">{value}</h3>
+      <p className="stat-card-label mb-3">{title}</p>
+      {link && (
+        <Link
+          to={link}
+          className="text-sm text-primary font-medium hover:text-primary-700 inline-flex items-center gap-1"
+        >
+          {linkText}
+          <ArrowRightIcon />
+        </Link>
+      )}
     </div>
   );
 }
 
-function RecommendationRow({ rec, onPlayVideo }) {
-  const actionColors = {
-    BUY: 'bg-green-100 text-green-800',
-    SELL: 'bg-red-100 text-red-800',
-    HOLD: 'bg-yellow-100 text-yellow-800'
-  };
-
+function RecommendationCard({ rec, onPlayVideo }) {
   const hasVideo = rec.videos?.youtube_url;
+  const actionBadgeClass = {
+    BUY: 'badge-success',
+    SELL: 'badge-error',
+    HOLD: 'badge-warning'
+  }[rec.action] || 'badge-secondary';
 
   return (
-    <tr className="hover:bg-gray-50">
-      <td className="px-4 py-3 text-sm text-gray-900">{rec.recommendation_date}</td>
-      <td className="px-4 py-3">
+    <article className="card">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center">
+            <span className="text-secondary font-bold">{rec.expert_name?.charAt(0) || '?'}</span>
+          </div>
+          <div>
+            <Link
+              to={`/experts/${encodeURIComponent(rec.expert_name)}`}
+              className="font-semibold text-text-primary hover:text-primary"
+            >
+              {rec.expert_name}
+            </Link>
+            <p className="text-xs text-text-secondary">{rec.recommendation_date}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4 mb-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Link
+              to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
+              className="text-lg font-bold text-text-primary hover:text-primary"
+            >
+              {rec.share_name}
+            </Link>
+            <span className={`badge ${actionBadgeClass}`}>{rec.action}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-text-secondary">Target</p>
+              <p className="font-semibold text-success data-value">
+                {rec.target_price ? `₹${rec.target_price}` : '-'}
+              </p>
+            </div>
+            <div>
+              <p className="text-text-secondary">Stop Loss</p>
+              <p className="font-semibold text-error data-value">
+                {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between pt-4 border-t border-border">
         <Link
           to={`/experts/${encodeURIComponent(rec.expert_name)}`}
-          className="text-sm font-medium text-primary-600 hover:text-primary-800"
+          className="text-sm text-primary font-medium hover:text-primary-700 inline-flex items-center gap-1"
         >
-          {rec.expert_name}
+          <UserIcon />
+          View expert
         </Link>
-      </td>
-      <td className="px-4 py-3">
-        <Link
-          to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
-          className="text-sm font-medium text-gray-900"
-        >
-          {rec.share_name}
-          {rec.nse_symbol && (
-            <span className="text-xs text-gray-500 ml-1">({rec.nse_symbol})</span>
-          )}
-        </Link>
-      </td>
-      <td className="px-4 py-3">
-        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${actionColors[rec.action]}`}>
-          {rec.action}
-        </span>
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-600">
-        {rec.target_price ? `₹${rec.target_price}` : '-'}
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-600">
-        {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
-      </td>
-      <td className="px-4 py-3">
         {hasVideo ? (
           <button
             onClick={() => onPlayVideo(rec.videos.youtube_url, rec.timestamp_in_video, rec.videos.title)}
-            className="text-sm text-primary-600 hover:text-primary-800 flex items-center"
-            title={rec.videos?.title}
+            className="text-sm text-secondary font-medium hover:text-secondary-700 inline-flex items-center gap-1"
           >
-            <span className="mr-1">▶</span>
-            Video
+            <PlayIcon />
+            Watch video
           </button>
         ) : (
-          <span className="text-sm text-gray-400">-</span>
+          <span className="text-sm text-text-tertiary">No video</span>
         )}
-      </td>
-    </tr>
+      </div>
+    </article>
+  );
+}
+
+function ExpertListItem({ expert, rank }) {
+  return (
+    <Link
+      to={`/experts/${encodeURIComponent(expert.name)}`}
+      className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors"
+    >
+      <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center border-2 border-success">
+        <span className="text-success font-bold text-sm">{rank}</span>
+      </div>
+      <div className="flex-1">
+        <p className="font-semibold text-text-primary text-sm">{expert.name}</p>
+        <p className="text-xs text-text-secondary">{expert.count} picks</p>
+      </div>
+      <ArrowRightIcon />
+    </Link>
+  );
+}
+
+function StockListItem({ share, rank }) {
+  return (
+    <Link
+      to={`/shares/${encodeURIComponent(share.symbol || share.name)}`}
+      className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors"
+    >
+      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary">
+        <span className="text-primary font-bold text-sm">{rank}</span>
+      </div>
+      <div className="flex-1">
+        <p className="font-semibold text-text-primary text-sm">
+          {share.name}
+          {share.symbol && <span className="text-text-tertiary ml-1">({share.symbol})</span>}
+        </p>
+        <p className="text-xs text-text-secondary">{share.count} mentions</p>
+      </div>
+      <ArrowRightIcon />
+    </Link>
   );
 }
 
@@ -113,18 +210,18 @@ function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-700">Error loading dashboard: {error}</p>
+      <div className="card bg-error/5 border-error/20">
+        <p className="text-error font-medium">Error loading dashboard: {error}</p>
         <button
           onClick={loadStats}
-          className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+          className="mt-3 btn btn-sm btn-outline"
         >
           Try again
         </button>
@@ -134,197 +231,192 @@ function Dashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 mt-1">
-            Track stock recommendations from Indian financial TV
-          </p>
+      {/* Welcome Section */}
+      <section className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-heading font-bold text-text-primary mb-2">
+              Dashboard
+            </h1>
+            <p className="text-text-secondary">
+              Track stock recommendations from Indian financial TV
+            </p>
+          </div>
+          <Link to="/add" className="btn btn-primary">
+            Add Video
+          </Link>
         </div>
-        <Link
-          to="/add"
-          className="inline-flex items-center px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
-        >
-          <span className="mr-2">➕</span>
-          Add Video
-        </Link>
-      </div>
+      </section>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Quick Stats Cards */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatCard
           title="Videos Processed"
           value={stats?.overview?.completedVideos || 0}
-          icon="🎬"
-          color="primary"
+          icon={VideoIcon}
+          colorClass="bg-primary/10 text-primary"
+          link="/recommendations"
+          linkText="View all"
         />
         <StatCard
           title="Recommendations"
           value={stats?.overview?.totalRecommendations || 0}
-          icon="📋"
-          color="green"
+          icon={LightbulbIcon}
+          colorClass="bg-secondary/10 text-secondary"
+          badgeText="Total"
+          link="/recommendations"
+          linkText="View all"
         />
         <StatCard
           title="Unique Experts"
           value={stats?.overview?.uniqueExperts || 0}
-          icon="👤"
-          color="purple"
+          icon={UserIcon}
+          colorClass="bg-accent/10 text-accent-700"
+          link="/leaderboard"
+          linkText="Leaderboard"
         />
         <StatCard
           title="Stocks Tracked"
           value={stats?.overview?.uniqueShares || 0}
-          icon="📈"
-          color="yellow"
+          icon={ChartIcon}
+          colorClass="bg-success/10 text-success"
+          link="/recommendations"
+          linkText="View stocks"
         />
-      </div>
+      </section>
 
-      {/* Action breakdown */}
+      {/* Action Breakdown */}
       {stats?.actionBreakdown && Object.keys(stats.actionBreakdown).length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Action Breakdown</h2>
-          <div className="flex space-x-8">
-            <div className="flex items-center">
-              <span className="w-4 h-4 bg-green-500 rounded mr-2"></span>
-              <span className="text-sm text-gray-600">BUY: {stats.actionBreakdown.BUY || 0}</span>
+        <section className="card">
+          <h2 className="text-lg font-heading font-bold text-text-primary mb-4">Action Breakdown</h2>
+          <div className="flex flex-wrap gap-6">
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 bg-success rounded"></span>
+              <span className="text-sm text-text-secondary">BUY:</span>
+              <span className="font-semibold text-text-primary data-value">{stats.actionBreakdown.BUY || 0}</span>
             </div>
-            <div className="flex items-center">
-              <span className="w-4 h-4 bg-red-500 rounded mr-2"></span>
-              <span className="text-sm text-gray-600">SELL: {stats.actionBreakdown.SELL || 0}</span>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 bg-error rounded"></span>
+              <span className="text-sm text-text-secondary">SELL:</span>
+              <span className="font-semibold text-text-primary data-value">{stats.actionBreakdown.SELL || 0}</span>
             </div>
-            <div className="flex items-center">
-              <span className="w-4 h-4 bg-yellow-500 rounded mr-2"></span>
-              <span className="text-sm text-gray-600">HOLD: {stats.actionBreakdown.HOLD || 0}</span>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 bg-warning rounded"></span>
+              <span className="text-sm text-text-secondary">HOLD:</span>
+              <span className="font-semibold text-text-primary data-value">{stats.actionBreakdown.HOLD || 0}</span>
             </div>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Processing jobs */}
+      {/* Processing Jobs */}
       {stats?.processingJobs?.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Processing Jobs</h2>
+        <section className="card">
+          <h2 className="text-lg font-heading font-bold text-text-primary mb-4">Processing Jobs</h2>
           <div className="space-y-3">
             {stats.processingJobs.map((job) => (
               <div
                 key={job.id}
-                className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
+                className="flex items-center justify-between bg-surface-elevated rounded-lg p-4"
               >
                 <div>
-                  <p className="font-medium text-gray-900">{job.title || 'Processing...'}</p>
-                  <p className="text-sm text-gray-500">{job.currentStep}</p>
+                  <p className="font-medium text-text-primary">{job.title || 'Processing...'}</p>
+                  <p className="text-sm text-text-secondary">{job.currentStep}</p>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-32 bg-border rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-primary-600 h-2 rounded-full transition-all"
+                      className="bg-primary h-2 rounded-full transition-all duration-300"
                       style={{ width: `${job.progress}%` }}
                     ></div>
                   </div>
-                  <span className="text-sm text-gray-600">{job.progress}%</span>
+                  <span className="text-sm font-medium text-text-primary data-value w-12 text-right">
+                    {job.progress}%
+                  </span>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Two column layout for experts and shares */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Experts */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Experts</h2>
-          {stats?.topExperts?.length > 0 ? (
-            <ul className="space-y-3">
-              {stats.topExperts.map((expert, idx) => (
-                <li key={expert.name} className="flex items-center justify-between">
-                  <Link
-                    to={`/experts/${encodeURIComponent(expert.name)}`}
-                    className="flex items-center text-gray-900 hover:text-primary-600"
-                  >
-                    <span className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full text-xs font-medium mr-3">
-                      {idx + 1}
-                    </span>
-                    <span>{expert.name}</span>
-                  </Link>
-                  <span className="text-sm text-gray-500">{expert.count} picks</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500 text-sm">No experts yet</p>
-          )}
-        </div>
-
-        {/* Top Shares */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Stocks</h2>
-          {stats?.topShares?.length > 0 ? (
-            <ul className="space-y-3">
-              {stats.topShares.map((share, idx) => (
-                <li key={share.name} className="flex items-center justify-between">
-                  <Link
-                    to={`/shares/${encodeURIComponent(share.symbol || share.name)}`}
-                    className="flex items-center text-gray-900 hover:text-primary-600"
-                  >
-                    <span className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full text-xs font-medium mr-3">
-                      {idx + 1}
-                    </span>
-                    <span>{share.name}</span>
-                    {share.symbol && (
-                      <span className="text-xs text-gray-500 ml-1">({share.symbol})</span>
-                    )}
-                  </Link>
-                  <span className="text-sm text-gray-500">{share.count} mentions</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500 text-sm">No stocks yet</p>
-          )}
-        </div>
-      </div>
-
-      {/* Recent recommendations */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Recommendations</h2>
-          <Link
-            to="/recommendations"
-            className="text-sm text-primary-600 hover:text-primary-800"
-          >
-            View all →
-          </Link>
-        </div>
-        {stats?.recentRecommendations?.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expert</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stop Loss</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {stats.recentRecommendations.map((rec) => (
-                  <RecommendationRow key={rec.id} rec={rec} onPlayVideo={openVideoPlayer} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="p-6 text-center text-gray-500">
-            <p>No recommendations yet</p>
-            <Link to="/add" className="text-primary-600 hover:text-primary-800 mt-2 inline-block">
-              Add a video to get started
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+        {/* Recent Recommendations Feed */}
+        <section className="lg:col-span-2">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-heading font-bold text-text-primary">Recent Recommendations</h2>
+            <Link to="/recommendations" className="text-sm text-primary font-medium hover:text-primary-700">
+              View all
             </Link>
           </div>
-        )}
+
+          {stats?.recentRecommendations?.length > 0 ? (
+            <div className="space-y-4">
+              {stats.recentRecommendations.slice(0, 5).map((rec) => (
+                <RecommendationCard key={rec.id} rec={rec} onPlayVideo={openVideoPlayer} />
+              ))}
+            </div>
+          ) : (
+            <div className="card text-center py-12">
+              <p className="text-text-secondary mb-4">No recommendations yet</p>
+              <Link to="/add" className="btn btn-primary">
+                Add a video to get started
+              </Link>
+            </div>
+          )}
+
+          {stats?.recentRecommendations?.length > 5 && (
+            <div className="mt-6 text-center">
+              <Link to="/recommendations" className="btn btn-outline">
+                View all recommendations
+              </Link>
+            </div>
+          )}
+        </section>
+
+        {/* Sidebar */}
+        <aside className="space-y-6">
+          {/* Top Experts */}
+          <section className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-heading font-bold text-text-primary">Top Experts</h3>
+              <Link to="/leaderboard" className="text-sm text-primary font-medium hover:text-primary-700">
+                View all
+              </Link>
+            </div>
+
+            {stats?.topExperts?.length > 0 ? (
+              <div className="space-y-2">
+                {stats.topExperts.slice(0, 5).map((expert, idx) => (
+                  <ExpertListItem key={expert.name} expert={expert} rank={idx + 1} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-text-secondary text-sm">No experts yet</p>
+            )}
+          </section>
+
+          {/* Top Stocks */}
+          <section className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-heading font-bold text-text-primary">Top Stocks</h3>
+              <Link to="/recommendations" className="text-sm text-primary font-medium hover:text-primary-700">
+                View all
+              </Link>
+            </div>
+
+            {stats?.topShares?.length > 0 ? (
+              <div className="space-y-2">
+                {stats.topShares.slice(0, 5).map((share, idx) => (
+                  <StockListItem key={share.name} share={share} rank={idx + 1} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-text-secondary text-sm">No stocks yet</p>
+            )}
+          </section>
+        </aside>
       </div>
 
       {/* Floating Video Player */}

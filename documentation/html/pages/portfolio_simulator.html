@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portfolio Simulator - Backtest investment strategies using historical expert recommendations with comprehensive performance analytics">
+    <title>Portfolio Simulator - SayIt OwnIt</title>
+    <link rel="stylesheet" href="../css/main.css">
+  
+  <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fsayitowni3190back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.12"></script>
+  <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2"></script>
+  </head>
+<body class="bg-background">
+    <!-- Navigation Header -->
+    <header class="bg-surface border-b border-border sticky top-0 z-navigation">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SayIt OwnIt Logo">
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0891B2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="20" cy="20" r="18" fill="url(#logoGradient)" opacity="0.1"/>
+                        <path d="M20 8C13.373 8 8 13.373 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 13.373 26.627 8 20 8ZM20 14C21.105 14 22 14.895 22 16V24C22 25.105 21.105 26 20 26C18.895 26 18 25.105 18 24V16C18 14.895 18.895 14 20 14Z" fill="url(#logoGradient)"/>
+                        <circle cx="20" cy="16" r="2" fill="#FFFFFF"/>
+                    </svg>
+                    <span class="text-xl font-heading font-bold text-primary">SayIt OwnIt</span>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="dashboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Dashboard</a>
+                    <a href="expert_profiles.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Experts</a>
+                    <a href="expert_leaderboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Leaderboard</a>
+                    <a href="portfolio_simulator.html" class="px-4 py-2 rounded-md text-sm font-medium bg-primary/10 text-primary">Simulator</a>
+                    <a href="live_portfolio_tracker.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Portfolio</a>
+                    <a href="stock_watchlist.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Watchlist</a>
+                </div>
+
+                <!-- User Profile -->
+                <div class="flex items-center gap-4">
+                    <button class="relative touch-target" aria-label="Notifications">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_147fb0931-1767277137488.png" alt="Notification bell icon" class="w-6 h-6">
+                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-error text-white text-xs rounded-full flex items-center justify-center font-medium">3</span>
+                    </button>
+                    <div class="flex items-center gap-3">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_16e7b66b9-1766496824802.png" alt="User profile avatar" class="w-10 h-10 rounded-full object-cover border-2 border-primary">
+                        <div class="hidden lg:block">
+                            <p class="text-sm font-medium text-text-primary">Rajesh Kumar</p>
+                            <p class="text-xs text-text-secondary">Pro Member</p>
+                        </div>
+                    </div>
+                    <!-- Mobile Menu Button -->
+                    <button class="md:hidden touch-target" id="mobileMenuBtn" aria-label="Toggle mobile menu">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_117a4830d-1764671721354.png" alt="Menu icon" class="w-6 h-6">
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div id="mobileMenu" class="hidden md:hidden pb-4 border-t border-border mt-2 pt-4">
+                <div class="flex flex-col gap-2">
+                    <a href="dashboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Dashboard</a>
+                    <a href="expert_profiles.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Experts</a>
+                    <a href="expert_leaderboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Leaderboard</a>
+                    <a href="portfolio_simulator.html" class="px-4 py-2 rounded-md text-sm font-medium bg-primary/10 text-primary">Simulator</a>
+                    <a href="live_portfolio_tracker.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Portfolio</a>
+                    <a href="stock_watchlist.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Watchlist</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <section class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl sm:text-4xl font-heading font-bold text-text-primary mb-2">Portfolio Simulator</h1>
+                    <p class="text-text-secondary">Backtest investment strategies using historical expert recommendations</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="loadConfigBtn" class="btn btn-outline">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12cb46394-1767277134487.png" alt="Folder open icon" class="w-5 h-5 mr-2">
+                        Load Config
+                    </button>
+                    <button id="saveConfigBtn" class="btn btn-ghost">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1060fc2e2-1765058708702.png" alt="Save icon" class="w-5 h-5 mr-2">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Configuration Section -->
+        <section class="mb-8">
+            <div class="card">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-heading font-bold text-text-primary">Simulation Configuration</h2>
+                    <button id="resetConfigBtn" class="text-sm text-error font-medium hover:text-error-700 inline-flex items-center gap-1">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1f22e5837-1764668818179.png" alt="Refresh icon" class="w-4 h-4">
+                        Reset to Default
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Left Column -->
+                    <div class="space-y-6">
+                        <!-- Initial Capital -->
+                        <div>
+                            <label for="initialCapital" class="label">Initial Capital (₹)</label>
+                            <input 
+                                type="number" 
+                                id="initialCapital" 
+                                class="input w-full" 
+                                placeholder="5,00,000" 
+                                value="500000"
+                                min="10000"
+                                step="10000"
+                            >
+                            <p class="text-xs text-text-tertiary mt-2">Minimum: ₹10,000</p>
+                        </div>
+
+                        <!-- Date Range -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="startDate" class="label">Start Date</label>
+                                <input 
+                                    type="date" 
+                                    id="startDate" 
+                                    class="input w-full" 
+                                    value="2025-01-01"
+                                >
+                            </div>
+                            <div>
+                                <label for="endDate" class="label">End Date</label>
+                                <input 
+                                    type="date" 
+                                    id="endDate" 
+                                    class="input w-full" 
+                                    value="2025-12-31"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Position Sizing -->
+                        <div>
+                            <label class="label">Position Sizing Strategy</label>
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-surface-elevated cursor-pointer transition-colors">
+                                    <input type="radio" name="positionSizing" value="equal" checked class="w-5 h-5 text-primary">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-text-primary">Equal Weight</p>
+                                        <p class="text-xs text-text-secondary">Distribute capital equally across all positions</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-surface-elevated cursor-pointer transition-colors">
+                                    <input type="radio" name="positionSizing" value="marketcap" class="w-5 h-5 text-primary">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-text-primary">Market Cap Weighted</p>
+                                        <p class="text-xs text-text-secondary">Allocate based on company market capitalization</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-surface-elevated cursor-pointer transition-colors">
+                                    <input type="radio" name="positionSizing" value="custom" class="w-5 h-5 text-primary">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-text-primary">Custom Allocation</p>
+                                        <p class="text-xs text-text-secondary">Define custom percentage for each position</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="space-y-6">
+                        <!-- Maximum Concurrent Positions -->
+                        <div>
+                            <label for="maxPositions" class="label">Maximum Concurrent Positions</label>
+                            <input 
+                                type="number" 
+                                id="maxPositions" 
+                                class="input w-full" 
+                                value="5"
+                                min="1"
+                                max="20"
+                            >
+                            <p class="text-xs text-text-tertiary mt-2">Limit: 1-20 positions</p>
+                        </div>
+
+                        <!-- Expert Selection -->
+                        <div>
+                            <label class="label">Select Experts</label>
+                            <div class="space-y-3 max-h-64 overflow-y-auto">
+                                <label class="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-surface-elevated cursor-pointer transition-colors">
+                                    <input type="checkbox" value="anil-singhvi" checked class="w-5 h-5 text-primary rounded">
+                                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_19ad480f0-1763291912018.png" alt="Expert Anil Singhvi profile photo" class="w-10 h-10 rounded-full object-cover border-2 border-secondary">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-text-primary">Anil Singhvi</p>
+                                        <p class="text-xs text-text-secondary">Win Rate: 78% • Avg Return: +24.5%</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-surface-elevated cursor-pointer transition-colors">
+                                    <input type="checkbox" value="simi-bhaumik" checked class="w-5 h-5 text-primary rounded">
+                                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12648eeca-1763301757446.png" alt="Expert Simi Bhaumik profile photo" class="w-10 h-10 rounded-full object-cover border-2 border-secondary">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-text-primary">Simi Bhaumik</p>
+                                        <p class="text-xs text-text-secondary">Win Rate: 72% • Avg Return: +19.8%</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-surface-elevated cursor-pointer transition-colors">
+                                    <input type="checkbox" value="ashwani-gujral" class="w-5 h-5 text-primary rounded">
+                                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1bf0c7d42-1763291659174.png" alt="Expert Ashwani Gujral profile photo" class="w-10 h-10 rounded-full object-cover border-2 border-secondary">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-text-primary">Ashwani Gujral</p>
+                                        <p class="text-xs text-text-secondary">Win Rate: 68% • Avg Return: +17.2%</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Benchmark Comparison -->
+                        <div>
+                            <label for="benchmark" class="label">Benchmark Index</label>
+                            <select id="benchmark" class="input w-full">
+                                <option value="nifty50">NIFTY 50</option>
+                                <option value="sensex">SENSEX</option>
+                                <option value="nifty500">NIFTY 500</option>
+                                <option value="none">No Benchmark</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Run Simulation Button -->
+                <div class="mt-8 pt-6 border-t border-border">
+                    <button id="runSimulationBtn" class="btn btn-primary w-full sm:w-auto">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-5 h-5 mr-2">
+                        Run Simulation
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section (Initially Hidden) -->
+        <section id="resultsSection" class="space-y-8">
+            <!-- Performance Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <!-- Final Portfolio Value -->
+                <div class="card stagger-item">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1c46c170f-1767219617975.png" alt="Wallet icon" class="w-6 h-6">
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-1 data-value">₹6,42,350</h3>
+                    <p class="text-sm text-text-secondary mb-2">Final Portfolio Value</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-text-tertiary">Initial: ₹5,00,000</span>
+                    </div>
+                </div>
+
+                <!-- Total Return -->
+                <div class="card stagger-item">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_129361b2f-1767125748084.png" alt="Trending up icon" class="w-6 h-6">
+                        </div>
+                        <span class="badge badge-success">Profitable</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-success mb-1 data-value">+28.47%</h3>
+                    <p class="text-sm text-text-secondary mb-2">Total Return</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-success">+₹1,42,350</span>
+                    </div>
+                </div>
+
+                <!-- XIRR -->
+                <div class="card stagger-item">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1d794a921-1767008749737.png" alt="Chart line icon" class="w-6 h-6">
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-1 data-value">32.15%</h3>
+                    <p class="text-sm text-text-secondary mb-2">XIRR (Annualized)</p>
+                    <div class="flex items-center gap-2">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_14bff7831-1766620330384.png" alt="Information icon" class="w-4 h-4">
+                        <span class="text-xs text-text-tertiary">Time-weighted return</span>
+                    </div>
+                </div>
+
+                <!-- Win Rate -->
+                <div class="card stagger-item">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_107d7c358-1766088024689.png" alt="Target icon" class="w-6 h-6">
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-1 data-value">65.2%</h3>
+                    <p class="text-sm text-text-secondary mb-2">Win Rate</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-text-tertiary">15 wins / 8 losses</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Chart & Advanced Metrics -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Portfolio Growth Chart -->
+                <div class="lg:col-span-2 card">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-heading font-bold text-text-primary">Portfolio Growth Over Time</h3>
+                        <div class="flex items-center gap-2">
+                            <button class="px-3 py-1.5 text-sm rounded-md bg-primary text-primary-foreground font-medium">
+                                Portfolio
+                            </button>
+                            <button class="px-3 py-1.5 text-sm rounded-md text-text-secondary hover:bg-surface-elevated transition-colors">
+                                Benchmark
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- SVG Chart -->
+                    <div class="relative h-80 w-full">
+                        <svg viewBox="0 0 800 320" class="w-full h-full" aria-label="Portfolio growth chart showing value increase from ₹5,00,000 to ₹6,42,350 over 12 months">
+                            <!-- Grid Lines -->
+                            <line x1="60" y1="40" x2="60" y2="280" stroke="#E2E8F0" stroke-width="1"/>
+                            <line x1="60" y1="280" x2="780" y2="280" stroke="#E2E8F0" stroke-width="1"/>
+                            
+                            <!-- Y-axis labels -->
+                            <text x="50" y="45" text-anchor="end" fill="#6B7280" font-size="12">₹7L</text>
+                            <text x="50" y="100" text-anchor="end" fill="#6B7280" font-size="12">₹6.5L</text>
+                            <text x="50" y="160" text-anchor="end" fill="#6B7280" font-size="12">₹6L</text>
+                            <text x="50" y="220" text-anchor="end" fill="#6B7280" font-size="12">₹5.5L</text>
+                            <text x="50" y="280" text-anchor="end" fill="#6B7280" font-size="12">₹5L</text>
+                            
+                            <!-- X-axis labels -->
+                            <text x="80" y="300" text-anchor="middle" fill="#6B7280" font-size="12">Jan</text>
+                            <text x="200" y="300" text-anchor="middle" fill="#6B7280" font-size="12">Mar</text>
+                            <text x="320" y="300" text-anchor="middle" fill="#6B7280" font-size="12">May</text>
+                            <text x="440" y="300" text-anchor="middle" fill="#6B7280" font-size="12">Jul</text>
+                            <text x="560" y="300" text-anchor="middle" fill="#6B7280" font-size="12">Sep</text>
+                            <text x="680" y="300" text-anchor="middle" fill="#6B7280" font-size="12">Nov</text>
+                            <text x="760" y="300" text-anchor="middle" fill="#6B7280" font-size="12">Dec</text>
+                            
+                            <!-- Portfolio Line -->
+                            <defs>
+                                <linearGradient id="portfolioGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:0.3" />
+                                    <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M 80 280 L 140 260 L 200 240 L 260 235 L 320 220 L 380 210 L 440 200 L 500 180 L 560 160 L 620 140 L 680 100 L 740 60 L 760 50" 
+                                  fill="none" stroke="#1E40AF" stroke-width="3" stroke-linecap="round"/>
+                            <path d="M 80 280 L 140 260 L 200 240 L 260 235 L 320 220 L 380 210 L 440 200 L 500 180 L 560 160 L 620 140 L 680 100 L 740 60 L 760 50 L 760 280 L 80 280 Z" 
+                                  fill="url(#portfolioGradient)"/>
+                            
+                            <!-- Data Points -->
+                            <circle cx="80" cy="280" r="4" fill="#1E40AF"/>
+                            <circle cx="200" cy="240" r="4" fill="#1E40AF"/>
+                            <circle cx="320" cy="220" r="4" fill="#1E40AF"/>
+                            <circle cx="440" cy="200" r="4" fill="#1E40AF"/>
+                            <circle cx="560" cy="160" r="4" fill="#1E40AF"/>
+                            <circle cx="680" cy="100" r="4" fill="#1E40AF"/>
+                            <circle cx="760" cy="50" r="4" fill="#1E40AF"/>
+                        </svg>
+                    </div>
+
+                    <!-- Chart Legend -->
+                    <div class="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-border">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-primary"></div>
+                            <span class="text-sm text-text-secondary">Your Portfolio</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-secondary"></div>
+                            <span class="text-sm text-text-secondary">NIFTY 50 (+18.2%)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Metrics -->
+                <div class="card">
+                    <h3 class="text-xl font-heading font-bold text-text-primary mb-6">Advanced Metrics</h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Sharpe Ratio -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Sharpe Ratio</span>
+                                <span class="text-lg font-bold text-text-primary data-value">1.85</span>
+                            </div>
+                            <div class="w-full bg-border-light rounded-full h-2">
+                                <div class="bg-success h-2 rounded-full" style="width: 62%"></div>
+                            </div>
+                            <p class="text-xs text-text-tertiary mt-1">Risk-adjusted return measure</p>
+                        </div>
+
+                        <!-- Maximum Drawdown -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Max Drawdown</span>
+                                <span class="text-lg font-bold text-error data-value">-8.5%</span>
+                            </div>
+                            <div class="w-full bg-border-light rounded-full h-2">
+                                <div class="bg-error h-2 rounded-full" style="width: 28%"></div>
+                            </div>
+                            <p class="text-xs text-text-tertiary mt-1">Largest peak-to-trough decline</p>
+                        </div>
+
+                        <!-- Volatility -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Volatility (σ)</span>
+                                <span class="text-lg font-bold text-text-primary data-value">15.2%</span>
+                            </div>
+                            <div class="w-full bg-border-light rounded-full h-2">
+                                <div class="bg-warning h-2 rounded-full" style="width: 51%"></div>
+                            </div>
+                            <p class="text-xs text-text-tertiary mt-1">Standard deviation of returns</p>
+                        </div>
+
+                        <!-- Total Trades -->
+                        <div class="pt-4 border-t border-border">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Total Trades</span>
+                                <span class="text-lg font-bold text-text-primary data-value">23</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mt-3">
+                                <div class="p-3 rounded-lg bg-success/5 border border-success/20">
+                                    <p class="text-xs text-text-secondary mb-1">Winning</p>
+                                    <p class="text-lg font-bold text-success data-value">15</p>
+                                </div>
+                                <div class="p-3 rounded-lg bg-error/5 border border-error/20">
+                                    <p class="text-xs text-text-secondary mb-1">Losing</p>
+                                    <p class="text-lg font-bold text-error data-value">8</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Average Trade Duration -->
+                        <div class="pt-4 border-t border-border">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-text-secondary">Avg Trade Duration</span>
+                                <span class="text-lg font-bold text-text-primary data-value">18 days</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sector Allocation & Comparison -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Sector Allocation -->
+                <div class="card">
+                    <h3 class="text-xl font-heading font-bold text-text-primary mb-6">Sector Allocation</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Information Technology</span>
+                                <span class="text-sm font-semibold text-text-primary data-value">32%</span>
+                            </div>
+                            <div class="w-full bg-border-light rounded-full h-2">
+                                <div class="bg-primary h-2 rounded-full" style="width: 32%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Banking & Finance</span>
+                                <span class="text-sm font-semibold text-text-primary data-value">28%</span>
+                            </div>
+                            <div class="w-full bg-border-light rounded-full h-2">
+                                <div class="bg-secondary h-2 rounded-full" style="width: 28%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Pharmaceuticals</span>
+                                <span class="text-sm font-semibold text-text-primary data-value">18%</span>
+                            </div>
+                            <div class="w-full bg-border-light rounded-full h-2">
+                                <div class="bg-success h-2 rounded-full" style="width: 18%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Consumer Goods</span>
+                                <span class="text-sm font-semibold text-text-primary data-value">12%</span>
+                            </div>
+                            <div class="w-full bg-border-light rounded-full h-2">
+                                <div class="bg-accent h-2 rounded-full" style="width: 12%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Energy</span>
+                                <span class="text-sm font-semibold text-text-primary data-value">10%</span>
+                            </div>
+                            <div class="w-full bg-border-light rounded-full h-2">
+                                <div class="bg-warning h-2 rounded-full" style="width: 10%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benchmark Comparison -->
+                <div class="card">
+                    <h3 class="text-xl font-heading font-bold text-text-primary mb-6">Benchmark Comparison</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Your Portfolio</span>
+                                <span class="text-2xl font-bold text-primary data-value">+28.47%</span>
+                            </div>
+                            <p class="text-xs text-text-tertiary">12-month return</p>
+                        </div>
+
+                        <div class="p-4 rounded-lg bg-surface-elevated">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">NIFTY 50</span>
+                                <span class="text-2xl font-bold text-text-primary data-value">+18.20%</span>
+                            </div>
+                            <p class="text-xs text-text-tertiary">12-month return</p>
+                        </div>
+
+                        <div class="pt-4 border-t border-border">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-sm font-medium text-text-primary">Outperformance</span>
+                                <span class="text-xl font-bold text-success data-value">+10.27%</span>
+                            </div>
+                            <div class="flex items-center gap-2 p-3 rounded-lg bg-success/5">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13b79b16f-1766590765649.png" alt="Check circle icon" class="w-5 h-5">
+                                <p class="text-sm text-success">Your portfolio beat the benchmark by 10.27 percentage points</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-3 rounded-lg bg-surface-elevated">
+                                <p class="text-xs text-text-secondary mb-1">Alpha</p>
+                                <p class="text-lg font-bold text-success data-value">+8.5%</p>
+                            </div>
+                            <div class="p-3 rounded-lg bg-surface-elevated">
+                                <p class="text-xs text-text-secondary mb-1">Beta</p>
+                                <p class="text-lg font-bold text-text-primary data-value">0.92</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Trade Log -->
+            <div class="card">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                    <h3 class="text-xl font-heading font-bold text-text-primary">Detailed Trade Log</h3>
+                    <div class="flex items-center gap-3">
+                        <button class="btn btn-outline">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_146cfa0c8-1764649038136.png" alt="Download icon" class="w-5 h-5 mr-2">
+                            Export CSV
+                        </button>
+                        <button class="btn btn-ghost">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_18ff10d2f-1764660632354.png" alt="Filter icon" class="w-5 h-5 mr-2">
+                            Filter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Stock</th>
+                                <th>Expert</th>
+                                <th>Entry Date</th>
+                                <th>Entry Price</th>
+                                <th>Exit Date</th>
+                                <th>Exit Price</th>
+                                <th>Return</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="font-semibold text-text-primary">RELIANCE</div>
+                                    <div class="text-xs text-text-secondary">Reliance Industries</div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_19ad480f0-1763291912018.png" alt="Expert Anil Singhvi profile photo" class="w-8 h-8 rounded-full object-cover">
+                                        <span class="text-sm text-text-primary">Anil Singhvi</span>
+                                    </div>
+                                </td>
+                                <td class="text-sm text-text-secondary">15/01/2025</td>
+                                <td class="text-sm font-mono text-text-primary data-value">₹2,650</td>
+                                <td class="text-sm text-text-secondary">28/02/2025</td>
+                                <td class="text-sm font-mono text-text-primary data-value">₹2,845</td>
+                                <td class="text-sm font-bold text-success data-value">+7.36%</td>
+                                <td><span class="badge badge-success">Target Hit</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="font-semibold text-text-primary">TCS</div>
+                                    <div class="text-xs text-text-secondary">Tata Consultancy Services</div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12648eeca-1763301757446.png" alt="Expert Simi Bhaumik profile photo" class="w-8 h-8 rounded-full object-cover">
+                                        <span class="text-sm text-text-primary">Simi Bhaumik</span>
+                                    </div>
+                                </td>
+                                <td class="text-sm text-text-secondary">22/01/2025</td>
+                                <td class="text-sm font-mono text-text-primary data-value">₹3,920</td>
+                                <td class="text-sm text-text-secondary">18/03/2025</td>
+                                <td class="text-sm font-mono text-text-primary data-value">₹4,185</td>
+                                <td class="text-sm font-bold text-success data-value">+6.76%</td>
+                                <td><span class="badge badge-success">Target Hit</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="font-semibold text-text-primary">HDFC BANK</div>
+                                    <div class="text-xs text-text-secondary">HDFC Bank Limited</div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_19ad480f0-1763291912018.png" alt="Expert Anil Singhvi profile photo" class="w-8 h-8 rounded-full object-cover">
+                                        <span class="text-sm text-text-primary">Anil Singhvi</span>
+                                    </div>
+                                </td>
+                                <td class="text-sm text-text-secondary">05/02/2025</td>
+                                <td class="text-sm font-mono text-text-primary data-value">₹1,645</td>
+                                <td class="text-sm text-text-secondary">12/02/2025</td>
+                                <td class="text-sm font-mono text-text-primary data-value">₹1,598</td>
+                                <td class="text-sm font-bold text-error data-value">-2.86%</td>
+                                <td><span class="badge badge-error">Stop Loss</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="font-semibold text-text-primary">INFY</div>
+                                    <div class="text-xs text-text-secondary">Infosys Limited</div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12648eeca-1763301757446.png" alt="Expert Simi Bhaumik profile photo" class="w-8 h-8 rounded-full object-cover">
+                                        <span class="text-sm text-text-primary">Simi Bhaumik</span>
+                                    </div>
+                                </td>
+                                <td class="text-sm text-text-secondary">18/02/2025</td>
+                                <td class="text-sm font-mono text-text-primary data-value">₹1,565</td>
+                                <td class="text-sm text-text-secondary">25/03/2025</td>
+                                <td class="text-sm font-mono text-text-primary data-value">₹1,685</td>
+                                <td class="text-sm font-bold text-success data-value">+7.67%</td>
+                                <td><span class="badge badge-success">Target Hit</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="font-semibold text-text-primary">WIPRO</div>
+                                    <div class="text-xs text-text-secondary">Wipro Limited</div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_19ad480f0-1763291912018.png" alt="Expert Anil Singhvi profile photo" class="w-8 h-8 rounded-full object-cover">
+                                        <span class="text-sm text-text-primary">Anil Singhvi</span>
+                                    </div>
+                                </td>
+                                <td class="text-sm text-text-secondary">08/03/2025</td>
+                                <td class="text-sm font-mono text-text-primary data-value">₹485</td>
+                                <td class="text-sm text-text-secondary">22/04/2025</td>
+                                <td class="text-sm font-mono text-text-primary data-value">₹520</td>
+                                <td class="text-sm font-bold text-success data-value">+7.22%</td>
+                                <td><span class="badge badge-success">Target Hit</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between mt-6 pt-6 border-t border-border">
+                    <p class="text-sm text-text-secondary">Showing 1-5 of 23 trades</p>
+                    <div class="flex items-center gap-2">
+                        <button class="px-3 py-2 rounded-md border border-border text-text-secondary hover:bg-surface-elevated transition-colors disabled:opacity-50" disabled>
+                            Previous
+                        </button>
+                        <button class="px-3 py-2 rounded-md bg-primary text-primary-foreground font-medium">1</button>
+                        <button class="px-3 py-2 rounded-md border border-border text-text-secondary hover:bg-surface-elevated transition-colors">2</button>
+                        <button class="px-3 py-2 rounded-md border border-border text-text-secondary hover:bg-surface-elevated transition-colors">3</button>
+                        <button class="px-3 py-2 rounded-md border border-border text-text-secondary hover:bg-surface-elevated transition-colors">
+                            Next
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button class="btn btn-primary">
+                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1060fc2e2-1765058708702.png" alt="Save icon" class="w-5 h-5 mr-2">
+                    Save Simulation
+                </button>
+                <button class="btn btn-outline">
+                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1e24ccbcd-1764668817633.png" alt="Share icon" class="w-5 h-5 mr-2">
+                    Share Results
+                </button>
+                <a href="live_portfolio_tracker.html" class="btn btn-secondary">
+                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1d794a921-1767008749737.png" alt="Chart line icon" class="w-5 h-5 mr-2">
+                    Track Live Portfolio
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface border-t border-border mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SayIt OwnIt Logo">
+                        <defs>
+                            <linearGradient id="footerLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0891B2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="20" cy="20" r="18" fill="url(#footerLogoGradient)" opacity="0.1"/>
+                        <path d="M20 8C13.373 8 8 13.373 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 13.373 26.627 8 20 8ZM20 14C21.105 14 22 14.895 22 16V24C22 25.105 21.105 26 20 26C18.895 26 18 25.105 18 24V16C18 14.895 18.895 14 20 14Z" fill="url(#footerLogoGradient)"/>
+                        <circle cx="20" cy="16" r="2" fill="#FFFFFF"/>
+                    </svg>
+                    <span class="font-heading font-bold text-primary">SayIt OwnIt</span>
+                </div>
+                <p class="text-sm text-text-secondary">© 2026 SayIt OwnIt. All Rights Reserved.</p>
+                <div class="flex items-center gap-4">
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Privacy</a>
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Terms</a>
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Run Simulation Button
+        const runSimulationBtn = document.getElementById('runSimulationBtn');
+        const resultsSection = document.getElementById('resultsSection');
+
+        runSimulationBtn.addEventListener('click', () => {
+            // Show loading state
+            runSimulationBtn.innerHTML = '<img src="https://api.iconify.design/mdi/loading.svg?color=%23FFFFFF" alt="Loading icon" class="w-5 h-5 mr-2 animate-spin">Running Simulation...';
+            runSimulationBtn.disabled = true;
+
+            // Simulate API call delay
+            setTimeout(() => {
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // Reset button
+                runSimulationBtn.innerHTML = '<img src="https://api.iconify.design/mdi/play-circle.svg?color=%23FFFFFF" alt="Play icon" class="w-5 h-5 mr-2">Run Simulation';
+                runSimulationBtn.disabled = false;
+            }, 2000);
+        });
+
+        // Reset Configuration
+        const resetConfigBtn = document.getElementById('resetConfigBtn');
+        resetConfigBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset all configuration to default values?')) {
+                document.getElementById('initialCapital').value = '500000';
+                document.getElementById('startDate').value = '2025-01-01';
+                document.getElementById('endDate').value = '2025-12-31';
+                document.getElementById('maxPositions').value = '5';
+                document.querySelector('input[name="positionSizing"][value="equal"]').checked = true;
+                document.getElementById('benchmark').value = 'nifty50';
+                
+                // Reset expert checkboxes
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                document.querySelector('input[value="anil-singhvi"]').checked = true;
+                document.querySelector('input[value="simi-bhaumik"]').checked = true;
+            }
+        });
+
+        // Save Configuration
+        const saveConfigBtn = document.getElementById('saveConfigBtn');
+        saveConfigBtn.addEventListener('click', () => {
+            const config = {
+                initialCapital: document.getElementById('initialCapital').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                maxPositions: document.getElementById('maxPositions').value,
+                positionSizing: document.querySelector('input[name="positionSizing"]:checked').value,
+                benchmark: document.getElementById('benchmark').value,
+                experts: Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value)
+            };
+            
+            localStorage.setItem('simulationConfig', JSON.stringify(config));
+            
+            // Show success message
+            const originalText = saveConfigBtn.innerHTML;
+            saveConfigBtn.innerHTML = '<img src="https://api.iconify.design/mdi/check.svg?color=%231E40AF" alt="Check icon" class="w-5 h-5 mr-2">Saved!';
+            setTimeout(() => {
+                saveConfigBtn.innerHTML = originalText;
+            }, 2000);
+        });
+
+        // Load Configuration
+        const loadConfigBtn = document.getElementById('loadConfigBtn');
+        loadConfigBtn.addEventListener('click', () => {
+            const savedConfig = localStorage.getItem('simulationConfig');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                document.getElementById('initialCapital').value = config.initialCapital;
+                document.getElementById('startDate').value = config.startDate;
+                document.getElementById('endDate').value = config.endDate;
+                document.getElementById('maxPositions').value = config.maxPositions;
+                document.querySelector(`input[name="positionSizing"][value="${config.positionSizing}"]`).checked = true;
+                document.getElementById('benchmark').value = config.benchmark;
+                
+                // Reset and set expert checkboxes
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = config.experts.includes(checkbox.value);
+                });
+                
+                // Show success message
+                const originalText = loadConfigBtn.innerHTML;
+                loadConfigBtn.innerHTML = '<img src="https://api.iconify.design/mdi/check.svg?color=%231E40AF" alt="Check icon" class="w-5 h-5 mr-2">Loaded!';
+                setTimeout(() => {
+                    loadConfigBtn.innerHTML = originalText;
+                }, 2000);
+            } else {
+                alert('No saved configuration found.');
+            }
+        });
+
+        // Form validation
+        document.getElementById('initialCapital').addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            if (value < 10000) {
+                e.target.classList.add('input-error');
+            } else {
+                e.target.classList.remove('input-error');
+            }
+        });
+
+        document.getElementById('maxPositions').addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            if (value < 1 || value > 20) {
+                e.target.classList.add('input-error');
+            } else {
+                e.target.classList.remove('input-error');
+            }
+        });
+
+        // Date validation
+        document.getElementById('endDate').addEventListener('change', (e) => {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(e.target.value);
+            
+            if (endDate <= startDate) {
+                e.target.classList.add('input-error');
+                alert('End date must be after start date');
+            } else {
+                e.target.classList.remove('input-error');
+            }
+        });
+    </script>
+<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
+</body>
+</html>

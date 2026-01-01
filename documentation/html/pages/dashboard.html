@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SayIt OwnIt Dashboard - Track expert stock recommendations and portfolio performance">
+    <title>Dashboard - SayIt OwnIt</title>
+    <link rel="stylesheet" href="../css/main.css">
+  
+  <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fsayitowni3190back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.12"></script>
+  <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2"></script>
+  </head>
+<body class="bg-background">
+    <!-- Navigation Header -->
+    <header class="bg-surface border-b border-border sticky top-0 z-navigation">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SayIt OwnIt Logo">
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0891B2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="20" cy="20" r="18" fill="url(#logoGradient)" opacity="0.1"/>
+                        <path d="M20 8C13.373 8 8 13.373 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 13.373 26.627 8 20 8ZM20 14C21.105 14 22 14.895 22 16V24C22 25.105 21.105 26 20 26C18.895 26 18 25.105 18 24V16C18 14.895 18.895 14 20 14Z" fill="url(#logoGradient)"/>
+                        <circle cx="20" cy="16" r="2" fill="#FFFFFF"/>
+                    </svg>
+                    <span class="text-xl font-heading font-bold text-primary">SayIt OwnIt</span>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="dashboard.html" class="px-4 py-2 rounded-md text-sm font-medium bg-primary/10 text-primary">Dashboard</a>
+                    <a href="expert_profiles.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Experts</a>
+                    <a href="expert_leaderboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Leaderboard</a>
+                    <a href="portfolio_simulator.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Simulator</a>
+                    <a href="live_portfolio_tracker.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Portfolio</a>
+                    <a href="stock_watchlist.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Watchlist</a>
+                </div>
+
+                <!-- User Profile -->
+                <div class="flex items-center gap-4">
+                    <button class="relative touch-target" aria-label="Notifications">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_147fb0931-1767277137488.png" alt="Notification bell icon" class="w-6 h-6">
+                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-error text-white text-xs rounded-full flex items-center justify-center font-medium">3</span>
+                    </button>
+                    <div class="flex items-center gap-3">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_16e7b66b9-1766496824802.png" alt="User profile avatar" class="w-10 h-10 rounded-full object-cover border-2 border-primary">
+                        <div class="hidden lg:block">
+                            <p class="text-sm font-medium text-text-primary">Rajesh Kumar</p>
+                            <p class="text-xs text-text-secondary">Pro Member</p>
+                        </div>
+                    </div>
+                    <!-- Mobile Menu Button -->
+                    <button class="md:hidden touch-target" id="mobileMenuBtn" aria-label="Toggle mobile menu">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_117a4830d-1764671721354.png" alt="Menu icon" class="w-6 h-6">
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div id="mobileMenu" class="hidden md:hidden pb-4 border-t border-border mt-2 pt-4">
+                <div class="flex flex-col gap-2">
+                    <a href="dashboard.html" class="px-4 py-2 rounded-md text-sm font-medium bg-primary/10 text-primary">Dashboard</a>
+                    <a href="expert_profiles.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Experts</a>
+                    <a href="expert_leaderboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Leaderboard</a>
+                    <a href="portfolio_simulator.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Simulator</a>
+                    <a href="live_portfolio_tracker.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Portfolio</a>
+                    <a href="stock_watchlist.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Watchlist</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Welcome Section -->
+        <section class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl sm:text-4xl font-heading font-bold text-text-primary mb-2">Welcome back, Rajesh!</h1>
+                    <p class="text-text-secondary">Here's what's happening with your investments today</p>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-text-secondary">
+                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_175bcfdbd-1764676194744.png" alt="Clock icon" class="w-5 h-5">
+                    <span>Last updated: 01 Jan 2026, 2:07 PM IST</span>
+                    <button class="ml-2 touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Refresh data">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1f22e5837-1764668818179.png" alt="Refresh icon" class="w-5 h-5">
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Stats Cards -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+            <!-- Watchlist Alerts -->
+            <div class="card stagger-item">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_130dd4a37-1767090899747.png" alt="Alert icon" class="w-6 h-6">
+                    </div>
+                    <span class="badge badge-warning">2 New</span>
+                </div>
+                <h3 class="text-2xl font-bold text-text-primary mb-1 data-value">5</h3>
+                <p class="text-sm text-text-secondary mb-3">Watchlist Alerts</p>
+                <a href="stock_watchlist.html" class="text-sm text-primary font-medium hover:text-primary-700 inline-flex items-center gap-1">
+                    View alerts
+                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_108c64400-1764895919543.png" alt="Arrow right icon" class="w-4 h-4">
+                </a>
+            </div>
+
+            <!-- New Recommendations -->
+            <div class="card stagger-item">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_11c24119f-1764709033495.png" alt="Lightbulb icon" class="w-6 h-6">
+                    </div>
+                    <span class="badge bg-secondary-100 text-secondary-700">Today</span>
+                </div>
+                <h3 class="text-2xl font-bold text-text-primary mb-1 data-value">12</h3>
+                <p class="text-sm text-text-secondary mb-3">New Recommendations</p>
+                <a href="expert_profiles.html" class="text-sm text-secondary font-medium hover:text-secondary-700 inline-flex items-center gap-1">
+                    View all
+                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_108c64400-1764895919543.png" alt="Arrow right icon" class="w-4 h-4">
+                </a>
+            </div>
+
+            <!-- Portfolio Value -->
+            <div class="card stagger-item">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_129361b2f-1767125748084.png" alt="Trending up icon" class="w-6 h-6">
+                    </div>
+                    <span class="badge badge-success">+12.5%</span>
+                </div>
+                <h3 class="text-2xl font-bold text-text-primary mb-1 data-value">₹5,62,450</h3>
+                <p class="text-sm text-text-secondary mb-3">Portfolio Value</p>
+                <a href="live_portfolio_tracker.html" class="text-sm text-success font-medium hover:text-success-700 inline-flex items-center gap-1">
+                    View portfolio
+                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_108c64400-1764895919543.png" alt="Arrow right icon" class="w-4 h-4">
+                </a>
+            </div>
+
+            <!-- Active Positions -->
+            <div class="card stagger-item">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1d794a921-1767008749737.png" alt="Chart line icon" class="w-6 h-6">
+                    </div>
+                    <span class="badge bg-primary-100 text-primary-700">Live</span>
+                </div>
+                <h3 class="text-2xl font-bold text-text-primary mb-1 data-value">8</h3>
+                <p class="text-sm text-text-secondary mb-3">Active Positions</p>
+                <a href="portfolio_simulator.html" class="text-sm text-primary font-medium hover:text-primary-700 inline-flex items-center gap-1">
+                    Simulate more
+                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_108c64400-1764895919543.png" alt="Arrow right icon" class="w-4 h-4">
+                </a>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            <!-- Recent Recommendations Feed -->
+            <section class="lg:col-span-2">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-heading font-bold text-text-primary">Recent Recommendations</h2>
+                    <div class="flex items-center gap-2">
+                        <button class="px-3 py-1.5 text-sm rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary-700 transition-colors">
+                            All
+                        </button>
+                        <button class="px-3 py-1.5 text-sm rounded-md text-text-secondary hover:bg-surface-elevated transition-colors">
+                            Buy
+                        </button>
+                        <button class="px-3 py-1.5 text-sm rounded-md text-text-secondary hover:bg-surface-elevated transition-colors">
+                            Sell
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recommendation Cards -->
+                <div class="space-y-4">
+                    <!-- Recommendation 1 -->
+                    <article class="card">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_19ad480f0-1763291912018.png" alt="Expert Anil Singhvi profile photo" class="w-12 h-12 rounded-full object-cover border-2 border-secondary">
+                                <div>
+                                    <h3 class="font-semibold text-text-primary">Anil Singhvi</h3>
+                                    <p class="text-xs text-text-secondary">Technical Analyst</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-text-tertiary">2 hours ago</span>
+                        </div>
+
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-lg font-bold text-text-primary">RELIANCE</span>
+                                    <span class="badge badge-success">BUY</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-text-secondary">Target Price</p>
+                                        <p class="font-semibold text-success data-value">₹2,850</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-text-secondary">Stop Loss</p>
+                                        <p class="font-semibold text-error data-value">₹2,620</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-text-secondary mb-1">Current Price</p>
+                                <p class="text-xl font-bold text-text-primary data-value">₹2,745</p>
+                                <p class="text-xs text-success">+1.2%</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-border">
+                            <a href="expert_profiles.html" class="text-sm text-primary font-medium hover:text-primary-700 inline-flex items-center gap-1">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1a4d4d36f-1767277135356.png" alt="Account icon" class="w-4 h-4">
+                                View expert profile
+                            </a>
+                            <a href="javascript:void(0)" class="text-sm text-secondary font-medium hover:text-secondary-700 inline-flex items-center gap-1">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-4 h-4">
+                                Watch video
+                            </a>
+                        </div>
+                    </article>
+
+                    <!-- Recommendation 2 -->
+                    <article class="card">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12648eeca-1763301757446.png" alt="Expert Simi Bhaumik profile photo" class="w-12 h-12 rounded-full object-cover border-2 border-secondary">
+                                <div>
+                                    <h3 class="font-semibold text-text-primary">Simi Bhaumik</h3>
+                                    <p class="text-xs text-text-secondary">Fundamental Analyst</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-text-tertiary">4 hours ago</span>
+                        </div>
+
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-lg font-bold text-text-primary">TCS</span>
+                                    <span class="badge badge-success">BUY</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-text-secondary">Target Price</p>
+                                        <p class="font-semibold text-success data-value">₹4,200</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-text-secondary">Stop Loss</p>
+                                        <p class="font-semibold text-error data-value">₹3,850</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-text-secondary mb-1">Current Price</p>
+                                <p class="text-xl font-bold text-text-primary data-value">₹3,985</p>
+                                <p class="text-xs text-error">-0.5%</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-border">
+                            <a href="expert_profiles.html" class="text-sm text-primary font-medium hover:text-primary-700 inline-flex items-center gap-1">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1a4d4d36f-1767277135356.png" alt="Account icon" class="w-4 h-4">
+                                View expert profile
+                            </a>
+                            <a href="javascript:void(0)" class="text-sm text-secondary font-medium hover:text-secondary-700 inline-flex items-center gap-1">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-4 h-4">
+                                Watch video
+                            </a>
+                        </div>
+                    </article>
+
+                    <!-- Recommendation 3 -->
+                    <article class="card">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1de1bd705-1763295587233.png" alt="Expert Sudarshan Sukhani profile photo" class="w-12 h-12 rounded-full object-cover border-2 border-secondary">
+                                <div>
+                                    <h3 class="font-semibold text-text-primary">Sudarshan Sukhani</h3>
+                                    <p class="text-xs text-text-secondary">Technical Expert</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-text-tertiary">6 hours ago</span>
+                        </div>
+
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-lg font-bold text-text-primary">INFY</span>
+                                    <span class="badge badge-error">SELL</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-text-secondary">Target Price</p>
+                                        <p class="font-semibold text-success data-value">₹1,520</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-text-secondary">Stop Loss</p>
+                                        <p class="font-semibold text-error data-value">₹1,650</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-text-secondary mb-1">Current Price</p>
+                                <p class="text-xl font-bold text-text-primary data-value">₹1,598</p>
+                                <p class="text-xs text-success">+0.8%</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-border">
+                            <a href="expert_profiles.html" class="text-sm text-primary font-medium hover:text-primary-700 inline-flex items-center gap-1">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1a4d4d36f-1767277135356.png" alt="Account icon" class="w-4 h-4">
+                                View expert profile
+                            </a>
+                            <a href="javascript:void(0)" class="text-sm text-secondary font-medium hover:text-secondary-700 inline-flex items-center gap-1">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_13a3db486-1767277137542.png" alt="Play icon" class="w-4 h-4">
+                                Watch video
+                            </a>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="mt-6 text-center">
+                    <a href="expert_profiles.html" class="btn btn-outline">
+                        View all recommendations
+                    </a>
+                </div>
+            </section>
+
+            <!-- Sidebar -->
+            <aside class="space-y-6">
+                <!-- Top Performing Experts -->
+                <section class="card">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-heading font-bold text-text-primary">Top Performers</h3>
+                        <a href="expert_leaderboard.html" class="text-sm text-primary font-medium hover:text-primary-700">View all</a>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Expert 1 -->
+                        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors cursor-pointer">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_19ad480f0-1763291912018.png" alt="Expert Anil Singhvi profile photo" class="w-10 h-10 rounded-full object-cover border-2 border-success">
+                            <div class="flex-1">
+                                <p class="font-semibold text-text-primary text-sm">Anil Singhvi</p>
+                                <p class="text-xs text-text-secondary">Win Rate: 78%</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-success data-value">+24.5%</p>
+                                <p class="text-xs text-text-tertiary">Avg Return</p>
+                            </div>
+                        </div>
+
+                        <!-- Expert 2 -->
+                        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors cursor-pointer">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12648eeca-1763301757446.png" alt="Expert Simi Bhaumik profile photo" class="w-10 h-10 rounded-full object-cover border-2 border-success">
+                            <div class="flex-1">
+                                <p class="font-semibold text-text-primary text-sm">Simi Bhaumik</p>
+                                <p class="text-xs text-text-secondary">Win Rate: 72%</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-success data-value">+19.8%</p>
+                                <p class="text-xs text-text-tertiary">Avg Return</p>
+                            </div>
+                        </div>
+
+                        <!-- Expert 3 -->
+                        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors cursor-pointer">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1bf0c7d42-1763291659174.png" alt="Expert Ashwani Gujral profile photo" class="w-10 h-10 rounded-full object-cover border-2 border-success">
+                            <div class="flex-1">
+                                <p class="font-semibold text-text-primary text-sm">Ashwani Gujral</p>
+                                <p class="text-xs text-text-secondary">Win Rate: 68%</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-success data-value">+17.2%</p>
+                                <p class="text-xs text-text-tertiary">Avg Return</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Portfolio Summary -->
+                <section class="card">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-heading font-bold text-text-primary">Portfolio Summary</h3>
+                        <a href="portfolio_simulator.html" class="text-sm text-primary font-medium hover:text-primary-700">Simulate</a>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 rounded-lg bg-success/5 border border-success/20">
+                            <div>
+                                <p class="text-sm text-text-secondary mb-1">Total Return</p>
+                                <p class="text-2xl font-bold text-success data-value">+12.5%</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_129361b2f-1767125748084.png" alt="Trending up icon" class="w-6 h-6">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 rounded-lg bg-surface-elevated">
+                                <p class="text-xs text-text-secondary mb-2">Initial Capital</p>
+                                <p class="text-lg font-bold text-text-primary data-value">₹5,00,000</p>
+                            </div>
+                            <div class="p-4 rounded-lg bg-surface-elevated">
+                                <p class="text-xs text-text-secondary mb-2">Current Value</p>
+                                <p class="text-lg font-bold text-text-primary data-value">₹5,62,450</p>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-border">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Win Rate</span>
+                                <span class="text-sm font-semibold text-text-primary data-value">62.5%</span>
+                            </div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-text-secondary">Total Trades</span>
+                                <span class="text-sm font-semibold text-text-primary data-value">24</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-text-secondary">XIRR</span>
+                                <span class="text-sm font-semibold text-success data-value">18.7%</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Quick Actions -->
+                <section class="card">
+                    <h3 class="text-lg font-heading font-bold text-text-primary mb-4">Quick Actions</h3>
+                    <div class="space-y-3">
+                        <a href="stock_watchlist.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors">
+                            <div class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-5 h-5">
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-text-primary text-sm">Manage Watchlist</p>
+                                <p class="text-xs text-text-secondary">5 stocks tracked</p>
+                            </div>
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1aa2f0d13-1766515852501.png" alt="Chevron right icon" class="w-5 h-5">
+                        </a>
+
+                        <a href="expert_profiles.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors">
+                            <div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1bd44b46f-1765982051495.png" alt="Account multiple icon" class="w-5 h-5">
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-text-primary text-sm">Follow Experts</p>
+                                <p class="text-xs text-text-secondary">3 of 5 followed</p>
+                            </div>
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1aa2f0d13-1766515852501.png" alt="Chevron right icon" class="w-5 h-5">
+                        </a>
+
+                        <a href="portfolio_simulator.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors">
+                            <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <img src="https://img.rocket.new/generatedImages/rocket_gen_img_17b9a80ad-1766846720017.png" alt="Calculator icon" class="w-5 h-5">
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-text-primary text-sm">Run Simulation</p>
+                                <p class="text-xs text-text-secondary">Test strategies</p>
+                            </div>
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1aa2f0d13-1766515852501.png" alt="Chevron right icon" class="w-5 h-5">
+                        </a>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface border-t border-border mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SayIt OwnIt Logo">
+                        <defs>
+                            <linearGradient id="footerLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0891B2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="20" cy="20" r="18" fill="url(#footerLogoGradient)" opacity="0.1"/>
+                        <path d="M20 8C13.373 8 8 13.373 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 13.373 26.627 8 20 8ZM20 14C21.105 14 22 14.895 22 16V24C22 25.105 21.105 26 20 26C18.895 26 18 25.105 18 24V16C18 14.895 18.895 14 20 14Z" fill="url(#footerLogoGradient)"/>
+                        <circle cx="20" cy="16" r="2" fill="#FFFFFF"/>
+                    </svg>
+                    <span class="font-heading font-bold text-primary">SayIt OwnIt</span>
+                </div>
+                <p class="text-sm text-text-secondary">© 2026 SayIt OwnIt. All Rights Reserved.</p>
+                <div class="flex items-center gap-4">
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Privacy</a>
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Terms</a>
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Simulate real-time price updates
+        function updatePrices() {
+            const priceElements = document.querySelectorAll('.data-value');
+            priceElements.forEach(element => {
+                // Add subtle animation on update
+                element.style.transition = 'color 0.3s ease';
+            });
+        }
+
+        // Update prices every 30 seconds
+        setInterval(updatePrices, 30000);
+    </script>
+<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
+</body>
+</html>

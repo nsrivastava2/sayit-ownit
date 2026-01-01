@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Stock Watchlist - Monitor specific stocks for expert recommendations and price movements with customizable alerts">
+    <title>Stock Watchlist - SayIt OwnIt</title>
+    <link rel="stylesheet" href="../css/main.css">
+  
+  <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fsayitowni3190back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.12"></script>
+  <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2"></script>
+  </head>
+<body class="bg-background">
+    <!-- Navigation Header -->
+    <header class="bg-surface border-b border-border sticky top-0 z-navigation">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SayIt OwnIt Logo">
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0891B2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="20" cy="20" r="18" fill="url(#logoGradient)" opacity="0.1"/>
+                        <path d="M20 8C13.373 8 8 13.373 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 13.373 26.627 8 20 8ZM20 14C21.105 14 22 14.895 22 16V24C22 25.105 21.105 26 20 26C18.895 26 18 25.105 18 24V16C18 14.895 18.895 14 20 14Z" fill="url(#logoGradient)"/>
+                        <circle cx="20" cy="16" r="2" fill="#FFFFFF"/>
+                    </svg>
+                    <span class="text-xl font-heading font-bold text-primary">SayIt OwnIt</span>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="dashboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Dashboard</a>
+                    <a href="expert_profiles.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Experts</a>
+                    <a href="expert_leaderboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Leaderboard</a>
+                    <a href="portfolio_simulator.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Simulator</a>
+                    <a href="live_portfolio_tracker.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors">Portfolio</a>
+                    <a href="stock_watchlist.html" class="px-4 py-2 rounded-md text-sm font-medium bg-primary/10 text-primary">Watchlist</a>
+                </div>
+
+                <!-- User Profile -->
+                <div class="flex items-center gap-4">
+                    <button class="relative touch-target" aria-label="Notifications">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_147fb0931-1767277137488.png" alt="Notification bell icon" class="w-6 h-6">
+                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-error text-white text-xs rounded-full flex items-center justify-center font-medium">3</span>
+                    </button>
+                    <div class="flex items-center gap-3">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_16e7b66b9-1766496824802.png" alt="User profile avatar" class="w-10 h-10 rounded-full object-cover border-2 border-primary">
+                        <div class="hidden lg:block">
+                            <p class="text-sm font-medium text-text-primary">Rajesh Kumar</p>
+                            <p class="text-xs text-text-secondary">Pro Member</p>
+                        </div>
+                    </div>
+                    <!-- Mobile Menu Button -->
+                    <button class="md:hidden touch-target" id="mobileMenuBtn" aria-label="Toggle mobile menu">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_117a4830d-1764671721354.png" alt="Menu icon" class="w-6 h-6">
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div id="mobileMenu" class="hidden md:hidden pb-4 border-t border-border mt-2 pt-4">
+                <div class="flex flex-col gap-2">
+                    <a href="dashboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Dashboard</a>
+                    <a href="expert_profiles.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Experts</a>
+                    <a href="expert_leaderboard.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Leaderboard</a>
+                    <a href="portfolio_simulator.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Simulator</a>
+                    <a href="live_portfolio_tracker.html" class="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated">Portfolio</a>
+                    <a href="stock_watchlist.html" class="px-4 py-2 rounded-md text-sm font-medium bg-primary/10 text-primary">Watchlist</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <section class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-3xl sm:text-4xl font-heading font-bold text-text-primary mb-2">Stock Watchlist</h1>
+                    <p class="text-text-secondary">Monitor stocks for expert recommendations and price movements</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="refreshPricesBtn" class="btn btn-outline flex items-center gap-2" aria-label="Refresh stock prices">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1f22e5837-1764668818179.png" alt="Refresh icon" class="w-5 h-5">
+                        <span class="hidden sm:inline">Refresh Prices</span>
+                    </button>
+                    <button id="addStockBtn" class="btn btn-primary flex items-center gap-2">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1ac9d9357-1765527931226.png" alt="Plus icon" class="w-5 h-5">
+                        <span>Add Stock</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Watchlist Stats & Quota -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Stocks Tracked</p>
+                            <p class="text-2xl font-bold text-text-primary data-value">5 / 10</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1b91d987a-1766948255607.png" alt="Star icon" class="w-6 h-6">
+                        </div>
+                    </div>
+                    <div class="mt-3 w-full bg-border-light rounded-full h-2">
+                        <div class="bg-primary h-2 rounded-full" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Active Alerts</p>
+                            <p class="text-2xl font-bold text-text-primary data-value">8</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1768892dd-1767042991434.png" alt="Bell ring icon" class="w-6 h-6">
+                        </div>
+                    </div>
+                    <p class="text-xs text-text-tertiary mt-2">3 triggered today</p>
+                </div>
+
+                <div class="card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Market Status</p>
+                            <p class="text-lg font-semibold text-success flex items-center gap-2">
+                                <span class="w-2 h-2 bg-success rounded-full animate-pulse"></span>
+                                Open
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_175bcfdbd-1764676194744.png" alt="Clock icon" class="w-6 h-6">
+                        </div>
+                    </div>
+                    <p class="text-xs text-text-tertiary mt-2">Last updated: 2:10 PM IST</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters & Search -->
+        <section class="mb-6">
+            <div class="card">
+                <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                    <!-- Search -->
+                    <div class="flex-1">
+                        <div class="relative">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_194eeb027-1764656322629.png" alt="Search icon" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5">
+                            <input type="text" id="searchInput" placeholder="Search stocks in watchlist..." class="input pl-10 w-full" aria-label="Search stocks">
+                        </div>
+                    </div>
+
+                    <!-- Filter Buttons -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button class="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary-700 transition-colors" data-filter="all">
+                            All Stocks
+                        </button>
+                        <button class="px-4 py-2 text-sm rounded-md text-text-secondary hover:bg-surface-elevated transition-colors" data-filter="gainers">
+                            Gainers
+                        </button>
+                        <button class="px-4 py-2 text-sm rounded-md text-text-secondary hover:bg-surface-elevated transition-colors" data-filter="losers">
+                            Losers
+                        </button>
+                        <button class="px-4 py-2 text-sm rounded-md text-text-secondary hover:bg-surface-elevated transition-colors" data-filter="alerts">
+                            With Alerts
+                        </button>
+                        <button id="exportBtn" class="px-4 py-2 text-sm rounded-md border border-border text-text-primary hover:bg-surface-elevated transition-colors flex items-center gap-2">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_146cfa0c8-1764649038136.png" alt="Download icon" class="w-4 h-4">
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Watchlist Grid -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Stock Card 1 - RELIANCE -->
+            <article class="card stagger-item">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-xl font-bold text-text-primary">RELIANCE</h3>
+                            <span class="badge badge-success">NSE</span>
+                        </div>
+                        <p class="text-sm text-text-secondary">Reliance Industries Ltd.</p>
+                    </div>
+                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Remove from watchlist">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_14cc28e88-1767154394294.png" alt="Filled star icon" class="w-6 h-6">
+                    </button>
+                </div>
+
+                <!-- Price Information -->
+                <div class="grid grid-cols-3 gap-4 mb-4 p-4 rounded-lg bg-success/5 border border-success/20">
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">Current Price</p>
+                        <p class="text-xl font-bold text-text-primary data-value">₹2,745.50</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">Change</p>
+                        <p class="text-lg font-semibold text-success data-value">+32.80</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">% Change</p>
+                        <p class="text-lg font-semibold text-success data-value">+1.21%</p>
+                    </div>
+                </div>
+
+                <!-- Expert Recommendations -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-text-primary">Recent Expert Activity</h4>
+                        <span class="text-xs text-text-tertiary">3 recommendations</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-3 p-3 rounded-lg bg-surface-elevated">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_19ad480f0-1763291912018.png" alt="Expert Anil Singhvi profile photo" class="w-8 h-8 rounded-full object-cover border border-secondary">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-text-primary">Anil Singhvi</p>
+                                <p class="text-xs text-text-secondary">Target: ₹2,850 • 2 hours ago</p>
+                            </div>
+                            <span class="badge badge-success text-xs">BUY</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Settings -->
+                <div class="pt-4 border-t border-border">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12320acfb-1767277134129.png" alt="Bell icon" class="w-4 h-4">
+                            Active Alerts
+                        </h4>
+                        <button class="text-xs text-primary font-medium hover:text-primary-700" data-stock="RELIANCE">
+                            Configure
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 rounded-full text-xs bg-warning-100 text-warning-700 flex items-center gap-1">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1f422c906-1764693352407.png" alt="Arrow up icon" class="w-3 h-3">
+                            Price ≥ ₹2,800
+                        </span>
+                        <span class="px-3 py-1 rounded-full text-xs bg-secondary-100 text-secondary-700 flex items-center gap-1">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_195b858d8-1767026089612.png" alt="Voice icon" class="w-3 h-3">
+                            New recommendations
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3 mt-4">
+                    <a href="expert_profiles.html" class="flex-1 btn btn-outline text-sm">
+                        View Experts
+                    </a>
+                    <button class="flex-1 btn btn-primary text-sm" data-action="simulate" data-stock="RELIANCE">
+                        Simulate Trade
+                    </button>
+                </div>
+            </article>
+
+            <!-- Stock Card 2 - TCS -->
+            <article class="card stagger-item">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-xl font-bold text-text-primary">TCS</h3>
+                            <span class="badge badge-success">NSE</span>
+                        </div>
+                        <p class="text-sm text-text-secondary">Tata Consultancy Services Ltd.</p>
+                    </div>
+                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Remove from watchlist">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_14cc28e88-1767154394294.png" alt="Filled star icon" class="w-6 h-6">
+                    </button>
+                </div>
+
+                <!-- Price Information -->
+                <div class="grid grid-cols-3 gap-4 mb-4 p-4 rounded-lg bg-error/5 border border-error/20">
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">Current Price</p>
+                        <p class="text-xl font-bold text-text-primary data-value">₹3,985.20</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">Change</p>
+                        <p class="text-lg font-semibold text-error data-value">-20.15</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">% Change</p>
+                        <p class="text-lg font-semibold text-error data-value">-0.50%</p>
+                    </div>
+                </div>
+
+                <!-- Expert Recommendations -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-text-primary">Recent Expert Activity</h4>
+                        <span class="text-xs text-text-tertiary">2 recommendations</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-3 p-3 rounded-lg bg-surface-elevated">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12648eeca-1763301757446.png" alt="Expert Simi Bhaumik profile photo" class="w-8 h-8 rounded-full object-cover border border-secondary">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-text-primary">Simi Bhaumik</p>
+                                <p class="text-xs text-text-secondary">Target: ₹4,200 • 4 hours ago</p>
+                            </div>
+                            <span class="badge badge-success text-xs">BUY</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Settings -->
+                <div class="pt-4 border-t border-border">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12320acfb-1767277134129.png" alt="Bell icon" class="w-4 h-4">
+                            Active Alerts
+                        </h4>
+                        <button class="text-xs text-primary font-medium hover:text-primary-700" data-stock="TCS">
+                            Configure
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 rounded-full text-xs bg-warning-100 text-warning-700 flex items-center gap-1">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1f422c906-1764693352407.png" alt="Arrow up icon" class="w-3 h-3">
+                            Price ≥ ₹4,100
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3 mt-4">
+                    <a href="expert_profiles.html" class="flex-1 btn btn-outline text-sm">
+                        View Experts
+                    </a>
+                    <button class="flex-1 btn btn-primary text-sm" data-action="simulate" data-stock="TCS">
+                        Simulate Trade
+                    </button>
+                </div>
+            </article>
+
+            <!-- Stock Card 3 - INFY -->
+            <article class="card stagger-item">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-xl font-bold text-text-primary">INFY</h3>
+                            <span class="badge badge-success">NSE</span>
+                        </div>
+                        <p class="text-sm text-text-secondary">Infosys Ltd.</p>
+                    </div>
+                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Remove from watchlist">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_14cc28e88-1767154394294.png" alt="Filled star icon" class="w-6 h-6">
+                    </button>
+                </div>
+
+                <!-- Price Information -->
+                <div class="grid grid-cols-3 gap-4 mb-4 p-4 rounded-lg bg-success/5 border border-success/20">
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">Current Price</p>
+                        <p class="text-xl font-bold text-text-primary data-value">₹1,598.75</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">Change</p>
+                        <p class="text-lg font-semibold text-success data-value">+12.65</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">% Change</p>
+                        <p class="text-lg font-semibold text-success data-value">+0.80%</p>
+                    </div>
+                </div>
+
+                <!-- Expert Recommendations -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-text-primary">Recent Expert Activity</h4>
+                        <span class="text-xs text-text-tertiary">1 recommendation</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-3 p-3 rounded-lg bg-surface-elevated">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1de1bd705-1763295587233.png" alt="Expert Sudarshan Sukhani profile photo" class="w-8 h-8 rounded-full object-cover border border-secondary">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-text-primary">Sudarshan Sukhani</p>
+                                <p class="text-xs text-text-secondary">Target: ₹1,520 • 6 hours ago</p>
+                            </div>
+                            <span class="badge badge-error text-xs">SELL</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Settings -->
+                <div class="pt-4 border-t border-border">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12320acfb-1767277134129.png" alt="Bell icon" class="w-4 h-4">
+                            Active Alerts
+                        </h4>
+                        <button class="text-xs text-primary font-medium hover:text-primary-700" data-stock="INFY">
+                            Configure
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 rounded-full text-xs bg-error-100 text-error-700 flex items-center gap-1">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1a01d07f3-1767221642580.png" alt="Arrow down icon" class="w-3 h-3">
+                            Price ≤ ₹1,550
+                        </span>
+                        <span class="px-3 py-1 rounded-full text-xs bg-secondary-100 text-secondary-700 flex items-center gap-1">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_195b858d8-1767026089612.png" alt="Voice icon" class="w-3 h-3">
+                            New recommendations
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3 mt-4">
+                    <a href="expert_profiles.html" class="flex-1 btn btn-outline text-sm">
+                        View Experts
+                    </a>
+                    <button class="flex-1 btn btn-primary text-sm" data-action="simulate" data-stock="INFY">
+                        Simulate Trade
+                    </button>
+                </div>
+            </article>
+
+            <!-- Stock Card 4 - HDFCBANK -->
+            <article class="card stagger-item">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-xl font-bold text-text-primary">HDFCBANK</h3>
+                            <span class="badge badge-success">NSE</span>
+                        </div>
+                        <p class="text-sm text-text-secondary">HDFC Bank Ltd.</p>
+                    </div>
+                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Remove from watchlist">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_14cc28e88-1767154394294.png" alt="Filled star icon" class="w-6 h-6">
+                    </button>
+                </div>
+
+                <!-- Price Information -->
+                <div class="grid grid-cols-3 gap-4 mb-4 p-4 rounded-lg bg-success/5 border border-success/20">
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">Current Price</p>
+                        <p class="text-xl font-bold text-text-primary data-value">₹1,642.30</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">Change</p>
+                        <p class="text-lg font-semibold text-success data-value">+18.45</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">% Change</p>
+                        <p class="text-lg font-semibold text-success data-value">+1.14%</p>
+                    </div>
+                </div>
+
+                <!-- Expert Recommendations -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-text-primary">Recent Expert Activity</h4>
+                        <span class="text-xs text-text-tertiary">4 recommendations</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-3 p-3 rounded-lg bg-surface-elevated">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1bf0c7d42-1763291659174.png" alt="Expert Ashwani Gujral profile photo" class="w-8 h-8 rounded-full object-cover border border-secondary">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-text-primary">Ashwani Gujral</p>
+                                <p class="text-xs text-text-secondary">Target: ₹1,720 • 1 hour ago</p>
+                            </div>
+                            <span class="badge badge-success text-xs">BUY</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Settings -->
+                <div class="pt-4 border-t border-border">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12320acfb-1767277134129.png" alt="Bell icon" class="w-4 h-4">
+                            Active Alerts
+                        </h4>
+                        <button class="text-xs text-primary font-medium hover:text-primary-700" data-stock="HDFCBANK">
+                            Configure
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 rounded-full text-xs bg-warning-100 text-warning-700 flex items-center gap-1">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1f422c906-1764693352407.png" alt="Arrow up icon" class="w-3 h-3">
+                            Price ≥ ₹1,700
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3 mt-4">
+                    <a href="expert_profiles.html" class="flex-1 btn btn-outline text-sm">
+                        View Experts
+                    </a>
+                    <button class="flex-1 btn btn-primary text-sm" data-action="simulate" data-stock="HDFCBANK">
+                        Simulate Trade
+                    </button>
+                </div>
+            </article>
+
+            <!-- Stock Card 5 - TATAMOTORS -->
+            <article class="card stagger-item">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-xl font-bold text-text-primary">TATAMOTORS</h3>
+                            <span class="badge badge-success">NSE</span>
+                        </div>
+                        <p class="text-sm text-text-secondary">Tata Motors Ltd.</p>
+                    </div>
+                    <button class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Remove from watchlist">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_14cc28e88-1767154394294.png" alt="Filled star icon" class="w-6 h-6">
+                    </button>
+                </div>
+
+                <!-- Price Information -->
+                <div class="grid grid-cols-3 gap-4 mb-4 p-4 rounded-lg bg-error/5 border border-error/20">
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">Current Price</p>
+                        <p class="text-xl font-bold text-text-primary data-value">₹785.60</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">Change</p>
+                        <p class="text-lg font-semibold text-error data-value">-8.25</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-text-secondary mb-1">% Change</p>
+                        <p class="text-lg font-semibold text-error data-value">-1.04%</p>
+                    </div>
+                </div>
+
+                <!-- Expert Recommendations -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-text-primary">Recent Expert Activity</h4>
+                        <span class="text-xs text-text-tertiary">2 recommendations</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-3 p-3 rounded-lg bg-surface-elevated">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_19ad480f0-1763291912018.png" alt="Expert Rajat Sharma profile photo" class="w-8 h-8 rounded-full object-cover border border-secondary">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-text-primary">Rajat Sharma</p>
+                                <p class="text-xs text-text-secondary">Target: ₹820 • 3 hours ago</p>
+                            </div>
+                            <span class="badge badge-success text-xs">BUY</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Settings -->
+                <div class="pt-4 border-t border-border">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_12320acfb-1767277134129.png" alt="Bell icon" class="w-4 h-4">
+                            Active Alerts
+                        </h4>
+                        <button class="text-xs text-primary font-medium hover:text-primary-700" data-stock="TATAMOTORS">
+                            Configure
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 rounded-full text-xs bg-error-100 text-error-700 flex items-center gap-1">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1a01d07f3-1767221642580.png" alt="Arrow down icon" class="w-3 h-3">
+                            Price ≤ ₹770
+                        </span>
+                        <span class="px-3 py-1 rounded-full text-xs bg-secondary-100 text-secondary-700 flex items-center gap-1">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_195b858d8-1767026089612.png" alt="Voice icon" class="w-3 h-3">
+                            New recommendations
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3 mt-4">
+                    <a href="expert_profiles.html" class="flex-1 btn btn-outline text-sm">
+                        View Experts
+                    </a>
+                    <button class="flex-1 btn btn-primary text-sm" data-action="simulate" data-stock="TATAMOTORS">
+                        Simulate Trade
+                    </button>
+                </div>
+            </article>
+
+            <!-- Empty Slot Card -->
+            <article class="card stagger-item border-2 border-dashed border-border hover:border-primary transition-colors cursor-pointer" id="addStockCard">
+                <div class="flex flex-col items-center justify-center py-12 text-center">
+                    <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1ac9d9357-1765527931226.png" alt="Plus icon" class="w-8 h-8">
+                    </div>
+                    <h3 class="text-lg font-semibold text-text-primary mb-2">Add More Stocks</h3>
+                    <p class="text-sm text-text-secondary mb-4">You have 5 slots remaining</p>
+                    <button class="btn btn-primary">
+                        Add Stock to Watchlist
+                    </button>
+                </div>
+            </article>
+        </section>
+
+        <!-- Recent Alerts Section -->
+        <section class="mt-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-heading font-bold text-text-primary">Recent Alerts</h2>
+                <button class="text-sm text-primary font-medium hover:text-primary-700">View all alerts</button>
+            </div>
+
+            <div class="card">
+                <div class="space-y-4">
+                    <!-- Alert 1 -->
+                    <div class="flex items-start gap-4 p-4 rounded-lg bg-warning-50 border border-warning-200">
+                        <div class="w-10 h-10 rounded-full bg-warning flex items-center justify-center flex-shrink-0">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1f422c906-1764693352407.png" alt="Arrow up icon" class="w-5 h-5">
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-start justify-between mb-2">
+                                <div>
+                                    <h4 class="font-semibold text-text-primary">RELIANCE Price Alert Triggered</h4>
+                                    <p class="text-sm text-text-secondary mt-1">Price reached your target of ₹2,800</p>
+                                </div>
+                                <span class="text-xs text-text-tertiary whitespace-nowrap ml-4">10 mins ago</span>
+                            </div>
+                            <div class="flex items-center gap-3 mt-3">
+                                <span class="text-sm font-medium text-text-primary data-value">Current: ₹2,745.50</span>
+                                <a href="expert_profiles.html" class="text-sm text-primary font-medium hover:text-primary-700">View recommendations</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alert 2 -->
+                    <div class="flex items-start gap-4 p-4 rounded-lg bg-secondary-50 border border-secondary-200">
+                        <div class="w-10 h-10 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_195b858d8-1767026089612.png" alt="Voice icon" class="w-5 h-5">
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-start justify-between mb-2">
+                                <div>
+                                    <h4 class="font-semibold text-text-primary">New Recommendation for HDFCBANK</h4>
+                                    <p class="text-sm text-text-secondary mt-1">Ashwani Gujral recommended BUY with target ₹1,720</p>
+                                </div>
+                                <span class="text-xs text-text-tertiary whitespace-nowrap ml-4">1 hour ago</span>
+                            </div>
+                            <div class="flex items-center gap-3 mt-3">
+                                <span class="badge badge-success">BUY</span>
+                                <a href="expert_profiles.html" class="text-sm text-primary font-medium hover:text-primary-700">View expert profile</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alert 3 -->
+                    <div class="flex items-start gap-4 p-4 rounded-lg bg-error-50 border border-error-200">
+                        <div class="w-10 h-10 rounded-full bg-error flex items-center justify-center flex-shrink-0">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1a01d07f3-1767221642580.png" alt="Arrow down icon" class="w-5 h-5">
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-start justify-between mb-2">
+                                <div>
+                                    <h4 class="font-semibold text-text-primary">TATAMOTORS Price Alert Triggered</h4>
+                                    <p class="text-sm text-text-secondary mt-1">Price dropped below your alert level of ₹770</p>
+                                </div>
+                                <span class="text-xs text-text-tertiary whitespace-nowrap ml-4">3 hours ago</span>
+                            </div>
+                            <div class="flex items-center gap-3 mt-3">
+                                <span class="text-sm font-medium text-text-primary data-value">Current: ₹785.60</span>
+                                <a href="portfolio_simulator.html" class="text-sm text-primary font-medium hover:text-primary-700">Simulate trade</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Add Stock Modal -->
+    <div id="addStockModal" class="modal-overlay hidden" role="dialog" aria-labelledby="addStockModalTitle" aria-modal="true">
+        <div class="modal-content">
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 id="addStockModalTitle" class="text-2xl font-heading font-bold text-text-primary">Add Stock to Watchlist</h2>
+                    <button id="closeAddStockModal" class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Close modal">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1d533db9c-1766571610545.png" alt="Close icon" class="w-6 h-6">
+                    </button>
+                </div>
+
+                <form id="addStockForm" class="space-y-6">
+                    <!-- Stock Symbol Search -->
+                    <div>
+                        <label for="stockSymbol" class="label">Stock Symbol (NSE/BSE)</label>
+                        <div class="relative">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_194eeb027-1764656322629.png" alt="Search icon" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5">
+                            <input type="text" id="stockSymbol" placeholder="e.g., RELIANCE, TCS, INFY" class="input pl-10 w-full" required aria-required="true">
+                        </div>
+                        <p class="text-xs text-text-tertiary mt-2">Search by stock symbol or company name</p>
+                    </div>
+
+                    <!-- Watchlist Quota Info -->
+                    <div class="p-4 rounded-lg bg-primary-50 border border-primary-200">
+                        <div class="flex items-start gap-3">
+                            <img src="https://img.rocket.new/generatedImages/rocket_gen_img_14bff7831-1766620330384.png" alt="Information icon" class="w-5 h-5 mt-0.5">
+                            <div>
+                                <p class="text-sm font-medium text-primary-800 mb-1">Watchlist Quota</p>
+                                <p class="text-sm text-primary-700">You have 5 of 10 slots remaining. Upgrade to Pro for unlimited watchlist slots.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alert Configuration -->
+                    <div>
+                        <label class="label">Configure Alerts (Optional)</label>
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-surface-elevated cursor-pointer transition-colors">
+                                <input type="checkbox" name="alertNewRecommendations" class="w-5 h-5 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                                <div class="flex-1">
+                                    <p class="font-medium text-text-primary">New Expert Recommendations</p>
+                                    <p class="text-sm text-text-secondary">Get notified when experts recommend this stock</p>
+                                </div>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-surface-elevated cursor-pointer transition-colors">
+                                <input type="checkbox" name="alertPriceTarget" class="w-5 h-5 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                                <div class="flex-1">
+                                    <p class="font-medium text-text-primary">Price Target Alert</p>
+                                    <p class="text-sm text-text-secondary">Set custom price alerts for this stock</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-3 pt-4">
+                        <button type="button" id="cancelAddStock" class="flex-1 btn btn-outline">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 btn btn-primary">
+                            Add to Watchlist
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configure Alert Modal -->
+    <div id="configureAlertModal" class="modal-overlay hidden" role="dialog" aria-labelledby="configureAlertModalTitle" aria-modal="true">
+        <div class="modal-content">
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 id="configureAlertModalTitle" class="text-2xl font-heading font-bold text-text-primary">Configure Alerts</h2>
+                    <button id="closeConfigureAlertModal" class="touch-target p-2 hover:bg-surface-elevated rounded-md transition-colors" aria-label="Close modal">
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_1d533db9c-1766571610545.png" alt="Close icon" class="w-6 h-6">
+                    </button>
+                </div>
+
+                <form id="configureAlertForm" class="space-y-6">
+                    <!-- Stock Info -->
+                    <div class="p-4 rounded-lg bg-surface-elevated">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-semibold text-text-primary" id="alertStockSymbol">RELIANCE</h3>
+                                <p class="text-sm text-text-secondary">Current Price: <span class="font-medium data-value">₹2,745.50</span></p>
+                            </div>
+                            <span class="badge badge-success">NSE</span>
+                        </div>
+                    </div>
+
+                    <!-- Price Alerts -->
+                    <div>
+                        <label class="label">Price Alerts</label>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="priceAbove" class="text-sm text-text-secondary mb-2 block">Alert when price goes above</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary">₹</span>
+                                    <input type="number" id="priceAbove" placeholder="2800" class="input pl-8 w-full" step="0.01">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="priceBelow" class="text-sm text-text-secondary mb-2 block">Alert when price goes below</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary">₹</span>
+                                    <input type="number" id="priceBelow" placeholder="2600" class="input pl-8 w-full" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendation Alerts -->
+                    <div>
+                        <label class="label">Recommendation Alerts</label>
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-surface-elevated cursor-pointer transition-colors">
+                                <input type="checkbox" name="alertNewRec" class="w-5 h-5 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2" checked>
+                                <div class="flex-1">
+                                    <p class="font-medium text-text-primary">New Recommendations</p>
+                                    <p class="text-sm text-text-secondary">Notify when any expert recommends this stock</p>
+                                </div>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-surface-elevated cursor-pointer transition-colors">
+                                <input type="checkbox" name="alertTargetHit" class="w-5 h-5 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                                <div class="flex-1">
+                                    <p class="font-medium text-text-primary">Target Achievement</p>
+                                    <p class="text-sm text-text-secondary">Notify when expert targets are achieved</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Notification Frequency -->
+                    <div>
+                        <label for="notificationFrequency" class="label">Notification Frequency</label>
+                        <select id="notificationFrequency" class="input w-full">
+                            <option value="instant">Instant (Real-time)</option>
+                            <option value="hourly">Hourly Summary</option>
+                            <option value="daily">Daily Summary</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-3 pt-4">
+                        <button type="button" id="cancelConfigureAlert" class="flex-1 btn btn-outline">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 btn btn-primary">
+                            Save Alerts
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-surface border-t border-border mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SayIt OwnIt Logo">
+                        <defs>
+                            <linearGradient id="footerLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0891B2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="20" cy="20" r="18" fill="url(#footerLogoGradient)" opacity="0.1"/>
+                        <path d="M20 8C13.373 8 8 13.373 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 13.373 26.627 8 20 8ZM20 14C21.105 14 22 14.895 22 16V24C22 25.105 21.105 26 20 26C18.895 26 18 25.105 18 24V16C18 14.895 18.895 14 20 14Z" fill="url(#footerLogoGradient)"/>
+                        <circle cx="20" cy="16" r="2" fill="#FFFFFF"/>
+                    </svg>
+                    <span class="font-heading font-bold text-primary">SayIt OwnIt</span>
+                </div>
+                <p class="text-sm text-text-secondary">© 2026 SayIt OwnIt. All Rights Reserved.</p>
+                <div class="flex items-center gap-4">
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Privacy</a>
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Terms</a>
+                    <a href="javascript:void(0)" class="text-text-secondary hover:text-primary transition-colors">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Add Stock Modal
+        const addStockBtn = document.getElementById('addStockBtn');
+        const addStockCard = document.getElementById('addStockCard');
+        const addStockModal = document.getElementById('addStockModal');
+        const closeAddStockModal = document.getElementById('closeAddStockModal');
+        const cancelAddStock = document.getElementById('cancelAddStock');
+        const addStockForm = document.getElementById('addStockForm');
+
+        function openAddStockModal() {
+            addStockModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddStockModalFunc() {
+            addStockModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            addStockForm.reset();
+        }
+
+        addStockBtn.addEventListener('click', openAddStockModal);
+        addStockCard.addEventListener('click', openAddStockModal);
+        closeAddStockModal.addEventListener('click', closeAddStockModalFunc);
+        cancelAddStock.addEventListener('click', closeAddStockModalFunc);
+
+        addStockModal.addEventListener('click', (e) => {
+            if (e.target === addStockModal) {
+                closeAddStockModalFunc();
+            }
+        });
+
+        addStockForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Simulate adding stock
+            alert('Stock added to watchlist successfully!');
+            closeAddStockModalFunc();
+        });
+
+        // Configure Alert Modal
+        const configureAlertModal = document.getElementById('configureAlertModal');
+        const closeConfigureAlertModal = document.getElementById('closeConfigureAlertModal');
+        const cancelConfigureAlert = document.getElementById('cancelConfigureAlert');
+        const configureAlertForm = document.getElementById('configureAlertForm');
+        const alertStockSymbol = document.getElementById('alertStockSymbol');
+
+        function openConfigureAlertModal(stockSymbol) {
+            alertStockSymbol.textContent = stockSymbol;
+            configureAlertModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeConfigureAlertModalFunc() {
+            configureAlertModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        closeConfigureAlertModal.addEventListener('click', closeConfigureAlertModalFunc);
+        cancelConfigureAlert.addEventListener('click', closeConfigureAlertModalFunc);
+
+        configureAlertModal.addEventListener('click', (e) => {
+            if (e.target === configureAlertModal) {
+                closeConfigureAlertModalFunc();
+            }
+        });
+
+        configureAlertForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Simulate saving alerts
+            alert('Alert settings saved successfully!');
+            closeConfigureAlertModalFunc();
+        });
+
+        // Configure alert buttons
+        document.querySelectorAll('[data-stock]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const stockSymbol = e.currentTarget.getAttribute('data-stock');
+                openConfigureAlertModal(stockSymbol);
+            });
+        });
+
+        // Refresh prices
+        const refreshPricesBtn = document.getElementById('refreshPricesBtn');
+        refreshPricesBtn.addEventListener('click', () => {
+            // Simulate price refresh
+            refreshPricesBtn.disabled = true;
+            refreshPricesBtn.innerHTML = '<img src="https://api.iconify.design/mdi/loading.svg?color=%231E40AF" alt="Loading icon" class="w-5 h-5 animate-spin"><span class="hidden sm:inline">Refreshing...</span>';
+            
+            setTimeout(() => {
+                refreshPricesBtn.disabled = false;
+                refreshPricesBtn.innerHTML = '<img src="https://api.iconify.design/mdi/refresh.svg?color=%231E40AF" alt="Refresh icon" class="w-5 h-5"><span class="hidden sm:inline">Refresh Prices</span>';
+                alert('Prices updated successfully!');
+            }, 2000);
+        });
+
+        // Export CSV
+        const exportBtn = document.getElementById('exportBtn');
+        exportBtn.addEventListener('click', () => {
+            // Simulate CSV export
+            const csvContent = 'Symbol,Name,Current Price,Change,% Change,Alerts\n' +
+                'RELIANCE,Reliance Industries Ltd.,2745.50,+32.80,+1.21%,2\n' +
+                'TCS,Tata Consultancy Services Ltd.,3985.20,-20.15,-0.50%,1\n' +
+                'INFY,Infosys Ltd.,1598.75,+12.65,+0.80%,2\n' +
+                'HDFCBANK,HDFC Bank Ltd.,1642.30,+18.45,+1.14%,1\n' +
+                'TATAMOTORS,Tata Motors Ltd.,785.60,-8.25,-1.04%,2';
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'watchlist_export_' + new Date().toISOString().split('T')[0] + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        });
+
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('[data-filter]');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Remove active state from all buttons
+                filterButtons.forEach(b => {
+                    b.classList.remove('bg-primary', 'text-primary-foreground');
+                    b.classList.add('text-text-secondary');
+                });
+                
+                // Add active state to clicked button
+                e.currentTarget.classList.add('bg-primary', 'text-primary-foreground');
+                e.currentTarget.classList.remove('text-text-secondary');
+                
+                // Filter logic would go here
+                const filter = e.currentTarget.getAttribute('data-filter');
+                console.log('Filtering by:', filter);
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            // Search logic would go here
+            console.log('Searching for:', searchTerm);
+        });
+
+        // Simulate trade buttons
+        document.querySelectorAll('[data-action="simulate"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const stockSymbol = e.currentTarget.getAttribute('data-stock');
+                // Redirect to portfolio simulator with stock pre-selected
+                window.location.href = `portfolio_simulator.html?stock=${stockSymbol}`;
+            });
+        });
+
+        // Keyboard accessibility for modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (!addStockModal.classList.contains('hidden')) {
+                    closeAddStockModalFunc();
+                }
+                if (!configureAlertModal.classList.contains('hidden')) {
+                    closeConfigureAlertModalFunc();
+                }
+            }
+        });
+    </script>
+<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
+</body>
+</html>
