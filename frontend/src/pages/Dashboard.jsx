@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import FloatingVideoPlayer from '../components/FloatingVideoPlayer';
 import { useVideoPlayer } from '../hooks/useVideoPlayer';
+import { useAuth } from '../contexts/AuthContext';
+import { useUser } from '../contexts/UserContext';
 
 // Icon components for stat cards
 const VideoIcon = () => (
@@ -41,6 +43,18 @@ const PlayIcon = () => (
   </svg>
 );
 
+const ClockIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const RefreshIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+  </svg>
+);
+
 function StatCard({ title, value, icon: Icon, colorClass, badgeText, link, linkText }) {
   return (
     <div className="card stagger-item">
@@ -67,6 +81,21 @@ function StatCard({ title, value, icon: Icon, colorClass, badgeText, link, linkT
   );
 }
 
+// Helper to format time ago
+function formatTimeAgo(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 function RecommendationCard({ rec, onPlayVideo }) {
   const hasVideo = rec.videos?.youtube_url;
   const actionBadgeClass = {
@@ -75,60 +104,86 @@ function RecommendationCard({ rec, onPlayVideo }) {
     HOLD: 'badge-warning'
   }[rec.action] || 'badge-secondary';
 
+  // Calculate price change percentage if we have current and target prices
+  const currentPrice = rec.current_price;
+  const hasCurrentPrice = currentPrice && currentPrice > 0;
+  const priceChange = hasCurrentPrice && rec.entry_price
+    ? ((currentPrice - rec.entry_price) / rec.entry_price * 100).toFixed(1)
+    : null;
+
   return (
     <article className="card">
+      {/* Expert Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center">
-            <span className="text-secondary font-bold">{rec.expert_name?.charAt(0) || '?'}</span>
+          <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center border-2 border-secondary">
+            <span className="text-secondary font-bold text-lg">{rec.expert_name?.charAt(0) || '?'}</span>
           </div>
           <div>
             <Link
               to={`/experts/${encodeURIComponent(rec.expert_name)}`}
-              className="font-semibold text-gray-900 hover:text-primary"
+              className="font-semibold text-text-primary hover:text-primary"
             >
               {rec.expert_name}
             </Link>
-            <p className="text-xs text-gray-500">{rec.recommendation_date}</p>
+            <p className="text-xs text-text-secondary">Market Analyst</p>
           </div>
         </div>
+        <span className="text-xs text-text-secondary">{formatTimeAgo(rec.recommendation_date)}</span>
       </div>
 
+      {/* Stock Info with Current Price */}
       <div className="flex items-center gap-4 mb-4">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-3">
             <Link
               to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
-              className="text-lg font-bold text-gray-900 hover:text-primary"
+              className="text-lg font-bold text-text-primary hover:text-primary"
             >
-              {rec.share_name}
+              {rec.nse_symbol || rec.share_name}
             </Link>
             <span className={`badge ${actionBadgeClass}`}>{rec.action}</span>
           </div>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-gray-500">Target</p>
-              <p className="font-semibold text-success data-value">
-                {rec.target_price ? `₹${rec.target_price}` : '-'}
+              <p className="text-xs text-text-secondary">Target Price</p>
+              <p className="font-mono font-semibold text-success data-value">
+                {rec.target_price ? `₹${Number(rec.target_price).toLocaleString('en-IN')}` : '-'}
               </p>
             </div>
             <div>
-              <p className="text-gray-500">Stop Loss</p>
-              <p className="font-semibold text-error data-value">
-                {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
+              <p className="text-xs text-text-secondary">Stop Loss</p>
+              <p className="font-mono font-semibold text-error data-value">
+                {rec.stop_loss ? `₹${Number(rec.stop_loss).toLocaleString('en-IN')}` : '-'}
               </p>
             </div>
           </div>
         </div>
+
+        {/* Current Price Section */}
+        <div className="text-right min-w-[100px]">
+          <p className="text-xs text-text-secondary">Current Price</p>
+          <p className="font-mono text-xl font-bold text-text-primary data-value">
+            {hasCurrentPrice ? `₹${Number(currentPrice).toLocaleString('en-IN')}` : '-'}
+          </p>
+          {priceChange ? (
+            <p className={`font-mono text-xs font-medium ${parseFloat(priceChange) >= 0 ? 'text-success' : 'text-error'}`}>
+              {parseFloat(priceChange) >= 0 ? '+' : ''}{priceChange}%
+            </p>
+          ) : (
+            <p className="text-xs text-text-tertiary">--</p>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+      {/* Actions Footer */}
+      <div className="flex items-center justify-between pt-4 border-t border-line">
         <Link
           to={`/experts/${encodeURIComponent(rec.expert_name)}`}
           className="text-sm text-primary font-medium hover:text-primary-700 inline-flex items-center gap-1"
         >
           <UserIcon />
-          View expert
+          View expert profile
         </Link>
         {hasVideo ? (
           <button
@@ -139,7 +194,7 @@ function RecommendationCard({ rec, onPlayVideo }) {
             Watch video
           </button>
         ) : (
-          <span className="text-sm text-gray-400">No video</span>
+          <span className="text-sm text-text-tertiary">No video</span>
         )}
       </div>
     </article>
@@ -150,14 +205,14 @@ function ExpertListItem({ expert, rank }) {
   return (
     <Link
       to={`/experts/${encodeURIComponent(expert.name)}`}
-      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+      className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors"
     >
       <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center border-2 border-success">
-        <span className="text-success font-bold text-sm">{rank}</span>
+        <span className="text-success font-bold text-sm">{expert.name.charAt(0)}</span>
       </div>
       <div className="flex-1">
-        <p className="font-semibold text-gray-900 text-sm">{expert.name}</p>
-        <p className="text-xs text-gray-500">{expert.count} picks</p>
+        <p className="font-semibold text-text-primary text-sm">{expert.name}</p>
+        <p className="text-xs text-text-secondary">{expert.count} recommendations</p>
       </div>
       <ArrowRightIcon />
     </Link>
@@ -168,17 +223,17 @@ function StockListItem({ share, rank }) {
   return (
     <Link
       to={`/shares/${encodeURIComponent(share.symbol || share.name)}`}
-      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+      className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors"
     >
       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary">
         <span className="text-primary font-bold text-sm">{rank}</span>
       </div>
       <div className="flex-1">
-        <p className="font-semibold text-gray-900 text-sm">
+        <p className="font-semibold text-text-primary text-sm">
           {share.name}
-          {share.symbol && <span className="text-gray-400 ml-1">({share.symbol})</span>}
+          {share.symbol && <span className="text-text-tertiary ml-1">({share.symbol})</span>}
         </p>
-        <p className="text-xs text-gray-500">{share.count} mentions</p>
+        <p className="text-xs text-text-secondary">{share.count} mentions</p>
       </div>
       <ArrowRightIcon />
     </Link>
@@ -189,7 +244,22 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionFilter, setActionFilter] = useState('All');
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [refreshing, setRefreshing] = useState(false);
   const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
+  const { isAuthenticated: isAdmin } = useAuth();
+  const { user, isAuthenticated: isUserLoggedIn } = useUser();
+
+  // Check if any user is logged in (either regular user or admin)
+  const isLoggedIn = isUserLoggedIn || isAdmin;
+  const userName = user?.fullName?.split(' ')[0] || 'User';
+
+  // Filter recommendations based on selected action
+  const filteredRecommendations = stats?.recentRecommendations?.filter(rec => {
+    if (actionFilter === 'All') return true;
+    return rec.action === actionFilter.toUpperCase();
+  }) || [];
 
   useEffect(() => {
     loadStats();
@@ -200,12 +270,39 @@ function Dashboard() {
       setLoading(true);
       const data = await api.getStats();
       setStats(data);
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      const data = await api.getStats();
+      setStats(data);
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  // Format last updated time
+  const formatLastUpdated = () => {
+    return lastUpdated.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }) + ', ' + lastUpdated.toLocaleTimeString('en-IN', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }) + ' IST';
+  };
 
   if (loading) {
     return (
@@ -231,33 +328,81 @@ function Dashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Section */}
-      <section className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-heading font-bold text-gray-900 mb-2">
-              Dashboard
-            </h1>
-            <p className="text-gray-500">
-              Track stock recommendations from Indian financial TV
-            </p>
+      {/* Welcome Section for Logged-in Users */}
+      {isLoggedIn && (
+        <section className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-heading font-bold text-text-primary mb-2">
+                Welcome back, {userName}!
+              </h1>
+              <p className="text-text-secondary">
+                Here's what's happening with your investments today
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-text-secondary">
+              <ClockIcon />
+              <span>Last updated: {formatLastUpdated()}</span>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="ml-2 p-2 hover:bg-surface-elevated rounded-md transition-colors disabled:opacity-50"
+                aria-label="Refresh data"
+              >
+                <RefreshIcon />
+              </button>
+              {isAdmin && (
+                <Link to="/add" className="btn btn-primary ml-2">
+                  Add Video
+                </Link>
+              )}
+            </div>
           </div>
-          <Link to="/add" className="btn btn-primary">
-            Add Video
-          </Link>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Hero Section for Visitors (not logged in) */}
+      {!isLoggedIn && (
+        <section className="card bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 border-0">
+          <div className="text-center py-6">
+            <h1 className="text-3xl sm:text-4xl font-heading font-bold text-text-primary mb-4">
+              Track TV Stock Recommendations
+            </h1>
+            <p className="text-lg text-text-secondary max-w-2xl mx-auto mb-6">
+              We monitor Indian financial TV channels and extract stock recommendations from expert analysts.
+              Track their calls, see historical accuracy, and make informed decisions.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-text-secondary">
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-success rounded-full"></span>
+                Real-time extraction from TV shows
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-primary rounded-full"></span>
+                Expert performance tracking
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-secondary rounded-full"></span>
+                Target & stop-loss levels
+              </span>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Quick Stats Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <StatCard
-          title="Videos Processed"
-          value={stats?.overview?.completedVideos || 0}
-          icon={VideoIcon}
-          colorClass="bg-primary/10 text-primary"
-          link="/recommendations"
-          linkText="View all"
-        />
+      <section className={`grid grid-cols-1 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4 sm:gap-6`}>
+        {/* Videos Processed - Admin Only */}
+        {isAdmin && (
+          <StatCard
+            title="Videos Processed"
+            value={stats?.overview?.completedVideos || 0}
+            icon={VideoIcon}
+            colorClass="bg-primary/10 text-primary"
+            link="/recommendations"
+            linkText="View all"
+          />
+        )}
         <StatCard
           title="Recommendations"
           value={stats?.overview?.totalRecommendations || 0}
@@ -288,49 +433,49 @@ function Dashboard() {
       {/* Action Breakdown */}
       {stats?.actionBreakdown && Object.keys(stats.actionBreakdown).length > 0 && (
         <section className="card">
-          <h2 className="text-lg font-heading font-bold text-gray-900 mb-4">Action Breakdown</h2>
+          <h2 className="text-lg font-heading font-bold text-text-primary mb-4">Action Breakdown</h2>
           <div className="flex flex-wrap gap-6">
             <div className="flex items-center gap-2">
               <span className="w-4 h-4 bg-success rounded"></span>
-              <span className="text-sm text-gray-500">BUY:</span>
-              <span className="font-semibold text-gray-900 data-value">{stats.actionBreakdown.BUY || 0}</span>
+              <span className="text-sm text-text-secondary">BUY:</span>
+              <span className="font-mono font-semibold text-text-primary data-value">{stats.actionBreakdown.BUY || 0}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-4 h-4 bg-error rounded"></span>
-              <span className="text-sm text-gray-500">SELL:</span>
-              <span className="font-semibold text-gray-900 data-value">{stats.actionBreakdown.SELL || 0}</span>
+              <span className="text-sm text-text-secondary">SELL:</span>
+              <span className="font-mono font-semibold text-text-primary data-value">{stats.actionBreakdown.SELL || 0}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-4 h-4 bg-warning rounded"></span>
-              <span className="text-sm text-gray-500">HOLD:</span>
-              <span className="font-semibold text-gray-900 data-value">{stats.actionBreakdown.HOLD || 0}</span>
+              <span className="text-sm text-text-secondary">HOLD:</span>
+              <span className="font-mono font-semibold text-text-primary data-value">{stats.actionBreakdown.HOLD || 0}</span>
             </div>
           </div>
         </section>
       )}
 
-      {/* Processing Jobs */}
-      {stats?.processingJobs?.length > 0 && (
+      {/* Processing Jobs - Admin Only */}
+      {isAdmin && stats?.processingJobs?.length > 0 && (
         <section className="card">
-          <h2 className="text-lg font-heading font-bold text-gray-900 mb-4">Processing Jobs</h2>
+          <h2 className="text-lg font-heading font-bold text-text-primary mb-4">Processing Jobs</h2>
           <div className="space-y-3">
             {stats.processingJobs.map((job) => (
               <div
                 key={job.id}
-                className="flex items-center justify-between bg-gray-50 rounded-lg p-4"
+                className="flex items-center justify-between bg-surface-elevated rounded-lg p-4"
               >
                 <div>
-                  <p className="font-medium text-gray-900">{job.title || 'Processing...'}</p>
-                  <p className="text-sm text-gray-500">{job.currentStep}</p>
+                  <p className="font-medium text-text-primary">{job.title || 'Processing...'}</p>
+                  <p className="text-sm text-text-secondary">{job.currentStep}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-32 bg-slate-200 rounded-full h-2 overflow-hidden">
+                  <div className="w-32 bg-line rounded-full h-2 overflow-hidden">
                     <div
                       className="bg-primary h-2 rounded-full transition-all duration-300"
                       style={{ width: `${job.progress}%` }}
                     ></div>
                   </div>
-                  <span className="text-sm font-medium text-gray-900 data-value w-12 text-right">
+                  <span className="font-mono text-sm font-medium text-text-primary data-value w-12 text-right">
                     {job.progress}%
                   </span>
                 </div>
@@ -345,28 +490,49 @@ function Dashboard() {
         {/* Recent Recommendations Feed */}
         <section className="lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-heading font-bold text-gray-900">Recent Recommendations</h2>
-            <Link to="/recommendations" className="text-sm text-primary font-medium hover:text-primary-700">
-              View all
-            </Link>
+            <h2 className="text-2xl font-heading font-bold text-text-primary">Recent Recommendations</h2>
+            <div className="flex items-center gap-2">
+              {['All', 'Buy', 'Sell'].map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setActionFilter(filter)}
+                  className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${
+                    actionFilter === filter
+                      ? 'bg-primary text-white'
+                      : 'text-text-secondary hover:bg-surface-elevated'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {stats?.recentRecommendations?.length > 0 ? (
+          {filteredRecommendations.length > 0 ? (
             <div className="space-y-4">
-              {stats.recentRecommendations.slice(0, 5).map((rec) => (
+              {filteredRecommendations.slice(0, 5).map((rec) => (
                 <RecommendationCard key={rec.id} rec={rec} onPlayVideo={openVideoPlayer} />
               ))}
             </div>
           ) : (
             <div className="card text-center py-12">
-              <p className="text-gray-500 mb-4">No recommendations yet</p>
-              <Link to="/add" className="btn btn-primary">
-                Add a video to get started
-              </Link>
+              <p className="text-text-secondary mb-4">
+                {actionFilter !== 'All'
+                  ? `No ${actionFilter.toLowerCase()} recommendations found`
+                  : isAdmin
+                    ? 'No recommendations yet'
+                    : 'No recommendations available yet. Check back soon!'}
+              </p>
+              {isAdmin && actionFilter === 'All' && (
+                <Link to="/add" className="btn btn-primary">
+                  Add a video to get started
+                </Link>
+              )}
             </div>
           )}
 
-          {stats?.recentRecommendations?.length > 5 && (
+          {/* Always show View all recommendations button */}
+          {stats?.recentRecommendations?.length > 0 && (
             <div className="mt-6 text-center">
               <Link to="/recommendations" className="btn btn-outline">
                 View all recommendations
@@ -377,30 +543,30 @@ function Dashboard() {
 
         {/* Sidebar */}
         <aside className="space-y-6">
-          {/* Top Experts */}
+          {/* Top Performers */}
           <section className="card">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-heading font-bold text-gray-900">Top Experts</h3>
+              <h3 className="text-lg font-heading font-bold text-text-primary">Top Performers</h3>
               <Link to="/leaderboard" className="text-sm text-primary font-medium hover:text-primary-700">
                 View all
               </Link>
             </div>
 
             {stats?.topExperts?.length > 0 ? (
-              <div className="space-y-2">
-                {stats.topExperts.slice(0, 5).map((expert, idx) => (
+              <div className="space-y-4">
+                {stats.topExperts.slice(0, 3).map((expert, idx) => (
                   <ExpertListItem key={expert.name} expert={expert} rank={idx + 1} />
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">No experts yet</p>
+              <p className="text-text-secondary text-sm">No experts yet</p>
             )}
           </section>
 
           {/* Top Stocks */}
           <section className="card">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-heading font-bold text-gray-900">Top Stocks</h3>
+              <h3 className="text-lg font-heading font-bold text-text-primary">Top Stocks</h3>
               <Link to="/recommendations" className="text-sm text-primary font-medium hover:text-primary-700">
                 View all
               </Link>
@@ -413,7 +579,7 @@ function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">No stocks yet</p>
+              <p className="text-text-secondary text-sm">No stocks yet</p>
             )}
           </section>
         </aside>

@@ -8,6 +8,7 @@
 import cron from 'node-cron';
 import priceService from '../services/priceService.js';
 import outcomeService from '../services/outcomeService.js';
+import metricsService from '../services/metricsService.js';
 
 const logger = {
   info: (msg, data) => console.log(`[PRICE-JOB:INFO] ${msg}`, JSON.stringify(data || {})),
@@ -45,11 +46,17 @@ async function runPriceUpdateJob() {
     const outcomeResult = await outcomeService.processAllActiveRecommendations();
     logger.info('Outcome detection complete', outcomeResult);
 
+    // Step 3: Calculate and save expert metrics for trend analysis
+    logger.info('Calculating expert metrics...');
+    const metricsResult = await metricsService.calculateAllExpertMetrics();
+    logger.info('Metrics calculation complete', { expertsProcessed: metricsResult.length });
+
     const duration = Date.now() - startTime;
     logger.info('Price update job complete', {
       durationMs: duration,
       prices: priceResult,
-      outcomes: outcomeResult
+      outcomes: outcomeResult,
+      metrics: { expertsProcessed: metricsResult.length }
     });
 
   } catch (error) {
