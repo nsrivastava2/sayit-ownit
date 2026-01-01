@@ -28,18 +28,42 @@ Extract recommendations ONLY for INDIAN EQUITY STOCKS listed on NSE/BSE.
 - **Sector advice**: "buy IT sector", "pharma looks good"
 - **Bullion shows**: "26 ka King Kaun" type Gold/Silver discussions
 
-### 3. ACTIONABLE RECOMMENDATIONS ONLY:
+### 3. CRITICAL: VIEWER Q&A vs ACTUAL RECOMMENDATIONS
+**DO NOT capture viewer questions/feedback responses as recommendations!**
+
+❌ **EXCLUDE - Viewer Q&A (Expert responding to viewer's existing position):**
+- "Maine Reliance 2500 pe liya hai, kya karun?" → Expert says "Hold karo, SL 2400"
+- "HDFC Bank mera portfolio mein hai, advice dijiye" → Expert responds with hold/sell
+- "Mera average price 180 hai, should I add more?"
+- Any question starting with "Maine liya hai", "Mere paas hai", "I bought at", "My average is"
+- Expert giving advice on viewer's EXISTING holdings
+- Phrases like "aapka stock", "your holding", "aap hold karein", "aapne jo liya hai"
+- SMS/WhatsApp questions where viewer mentions their purchase price
+
+✅ **INCLUDE - Actual Recommendations (Expert proactively suggesting):**
+- "Aaj ke liye BUY karo HDFC Bank at 1650, target 1750, stop loss 1600"
+- "Mera pick hai Reliance, buy around 2400"
+- "Tata Motors mein position banana chahiye"
+- Expert initiating a fresh recommendation for viewers to act on
+- "10 Ki Kamai" picks, "Anil Singhvi Ki Pick", "Pehla Sauda" recommendations
+- Segments where expert gives their TOP PICKS for the day
+
+**Key Distinction:**
+- If a VIEWER mentions they already OWN the stock → NOT a recommendation (it's Q&A feedback)
+- If the EXPERT suggests a NEW trade idea → IS a recommendation
+
+### 4. ACTIONABLE RECOMMENDATIONS ONLY:
 - Must have a clear BUY or SELL action with at least ONE price point
 - HOLD without any price targets = DO NOT INCLUDE
 - "Stock looks good" without specific action = DO NOT INCLUDE
 - Vague mentions ("could be good", "might rise") = DO NOT INCLUDE
 
-### 4. REQUIRED FIELDS for Valid Recommendation:
+### 5. REQUIRED FIELDS for Valid Recommendation:
 - **share_name**: Specific stock name (not sector)
 - **action**: Must be "BUY" or "SELL" (ignore HOLD without targets)
 - **At least ONE of**: recommended_price OR target_price OR stop_loss
 
-### 5. ZEE BUSINESS EXPERTS:
+### 6. ZEE BUSINESS EXPERTS:
 Regular experts on Zee Business (look for these names):
 - **Anil Singhvi** (Editor) - also called "Anil ji", "Singhvi ji"
 - **Sandeep Jain** - also called "Sandeep ji", "Jain ji"
@@ -50,19 +74,19 @@ Regular experts on Zee Business (look for these names):
 - **Gaurav Bissa**, **Ruchit Jain**, **Shrikant Chouhan**
 - Guest experts from brokerages (Morgan Stanley, HDFC, ICICI, etc.)
 
-### 6. Price Information:
+### 7. Price Information:
 Zee Business typically shows prices as:
 - CMP (Current Market Price) = Entry price
 - TGT / Target = Target price
 - SL / Stoploss = Stop loss
 - Look at screen graphics with price boxes
 
-### 7. Confidence Levels:
+### 8. Confidence Levels:
 - **high**: Clearly visible on screen AND spoken by expert
 - **medium**: Either visible OR spoken clearly
 - **low**: Partially heard/seen
 
-### 8. TAGS - Segment/Show Identification:
+### 9. TAGS - Segment/Show Identification:
 Extract tags to identify the show segment or occasion. Look for:
 
 **Show Segments** (common on Zee Business):

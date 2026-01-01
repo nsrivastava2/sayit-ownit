@@ -18,18 +18,41 @@ Extract recommendations ONLY for INDIAN EQUITY STOCKS listed on NSE/BSE.
 - **Sector advice**: "buy IT sector", "pharma looks good"
 - **Bullion/commodity shows**: Gold/Silver investment discussions
 
-### 3. ACTIONABLE RECOMMENDATIONS ONLY:
+### 3. CRITICAL: VIEWER Q&A vs ACTUAL RECOMMENDATIONS
+**DO NOT capture viewer questions/feedback responses as recommendations!**
+
+❌ **EXCLUDE - Viewer Q&A (Expert responding to viewer's existing position):**
+- "I bought XYZ at 500, what should I do?" → Expert responds with hold/sell advice
+- "My average price is 180, should I add more?"
+- Any question where viewer mentions "I bought", "I have", "My average", "My portfolio"
+- Expert giving advice on viewer's EXISTING holdings
+- Phrases like "aapka stock", "your holding", "aapne jo liya hai"
+- SMS/Call-in questions where viewer mentions their purchase price
+- Hindi: "Maine liya hai", "Mere paas hai", "Mera average price"
+
+✅ **INCLUDE - Actual Recommendations (Expert proactively suggesting):**
+- Expert says "Buy XYZ at 500, target 600, stop loss 475"
+- "Today's pick is ABC, entry around 200"
+- "My recommendation for this week is..."
+- Expert initiating a fresh trade idea for viewers to act on
+- Named segments like "Top Picks", "Stock of the Day", "Expert Ki Pasand"
+
+**Key Distinction:**
+- If a VIEWER mentions they already OWN the stock → NOT a recommendation (it's Q&A feedback)
+- If the EXPERT suggests a NEW trade idea → IS a recommendation
+
+### 4. ACTIONABLE RECOMMENDATIONS ONLY:
 - Must have a clear BUY or SELL action with at least ONE price point
 - HOLD without any price targets = DO NOT INCLUDE
 - "Stock looks good" without specific action = DO NOT INCLUDE
 - Vague mentions ("could be good", "might rise") = DO NOT INCLUDE
 
-### 4. REQUIRED FIELDS for Valid Recommendation:
+### 5. REQUIRED FIELDS for Valid Recommendation:
 - **share_name**: Specific stock name (not sector)
 - **action**: Must be "BUY" or "SELL" (ignore HOLD without targets)
 - **At least ONE of**: recommended_price OR target_price OR stop_loss
 
-### 5. Expert Names to Look For:
+### 6. Expert Names to Look For:
 Common Indian stock market experts:
 - Anil Singhvi, Prakash Gaba, Sanjiv Bhasin, Ashwani Gujral
 - Ashish Chaturmohta, Sudarshan Sukhani, Mitesh Thakkar
@@ -38,18 +61,18 @@ Common Indian stock market experts:
 - Names displayed on screen (title cards, lower thirds)
 - If unclear, use "Unknown Expert"
 
-### 6. Price Information:
+### 7. Price Information:
 Look for these price indicators:
 - Entry/Buy Price (CMP, current price, buy at)
 - Target Price (lakshya, TGT, target)
 - Stop Loss (stoploss, SL)
 
-### 7. Confidence Levels:
+### 8. Confidence Levels:
 - **high**: Clearly visible on screen AND spoken
 - **medium**: Either visible OR spoken clearly
 - **low**: Partially heard/seen
 
-### 8. TAGS - Segment/Show Identification:
+### 9. TAGS - Segment/Show Identification:
 Extract tags to identify the show segment or occasion. Look for:
 
 **Show Segments** (examples):
