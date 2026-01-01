@@ -284,55 +284,38 @@ export const geminiVideoService = {
 
   /**
    * Parse Gemini response into recommendations
+   * Handles truncated JSON responses gracefully
    */
   parseRecommendations(responseText) {
-    try {
-      // Try to parse as JSON directly
-      let recommendations = JSON.parse(responseText);
+    // Items to exclude (commodities, indices, derivatives)
+    const excludePatterns = [
+      /\bgold\b/i, /\bsilver\b/i, /\bcrude\b/i, /\bnatural gas\b/i,
+      /\bcopper\b/i, /\bzinc\b/i, /\baluminium\b/i, /\blead\b/i,
+      /\bnifty\b/i, /\bsensex\b/i, /\bbank nifty\b/i, /\bnifty\s*(50|100|it|bank|fin)/i,
+      /\b(call|put)\s*option/i, /\bfutures?\b/i, /\b(ce|pe)\b/i,
+      /\bdollar\b/i, /\brupee\b/i, /\beur\b/i, /\bbitcoin\b/i, /\bethererum\b/i,
+      /\bbullion\b/i, /\bcommodity\b/i, /\bcommodities\b/i
+    ];
 
-      if (!Array.isArray(recommendations)) {
-        console.warn('Gemini response is not an array');
-        return [];
-      }
+    const validateAndClean = (recommendations) => {
+      if (!Array.isArray(recommendations)) return [];
 
-      // Items to exclude (commodities, indices, derivatives)
-      const excludePatterns = [
-        /\bgold\b/i, /\bsilver\b/i, /\bcrude\b/i, /\bnatural gas\b/i,
-        /\bcopper\b/i, /\bzinc\b/i, /\baluminium\b/i, /\blead\b/i,
-        /\bnifty\b/i, /\bsensex\b/i, /\bbank nifty\b/i, /\bnifty\s*(50|100|it|bank|fin)/i,
-        /\b(call|put)\s*option/i, /\bfutures?\b/i, /\b(ce|pe)\b/i,
-        /\bdollar\b/i, /\brupee\b/i, /\beur\b/i, /\bbitcoin\b/i, /\bethererum\b/i,
-        /\bbullion\b/i, /\bcommodity\b/i, /\bcommodities\b/i
-      ];
-
-      // Validate and clean each recommendation
       return recommendations
         .filter(r => {
-          // Must have share_name and action
           if (!r || !r.share_name || !r.action) return false;
 
-          // Must have at least one price for actionable recommendations
           const hasPrice = r.recommended_price || r.target_price || r.stop_loss;
-          if (!hasPrice) {
-            console.log(`Filtered out: ${r.share_name} - no price data`);
-            return false;
-          }
+          if (!hasPrice) return false;
 
-          // Exclude commodities, indices, derivatives
           const shareName = r.share_name.toLowerCase();
           for (const pattern of excludePatterns) {
             if (pattern.test(shareName) || pattern.test(r.nse_symbol || '')) {
-              console.log(`Filtered out: ${r.share_name} - excluded category`);
               return false;
             }
           }
 
-          // Only accept BUY or SELL (not HOLD without prices)
           const action = (r.action || '').toUpperCase().trim();
-          if (action === 'HOLD' && !r.target_price) {
-            console.log(`Filtered out: ${r.share_name} - HOLD without target`);
-            return false;
-          }
+          if (action === 'HOLD' && !r.target_price) return false;
 
           return true;
         })
@@ -346,23 +329,100 @@ export const geminiVideoService = {
           stop_loss: this.parsePrice(r.stop_loss),
           reason: r.reason || null,
           timestamp_seconds: typeof r.timestamp_seconds === 'number' ? Math.floor(r.timestamp_seconds) : 0,
-          confidence_score: this.confidenceToScore(r.confidence)
+          confidence_score: this.confidenceToScore(r.confidence),
+          tags: Array.isArray(r.tags) ? r.tags : null
         }));
-    } catch (error) {
-      console.error('Failed to parse Gemini response:', error.message);
-      console.error('Response was:', responseText.substring(0, 1000));
+    };
 
-      // Try to extract JSON from text
-      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        try {
-          return this.parseRecommendations(jsonMatch[0]);
-        } catch (e) {
-          return [];
-        }
+    // Strategy 1: Try direct parse
+    try {
+      const recommendations = JSON.parse(responseText);
+      if (Array.isArray(recommendations)) {
+        return validateAndClean(recommendations);
       }
-      return [];
+    } catch (e) {
+      // Continue to recovery strategies
     }
+
+    // Strategy 2: Extract individual complete JSON objects from truncated response
+    // This handles cases where response is cut off mid-array
+    const extractedRecs = [];
+    const objectRegex = /\{[^{}]*"share_name"\s*:\s*"[^"]+\"[^{}]*\}/g;
+    let match;
+
+    while ((match = objectRegex.exec(responseText)) !== null) {
+      try {
+        const obj = JSON.parse(match[0]);
+        if (obj.share_name && obj.action) {
+          extractedRecs.push(obj);
+        }
+      } catch (e) {
+        // Skip malformed objects
+      }
+    }
+
+    if (extractedRecs.length > 0) {
+      console.log(`Recovered ${extractedRecs.length} recommendations from truncated JSON`);
+      return validateAndClean(extractedRecs);
+    }
+
+    // Strategy 3: Try to repair truncated JSON
+    let repairedText = responseText.trim();
+
+    // Remove markdown code blocks if present
+    repairedText = repairedText.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '');
+
+    // Try to fix common truncation issues
+    // Count brackets to see what's missing
+    const openBrackets = (repairedText.match(/\[/g) || []).length;
+    const closeBrackets = (repairedText.match(/\]/g) || []).length;
+    const openBraces = (repairedText.match(/\{/g) || []).length;
+    const closeBraces = (repairedText.match(/\}/g) || []).length;
+
+    // If truncated mid-string, try to close it
+    const lastQuote = repairedText.lastIndexOf('"');
+    const lastColon = repairedText.lastIndexOf(':');
+    if (lastColon > lastQuote) {
+      // Likely truncated after a key, add null value
+      repairedText += 'null';
+    }
+
+    // Add missing closing braces and brackets
+    for (let i = 0; i < openBraces - closeBraces; i++) {
+      repairedText += '}';
+    }
+    for (let i = 0; i < openBrackets - closeBrackets; i++) {
+      repairedText += ']';
+    }
+
+    // Remove trailing commas before closing brackets
+    repairedText = repairedText.replace(/,\s*\}/g, '}').replace(/,\s*\]/g, ']');
+
+    try {
+      const recommendations = JSON.parse(repairedText);
+      if (Array.isArray(recommendations)) {
+        console.log(`Repaired truncated JSON, found ${recommendations.length} items`);
+        return validateAndClean(recommendations);
+      }
+    } catch (e) {
+      console.log('JSON repair failed:', e.message);
+    }
+
+    // Strategy 4: Last resort - try to find any valid array in the text
+    const arrayMatch = responseText.match(/\[[\s\S]*?\]/);
+    if (arrayMatch) {
+      try {
+        const arr = JSON.parse(arrayMatch[0]);
+        if (Array.isArray(arr)) {
+          return validateAndClean(arr);
+        }
+      } catch (e) {
+        // Give up
+      }
+    }
+
+    console.log('Could not parse Gemini response after all recovery attempts');
+    return [];
   },
 
   /**
