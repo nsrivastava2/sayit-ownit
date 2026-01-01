@@ -2,8 +2,18 @@ import express from 'express';
 import { db } from '../config/index.js';
 import queueService from '../services/queueService.js';
 import { adminAuth } from '../middleware/adminAuth.js';
+import geminiVideoService from '../services/geminiVideoService.js';
 
 const router = express.Router();
+
+/**
+ * GET /api/videos/models
+ * Get available Gemini models for analysis
+ */
+router.get('/models', adminAuth, (req, res) => {
+  const models = geminiVideoService.getAvailableModels();
+  res.json({ models });
+});
 
 /**
  * POST /api/videos/process
@@ -128,10 +138,58 @@ router.get('/:id/status', async (req, res) => {
 });
 
 /**
+ * POST /api/videos/:id/reprocess
+ * Reprocess a video with a specific model
+ * Useful when Flash-Lite results are not satisfactory
+ */
+router.post('/:id/reprocess', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { model = 'flash' } = req.body; // Default to Flash for reprocessing
+
+    // Validate model
+    const availableModels = geminiVideoService.getAvailableModels();
+    const validModelIds = availableModels.map(m => m.id);
+    if (!validModelIds.includes(model)) {
+      return res.status(400).json({
+        error: `Invalid model. Available: ${validModelIds.join(', ')}`
+      });
+    }
+
+    // Get video details
+    const video = await db.getVideo(id);
+    if (!video) {
+      return res.status(404).json({ error: 'Video not found' });
+    }
+
+    // Delete existing recommendations for this video
+    await db.query('DELETE FROM recommendations WHERE video_id = $1', [id]);
+    await db.query('DELETE FROM transcripts WHERE video_id = $1', [id]);
+
+    // Reset video status
+    await db.updateVideo(id, { status: 'pending', processed_at: null, model_used: null });
+
+    // Create new job with specific model
+    const result = await queueService.createJob(video.youtube_url, { modelKey: model });
+
+    res.json({
+      success: true,
+      message: `Reprocessing started with ${model}`,
+      job_id: result.jobId,
+      model: model,
+      previous_model: video.model_used
+    });
+  } catch (error) {
+    console.error('Error reprocessing video:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * DELETE /api/videos/:id
  * Delete a video and its data
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
 

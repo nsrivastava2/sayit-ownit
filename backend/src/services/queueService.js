@@ -21,22 +21,30 @@ let isProcessing = false;
 export const queueService = {
   /**
    * Create a new job for processing a video
+   * @param {string} youtubeUrl - YouTube URL
+   * @param {Object} options - Optional settings
+   * @param {string} options.modelKey - Gemini model to use: 'flash-lite', 'flash', or 'flash-25'
+   * @param {boolean} options.skipExistingCheck - Skip check for existing video (for reprocessing)
    */
-  async createJob(youtubeUrl) {
+  async createJob(youtubeUrl, options = {}) {
+    const { modelKey, skipExistingCheck = false } = options;
+
     // Validate URL
     if (!videoService.isValidYouTubeUrl(youtubeUrl)) {
       throw new Error('Invalid YouTube URL');
     }
 
-    // Check if video already exists
-    const existingVideo = await db.getVideoByUrl(youtubeUrl);
-    if (existingVideo) {
-      return {
-        jobId: existingVideo.id,
-        status: existingVideo.status,
-        message: 'Video already exists',
-        isExisting: true
-      };
+    // Check if video already exists (unless reprocessing)
+    if (!skipExistingCheck) {
+      const existingVideo = await db.getVideoByUrl(youtubeUrl);
+      if (existingVideo) {
+        return {
+          jobId: existingVideo.id,
+          status: existingVideo.status,
+          message: 'Video already exists',
+          isExisting: true
+        };
+      }
     }
 
     // Get video info from yt-dlp (for metadata)
@@ -49,17 +57,25 @@ export const queueService = {
       publishDate = `${videoInfo.uploadDate.slice(0, 4)}-${videoInfo.uploadDate.slice(4, 6)}-${videoInfo.uploadDate.slice(6, 8)}`;
     }
 
-    // Create video record
-    const video = await db.createVideo({
-      youtube_url: youtubeUrl,
-      title: videoInfo.title,
-      channel_name: videoInfo.channelName,
-      video_type: videoInfo.isLive ? 'live' : 'recorded',
-      duration_seconds: videoInfo.duration,
-      language: videoInfo.language,
-      status: 'pending',
-      publish_date: publishDate
-    });
+    // Check if video exists (for reprocessing case)
+    let video = await db.getVideoByUrl(youtubeUrl);
+
+    if (video) {
+      // Update existing video status for reprocessing
+      await db.updateVideo(video.id, { status: 'pending' });
+    } else {
+      // Create video record
+      video = await db.createVideo({
+        youtube_url: youtubeUrl,
+        title: videoInfo.title,
+        channel_name: videoInfo.channelName,
+        video_type: videoInfo.isLive ? 'live' : 'recorded',
+        duration_seconds: videoInfo.duration,
+        language: videoInfo.language,
+        status: 'pending',
+        publish_date: publishDate
+      });
+    }
 
     // Create job
     const job = {
@@ -67,6 +83,7 @@ export const queueService = {
       videoId: video.id,
       youtubeUrl,
       videoInfo,
+      modelKey, // Pass model choice to job
       status: 'pending',
       progress: 0,
       currentStep: 'queued',
@@ -206,8 +223,9 @@ export const queueService = {
         console.log(`Analyzing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)}...`);
 
         try {
-          const batchRecs = await geminiVideoService.analyzeTranscriptWithGemini(batchText, channelName, job.videoInfo?.title);
-          allRecommendations.push(...batchRecs);
+          const result = await geminiVideoService.analyzeTranscriptWithGemini(batchText, channelName, job.videoInfo?.title, job.modelKey);
+          allRecommendations.push(...result.recommendations);
+          job.modelUsed = result.model; // Track which model was used
         } catch (batchError) {
           console.log(`Batch ${Math.floor(i / batchSize) + 1} failed: ${batchError.message}`);
         }
@@ -233,13 +251,14 @@ export const queueService = {
         try {
           job.currentStep = 'analyzing_video';
           job.progress = 20;
-          console.log(`Using Gemini video analysis (Gemini 2.5 Flash)... [${Math.round(videoDurationMinutes)} min video]`);
+          console.log(`Using Gemini video analysis... [${Math.round(videoDurationMinutes)} min video]`);
 
-          const result = await geminiVideoService.analyzeYouTubeVideoByUrl(job.youtubeUrl, channelName);
+          const result = await geminiVideoService.analyzeYouTubeVideoByUrl(job.youtubeUrl, channelName, job.modelKey);
           recommendations = result.recommendations;
           processingMethod = 'gemini_video';
+          job.modelUsed = result.model; // Track which model was used
 
-          console.log(`Gemini Video: Found ${recommendations.length} recommendations`);
+          console.log(`${result.model}: Found ${recommendations.length} recommendations`);
           job.progress = 80;
 
         } catch (geminiError) {
@@ -348,10 +367,11 @@ export const queueService = {
     job.currentStep = 'completed';
     await db.updateVideo(job.videoId, {
       status: 'completed',
-      processed_at: new Date().toISOString()
+      processed_at: new Date().toISOString(),
+      model_used: job.modelUsed || null
     });
 
-    console.log(`Job ${job.id} completed successfully using ${processingMethod}`);
+    console.log(`Job ${job.id} completed successfully using ${processingMethod} (model: ${job.modelUsed || 'unknown'})`);
   },
 
   /**

@@ -11,11 +11,54 @@ import { promptService } from './promptService.js';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_FILE_API_URL = 'https://generativelanguage.googleapis.com/upload/v1beta/files';
-const GEMINI_GENERATE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-const GEMINI_GENERATE_URL_25 = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 const GEMINI_FILE_STATUS_URL = 'https://generativelanguage.googleapis.com/v1beta/files';
 
+// Model configurations - Flash-Lite is default (3x cheaper, same quality for Hindi)
+const GEMINI_MODELS = {
+  'flash-lite': {
+    name: 'gemini-2.0-flash-lite',
+    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent',
+    description: 'Flash-Lite 2.0 - Fast, cost-effective, great for Hindi (default)',
+    costPerMillion: 0.10
+  },
+  'flash': {
+    name: 'gemini-2.0-flash',
+    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    description: 'Flash 2.0 - Standard model, slightly better reasoning',
+    costPerMillion: 0.30
+  },
+  'flash-25': {
+    name: 'gemini-2.5-flash',
+    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+    description: 'Flash 2.5 - Latest model, best quality',
+    costPerMillion: 0.30
+  }
+};
+
+// Default model - Flash-Lite for cost efficiency
+const DEFAULT_MODEL = process.env.GEMINI_DEFAULT_MODEL || 'flash-lite';
+
 export const geminiVideoService = {
+  /**
+   * Get available models for admin UI
+   */
+  getAvailableModels() {
+    return Object.entries(GEMINI_MODELS).map(([key, model]) => ({
+      id: key,
+      name: model.name,
+      description: model.description,
+      costPerMillion: model.costPerMillion,
+      isDefault: key === DEFAULT_MODEL
+    }));
+  },
+
+  /**
+   * Get model configuration by key
+   */
+  getModel(modelKey = DEFAULT_MODEL) {
+    return GEMINI_MODELS[modelKey] || GEMINI_MODELS[DEFAULT_MODEL];
+  },
+
   /**
    * Download video from YouTube
    * @param {string} youtubeUrl - YouTube video URL
@@ -428,18 +471,20 @@ export const geminiVideoService = {
 
   /**
    * Analyze YouTube video directly by URL (no download/upload needed)
-   * Uses Gemini 2.5 Flash which accepts YouTube URLs directly
+   * Uses Gemini models which accept YouTube URLs directly
    * @param {string} youtubeUrl - YouTube video URL
    * @param {string} channelName - Channel name for loading channel-specific prompt
+   * @param {string} modelKey - Model to use: 'flash-lite' (default), 'flash', or 'flash-25'
    * @returns {Object} - Analysis results
    */
-  async analyzeYouTubeVideoByUrl(youtubeUrl, channelName = null) {
-    console.log('Analyzing YouTube video directly via URL...');
+  async analyzeYouTubeVideoByUrl(youtubeUrl, channelName = null, modelKey = DEFAULT_MODEL) {
+    const model = this.getModel(modelKey);
+    console.log(`Analyzing YouTube video directly via URL with ${model.name}...`);
     console.log(`Video: ${youtubeUrl}`);
 
     const prompt = await this.buildAnalysisPrompt(channelName);
 
-    const response = await fetch(`${GEMINI_GENERATE_URL_25}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${model.url}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -469,18 +514,20 @@ export const geminiVideoService = {
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Gemini URL analysis failed: ${response.status} - ${error}`);
+      throw new Error(`Gemini URL analysis failed (${model.name}): ${response.status} - ${error}`);
     }
 
     const result = await response.json();
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     const recommendations = this.parseRecommendations(text);
-    console.log(`Found ${recommendations.length} recommendations via Gemini URL method`);
+    console.log(`Found ${recommendations.length} recommendations via ${model.name} URL method`);
 
     return {
       recommendations,
-      method: 'gemini_url'
+      method: 'gemini_url',
+      model: model.name,
+      modelKey
     };
   },
 
@@ -537,10 +584,12 @@ export const geminiVideoService = {
    * @param {string} transcriptText - Combined transcript text with timestamps
    * @param {string} channelName - Channel name for loading channel-specific prompt
    * @param {string} videoTitle - Video title (helps identify expert from title like "Anil Singhvi's Pick")
-   * @returns {Array} - Extracted recommendations
+   * @param {string} modelKey - Model to use: 'flash-lite' (default), 'flash', or 'flash-25'
+   * @returns {Object} - { recommendations: Array, model: string }
    */
-  async analyzeTranscriptWithGemini(transcriptText, channelName = null, videoTitle = null) {
-    console.log('Analyzing transcript with Gemini...');
+  async analyzeTranscriptWithGemini(transcriptText, channelName = null, videoTitle = null, modelKey = DEFAULT_MODEL) {
+    const model = this.getModel(modelKey);
+    console.log(`Analyzing transcript with ${model.name}...`);
 
     // Load channel-specific prompt
     const basePrompt = await promptService.loadPrompt(channelName);
@@ -563,7 +612,7 @@ ${transcriptText}
 
 Extract ONLY actionable stock recommendations. Convert MM:SS to seconds (05:30 = 330).`;
 
-    const response = await fetch(`${GEMINI_GENERATE_URL_25}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${model.url}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -578,13 +627,19 @@ Extract ONLY actionable stock recommendations. Convert MM:SS to seconds (05:30 =
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Gemini transcript analysis failed: ${response.status} - ${error}`);
+      throw new Error(`Gemini transcript analysis failed (${model.name}): ${response.status} - ${error}`);
     }
 
     const result = await response.json();
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
 
-    return this.parseRecommendations(text);
+    const recommendations = this.parseRecommendations(text);
+
+    return {
+      recommendations,
+      model: model.name,
+      modelKey
+    };
   },
 
   /**

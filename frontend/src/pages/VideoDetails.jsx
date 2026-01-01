@@ -11,8 +11,19 @@ function VideoDetails() {
   const [error, setError] = useState(null);
   const [showFullTranscript, setShowFullTranscript] = useState(false);
 
+  // Reprocess state
+  const [models, setModels] = useState([]);
+  const [selectedModel, setSelectedModel] = useState('flash');
+  const [reprocessing, setReprocessing] = useState(false);
+  const [reprocessError, setReprocessError] = useState(null);
+  const [reprocessSuccess, setReprocessSuccess] = useState(null);
+  const isAdmin = localStorage.getItem('adminToken') !== null;
+
   useEffect(() => {
     loadVideo();
+    if (isAdmin) {
+      loadModels();
+    }
   }, [id]);
 
   async function loadVideo() {
@@ -26,6 +37,59 @@ function VideoDetails() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadModels() {
+    try {
+      const response = await fetch('/api/videos/models', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setModels(data.models || []);
+      }
+    } catch (err) {
+      console.error('Failed to load models:', err);
+    }
+  }
+
+  async function handleReprocess() {
+    if (!window.confirm(`Reprocess this video with ${selectedModel}? This will delete existing recommendations.`)) {
+      return;
+    }
+
+    setReprocessing(true);
+    setReprocessError(null);
+    setReprocessSuccess(null);
+
+    try {
+      const response = await fetch(`/api/videos/${id}/reprocess`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
+        body: JSON.stringify({ model: selectedModel })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Reprocess failed');
+      }
+
+      setReprocessSuccess(`Reprocessing started with ${selectedModel}. Job ID: ${data.job_id}`);
+      // Reload video data after a short delay
+      setTimeout(() => {
+        loadVideo();
+      }, 2000);
+    } catch (err) {
+      setReprocessError(err.message);
+    } finally {
+      setReprocessing(false);
     }
   }
 
@@ -114,7 +178,80 @@ function VideoDetails() {
             Watch on YouTube →
           </a>
         </div>
+
+        {/* Model info */}
+        {video?.model_used && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <span className="text-sm text-gray-500">
+              Processed with: <span className="font-medium text-gray-700">{video.model_used}</span>
+            </span>
+          </div>
+        )}
       </div>
+
+      {/* Admin Reprocess Section */}
+      {isAdmin && models.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Reprocess Video</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            If Flash-Lite missed some recommendations, you can reprocess with a more powerful model.
+          </p>
+
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="flex-1 min-w-48">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Select Model</label>
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                disabled={reprocessing}
+              >
+                {models.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name} - {model.description}
+                    {model.isDefault ? ' (Default)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              onClick={handleReprocess}
+              disabled={reprocessing}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            >
+              {reprocessing ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Reprocessing...
+                </>
+              ) : (
+                'Reprocess Video'
+              )}
+            </button>
+          </div>
+
+          {/* Status messages */}
+          {reprocessError && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-700">{reprocessError}</p>
+            </div>
+          )}
+          {reprocessSuccess && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-700">{reprocessSuccess}</p>
+            </div>
+          )}
+
+          {/* Cost info */}
+          <div className="mt-4 text-xs text-gray-500">
+            <strong>Cost comparison:</strong> flash-lite: $0.10/M tokens, flash: $0.30/M tokens, flash-25: $0.30/M tokens
+          </div>
+        </div>
+      )}
 
       {/* Video embed */}
       {embedUrl && (
