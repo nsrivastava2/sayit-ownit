@@ -122,7 +122,7 @@ function RecommendationCard({ rec, onPlayVideo }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-border">
+      <div className="flex items-center justify-between pt-4 border-t border-slate-200">
         <Link
           to={`/experts/${encodeURIComponent(rec.expert_name)}`}
           className="text-sm text-primary font-medium hover:text-primary-700 inline-flex items-center gap-1"
@@ -324,7 +324,7 @@ function Dashboard() {
                   <p className="text-sm text-text-secondary">{job.currentStep}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-32 bg-border rounded-full h-2 overflow-hidden">
+                  <div className="w-32 bg-slate-200 rounded-full h-2 overflow-hidden">
                     <div
                       className="bg-primary h-2 rounded-full transition-all duration-300"
                       style={{ width: `${job.progress}%` }}

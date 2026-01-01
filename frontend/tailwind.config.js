@@ -115,8 +115,8 @@ export default {
           900: '#7F1D1D', // red-900
           foreground: '#FFFFFF', // white
         },
-        // Border Colors
-        border: {
+        // Border Colors (using 'line' to avoid conflict with border utility)
+        line: {
           DEFAULT: '#E2E8F0', // slate-200
           light: '#F1F5F9', // slate-100
           dark: '#CBD5E1', // slate-300

@@ -33,11 +33,11 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-border rounded-md;
+  @apply bg-slate-200 rounded-md;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-border-dark;
+  @apply bg-slate-300;
 }
 
 /* Focus Visible Styles */
@@ -53,7 +53,7 @@ html {
 @layer components {
   /* Card Component */
   .card {
-    @apply rounded-xl border border-border bg-surface p-6 shadow-sm transition-all duration-250 ease-out;
+    @apply rounded-xl border border-slate-200 bg-surface p-6 shadow-sm transition-all duration-250 ease-out;
   }
 
   .card:hover {
@@ -103,7 +103,7 @@ html {
 
   /* Input Components */
   .input {
-    @apply h-12 w-full rounded-md border border-border bg-surface px-4 text-text-primary transition-all duration-250 ease-out;
+    @apply h-12 w-full rounded-md border border-slate-200 bg-surface px-4 text-text-primary transition-all duration-250 ease-out;
   }
 
   .input:focus {
@@ -154,11 +154,11 @@ html {
   }
 
   .table th {
-    @apply border-b border-border px-4 py-4 text-left font-semibold text-text-primary;
+    @apply border-b border-slate-200 px-4 py-4 text-left font-semibold text-text-primary;
   }
 
   .table td {
-    @apply border-b border-border px-4 py-4;
+    @apply border-b border-slate-200 px-4 py-4;
     height: 56px;
   }
 
@@ -177,7 +177,7 @@ html {
 
   /* Dropdown Component */
   .dropdown {
-    @apply absolute z-dropdown rounded-xl border border-border bg-surface shadow-lg animate-dropdown-open;
+    @apply absolute z-dropdown rounded-xl border border-slate-200 bg-surface shadow-lg animate-dropdown-open;
   }
 
   /* Data Display - Monospace for financial data */

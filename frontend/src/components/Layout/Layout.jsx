@@ -57,7 +57,7 @@ function Layout({ children }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-surface border-b border-border sticky top-0 z-navigation">
+      <header className="bg-surface border-b border-slate-200 sticky top-0 z-navigation">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -79,7 +79,7 @@ function Layout({ children }) {
               ))}
 
               {/* User Section */}
-              <span className="border-l border-border mx-3 h-6"></span>
+              <span className="border-l border-slate-200 mx-3 h-6"></span>
 
               {!userLoading && isUserAuth ? (
                 <>
@@ -119,7 +119,7 @@ function Layout({ children }) {
               {/* Admin Section */}
               {!adminLoading && isAdminAuth && (
                 <>
-                  <span className="border-l border-border mx-3 h-6"></span>
+                  <span className="border-l border-slate-200 mx-3 h-6"></span>
                   {adminNavItems.map((item) => (
                     <Link
                       key={item.path}
@@ -174,7 +174,7 @@ function Layout({ children }) {
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
-            <div className="md:hidden pb-4 border-t border-border mt-2 pt-4 animate-dropdown-open">
+            <div className="md:hidden pb-4 border-t border-slate-200 mt-2 pt-4 animate-dropdown-open">
               <div className="flex flex-col gap-2">
                 {publicNavItems.map((item) => (
                   <Link
@@ -215,7 +215,7 @@ function Layout({ children }) {
 
                 {!adminLoading && isAdminAuth && (
                   <>
-                    <div className="border-t border-border my-2"></div>
+                    <div className="border-t border-slate-200 my-2"></div>
                     <span className="px-4 py-1 text-xs font-medium text-text-tertiary uppercase tracking-wider">Admin</span>
                     {adminNavItems.map((item) => (
                       <Link
@@ -247,7 +247,7 @@ function Layout({ children }) {
       </main>
 
       {/* Footer */}
-      <footer className="bg-surface border-t border-border mt-16">
+      <footer className="bg-surface border-t border-slate-200 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
