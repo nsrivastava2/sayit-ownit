@@ -116,6 +116,27 @@ function RecommendationReview() {
     return 'bg-orange-100 text-orange-800';
   };
 
+  // Format timestamp as MM:SS or HH:MM:SS
+  const formatTimestamp = (seconds) => {
+    if (!seconds && seconds !== 0) return null;
+    const s = Math.floor(seconds);
+    const hrs = Math.floor(s / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    if (hrs > 0) {
+      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Get YouTube URL with timestamp
+  const getVideoUrl = (url, timestamp) => {
+    if (!url) return null;
+    if (!timestamp && timestamp !== 0) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}t=${Math.floor(timestamp)}s`;
+  };
+
   // Filter recommendations based on selected reason
   const filteredRecommendations = filterReason
     ? recommendations.filter(rec =>
@@ -400,12 +421,16 @@ function RecommendationReview() {
                     Source: {rec.video_title}
                     {rec.youtube_url && (
                       <a
-                        href={rec.youtube_url}
+                        href={getVideoUrl(rec.youtube_url, rec.timestamp_in_video)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="ml-2 text-primary-600 hover:underline"
                       >
-                        Watch
+                        {rec.timestamp_in_video ? (
+                          <>▶ Watch @ {formatTimestamp(rec.timestamp_in_video)}</>
+                        ) : (
+                          'Watch'
+                        )}
                       </a>
                     )}
                   </div>

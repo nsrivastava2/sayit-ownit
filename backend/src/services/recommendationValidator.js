@@ -199,6 +199,7 @@ export const recommendationValidator = {
         r.reviewed_at,
         r.reviewer_notes,
         r.created_at,
+        r.timestamp_in_video,
         v.title as video_title,
         v.youtube_url,
         v.id as video_id
