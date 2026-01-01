@@ -1,10 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import session from 'express-session';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config, ollama } from './config/index.js';
+import { configurePassport } from './config/passport.js';
+import passport from 'passport';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +20,8 @@ import sharesRouter from './routes/shares.js';
 import stocksRouter from './routes/stocks.js';
 import statsRouter from './routes/stats.js';
 import authRouter from './routes/auth.js';
+import userAuthRouter from './routes/userAuth.js';
+import userRouter from './routes/user.js';
 import pricesRouter from './routes/prices.js';
 
 // Import admin routes
@@ -42,6 +47,23 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Session middleware (for user auth)
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'sayitownit-session-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  }
+}));
+
+// Initialize Passport for Google OAuth
+configurePassport();
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Serve uploaded files (expert profile images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -62,6 +84,10 @@ app.get('/api/health', (req, res) => {
 
 // Auth Routes (public)
 app.use('/api/auth', authRouter);
+app.use('/api/auth', userAuthRouter);  // Google OAuth routes
+
+// User Routes (protected - require login)
+app.use('/api/user', userRouter);
 
 // Public API Routes
 app.use('/api/videos', videosRouter);

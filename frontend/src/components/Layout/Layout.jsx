@@ -1,10 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUser } from '../../contexts/UserContext';
 
 function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, loading, logout } = useAuth();
+  const { isAuthenticated: isAdminAuth, loading: adminLoading, logout: adminLogout } = useAuth();
+  const { user, isAuthenticated: isUserAuth, loading: userLoading, logout: userLogout } = useUser();
 
   // Public nav items (always visible)
   const publicNavItems = [
@@ -23,8 +25,13 @@ function Layout({ children }) {
 
   const isActive = (path) => location.pathname === path;
 
-  async function handleLogout() {
-    await logout();
+  async function handleAdminLogout() {
+    await adminLogout();
+    navigate('/');
+  }
+
+  async function handleUserLogout() {
+    await userLogout();
     navigate('/');
   }
 
@@ -56,10 +63,52 @@ function Layout({ children }) {
                 </Link>
               ))}
 
-              {/* Admin Section (only visible when authenticated) */}
-              {!loading && isAuthenticated && (
+              {/* User Section */}
+              <span className="border-l border-gray-300 mx-2 h-6"></span>
+
+              {!userLoading && isUserAuth ? (
                 <>
-                  {/* Divider */}
+                  <Link
+                    to="/dashboard"
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      isActive('/dashboard')
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {user?.profilePicture ? (
+                      <img src={user.profilePicture} alt="" className="w-6 h-6 rounded-full" />
+                    ) : (
+                      <span className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold">
+                        {user?.fullName?.charAt(0) || '?'}
+                      </span>
+                    )}
+                    <span className="hidden md:inline">{user?.fullName?.split(' ')[0]}</span>
+                  </Link>
+                  <button
+                    onClick={handleUserLogout}
+                    className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100"
+                    title="Logout"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : !userLoading ? (
+                <Link
+                  to="/login"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive('/login')
+                      ? 'bg-primary-100 text-primary-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  Sign In
+                </Link>
+              ) : null}
+
+              {/* Admin Section (only visible when admin authenticated) */}
+              {!adminLoading && isAdminAuth && (
+                <>
                   <span className="border-l border-gray-300 mx-2 h-6"></span>
 
                   {/* Admin Navigation */}
@@ -67,43 +116,37 @@ function Layout({ children }) {
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         isActive(item.path)
                           ? 'bg-amber-100 text-amber-700'
                           : 'text-gray-500 hover:bg-gray-100'
                       }`}
                     >
                       <span className="mr-1">{item.icon}</span>
-                      {item.label}
+                      <span className="hidden lg:inline">{item.label}</span>
                     </Link>
                   ))}
 
-                  {/* Logout Button */}
                   <button
-                    onClick={handleLogout}
+                    onClick={handleAdminLogout}
                     data-testid="logout-button"
-                    className="ml-2 px-4 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50"
+                    title="Admin Logout"
                   >
-                    🚪 Logout
+                    🚪
                   </button>
                 </>
               )}
 
-              {/* Login Link (only visible when NOT authenticated) */}
-              {!loading && !isAuthenticated && (
-                <>
-                  <span className="border-l border-gray-300 mx-2 h-6"></span>
-                  <Link
-                    to="/admin/login"
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isActive('/admin/login')
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-500 hover:bg-gray-100'
-                    }`}
-                  >
-                    🔐 Admin
-                  </Link>
-                </>
+              {/* Admin Login Link (only visible when NOT admin authenticated) */}
+              {!adminLoading && !isAdminAuth && (
+                <Link
+                  to="/admin/login"
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  title="Admin Login"
+                >
+                  🔐
+                </Link>
               )}
             </nav>
           </div>

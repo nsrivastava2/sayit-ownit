@@ -164,6 +164,85 @@ export const api = {
   },
 
   // ============================================
+  // User Authentication
+  // ============================================
+
+  async getUser() {
+    return fetchApi('/auth/user');
+  },
+
+  async logout() {
+    return fetchApi('/auth/logout', { method: 'POST' });
+  },
+
+  // ============================================
+  // User Features (Following, Watchlists, etc.)
+  // ============================================
+
+  async getFollowing() {
+    return fetchApi('/user/following');
+  },
+
+  async followExpert(expertId) {
+    return fetchApi(`/user/following/${expertId}`, { method: 'POST' });
+  },
+
+  async unfollowExpert(expertId) {
+    return fetchApi(`/user/following/${expertId}`, { method: 'DELETE' });
+  },
+
+  async getWatchlists() {
+    return fetchApi('/user/watchlists');
+  },
+
+  async createWatchlist(name) {
+    return fetchApi('/user/watchlists', {
+      method: 'POST',
+      body: JSON.stringify({ name })
+    });
+  },
+
+  async updateWatchlist(id, name) {
+    return fetchApi(`/user/watchlists/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name })
+    });
+  },
+
+  async deleteWatchlist(id) {
+    return fetchApi(`/user/watchlists/${id}`, { method: 'DELETE' });
+  },
+
+  async addStockToWatchlist(watchlistId, stockId, notes = null) {
+    return fetchApi(`/user/watchlists/${watchlistId}/stocks`, {
+      method: 'POST',
+      body: JSON.stringify({ stockId, notes })
+    });
+  },
+
+  async removeStockFromWatchlist(watchlistId, stockId) {
+    return fetchApi(`/user/watchlists/${watchlistId}/stocks/${stockId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async getNotifications(unreadOnly = false) {
+    return fetchApi(`/user/notifications?unreadOnly=${unreadOnly}`);
+  },
+
+  async markNotificationRead(id) {
+    return fetchApi(`/user/notifications/${id}/read`, { method: 'POST' });
+  },
+
+  async markAllNotificationsRead() {
+    return fetchApi('/user/notifications/read-all', { method: 'POST' });
+  },
+
+  async getDashboard() {
+    return fetchApi('/user/dashboard');
+  },
+
+  // ============================================
   // Admin API - Expert Management
   // ============================================
 
