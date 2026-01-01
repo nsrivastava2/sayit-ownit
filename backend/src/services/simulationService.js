@@ -341,11 +341,51 @@ export async function runSimulation({
     }
   }
 
-  // Calculate final portfolio value (cash + active positions at entry price)
+  // Get current prices for active positions
+  const activePositionsList = [];
   let activePositionsValue = 0;
+
   for (const [symbol, pos] of activePositions) {
-    activePositionsValue += pos.shares * pos.entryPrice; // Use entry price as conservative estimate
+    // Try to get current price from stock_prices table
+    let currentPrice = pos.entryPrice; // Default to entry price
+    let priceDate = null;
+
+    try {
+      const priceResult = await pool.query(`
+        SELECT close_price, price_date
+        FROM stock_prices
+        WHERE nse_symbol = $1
+        ORDER BY price_date DESC
+        LIMIT 1
+      `, [symbol]);
+
+      if (priceResult.rows.length > 0) {
+        currentPrice = parseFloat(priceResult.rows[0].close_price);
+        priceDate = priceResult.rows[0].price_date;
+      }
+    } catch (err) {
+      // Ignore price lookup errors, use entry price
+    }
+
+    const currentValue = pos.shares * currentPrice;
+    const unrealizedPnL = currentValue - pos.cost;
+    const unrealizedReturnPct = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100;
+
+    activePositionsList.push({
+      symbol,
+      shares: pos.shares,
+      entryDate: pos.entryDate,
+      entryPrice: pos.entryPrice,
+      currentPrice: parseFloat(currentPrice.toFixed(2)),
+      priceDate,
+      currentValue: parseFloat(currentValue.toFixed(2)),
+      unrealizedPnL: parseFloat(unrealizedPnL.toFixed(2)),
+      unrealizedReturnPct: parseFloat(unrealizedReturnPct.toFixed(2))
+    });
+
+    activePositionsValue += currentValue;
   }
+
   portfolioValue = cashBalance + activePositionsValue;
 
   // Add final value as cash flow (inflow at end date)
@@ -382,6 +422,7 @@ export async function runSimulation({
     winRate: winRate !== null ? parseFloat(winRate.toFixed(2)) : null,
     avgReturnPerTrade: avgReturnPerTrade !== null ? parseFloat(avgReturnPerTrade.toFixed(2)) : null,
     tradeLog,
+    activePositions: activePositionsList,
     cashFlows: cashFlows.map(cf => ({
       ...cf,
       amount: parseFloat(cf.amount.toFixed(2))

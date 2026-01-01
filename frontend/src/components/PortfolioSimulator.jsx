@@ -291,6 +291,66 @@ function PortfolioSimulator({ expertId, expertName }) {
               </div>
             </div>
 
+            {/* Active Positions */}
+            {results.activePositions && results.activePositions.length > 0 && (
+              <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                <h3 className="font-medium text-yellow-800 mb-3 flex items-center gap-2">
+                  <span>&#128200;</span>
+                  Active Positions ({results.activePositions.length})
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-yellow-100">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-yellow-800">Symbol</th>
+                        <th className="px-3 py-2 text-right text-yellow-800">Shares</th>
+                        <th className="px-3 py-2 text-left text-yellow-800">Entry Date</th>
+                        <th className="px-3 py-2 text-right text-yellow-800">Entry Price</th>
+                        <th className="px-3 py-2 text-right text-yellow-800">Current Price</th>
+                        <th className="px-3 py-2 text-right text-yellow-800">Current Value</th>
+                        <th className="px-3 py-2 text-right text-yellow-800">Unrealized P&L</th>
+                        <th className="px-3 py-2 text-right text-yellow-800">Return</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-yellow-200">
+                      {results.activePositions.map((pos, idx) => (
+                        <tr key={idx} className="hover:bg-yellow-100">
+                          <td className="px-3 py-2 font-medium text-gray-900">{pos.symbol}</td>
+                          <td className="px-3 py-2 text-right text-gray-700">{pos.shares}</td>
+                          <td className="px-3 py-2 text-gray-600">{pos.entryDate}</td>
+                          <td className="px-3 py-2 text-right text-gray-700">₹{pos.entryPrice}</td>
+                          <td className="px-3 py-2 text-right text-gray-700">
+                            ₹{pos.currentPrice}
+                            {pos.priceDate && (
+                              <span className="text-xs text-gray-400 block">
+                                as of {new Date(pos.priceDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-right font-medium text-gray-900">
+                            {formatCurrency(pos.currentValue)}
+                          </td>
+                          <td className={`px-3 py-2 text-right font-medium ${
+                            pos.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {pos.unrealizedPnL >= 0 ? '+' : ''}{formatCurrency(pos.unrealizedPnL)}
+                          </td>
+                          <td className={`px-3 py-2 text-right font-medium ${
+                            pos.unrealizedReturnPct >= 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {formatPercent(pos.unrealizedReturnPct)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs text-yellow-600 mt-2">
+                  * These positions are still open. Current prices are from the latest available market data.
+                </p>
+              </div>
+            )}
+
             {/* Trade Log Toggle */}
             {results.tradeLog && results.tradeLog.length > 0 && (
               <div>
