@@ -406,10 +406,10 @@ CREATE TABLE portfolio_simulations (
 - Trade log table
 
 **Deliverables:**
-- [ ] Portfolio simulation engine
-- [ ] XIRR calculation
-- [ ] Simulation UI on expert profiles
-- [ ] Save simulation results
+- [x] Portfolio simulation engine (simulationService.js)
+- [x] XIRR calculation (Newton-Raphson method)
+- [x] Simulation UI on expert profiles (PortfolioSimulator component)
+- [x] Save simulation results (for logged-in users)
 
 **Site Status:** ✅ Fully usable, advanced analytics
 
