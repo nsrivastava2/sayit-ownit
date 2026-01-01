@@ -6,9 +6,11 @@ import FlagIndicator from '../components/FlagIndicator';
 import FloatingVideoPlayer from '../components/FloatingVideoPlayer';
 import { useVideoPlayer } from '../hooks/useVideoPlayer';
 import { SectorBreakdownChart, MonthlyReturnsChart, WinRateChart } from '../components/charts';
+import { useUser } from '../contexts/UserContext';
 
 function ExpertView() {
   const { name } = useParams();
+  const { user, isAuthenticated } = useUser();
   const [expert, setExpert] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
   const [metrics, setMetrics] = useState(null);
@@ -24,6 +26,12 @@ function ExpertView() {
 
   // Expandable row state
   const [expandedRows, setExpandedRows] = useState(new Set());
+
+  // Following state
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [expertId, setExpertId] = useState(null);
+  const [followError, setFollowError] = useState(null);
 
   const toggleRowExpansion = (id) => {
     setExpandedRows(prev => {
@@ -41,6 +49,49 @@ function ExpertView() {
     loadExpert();
   }, [name]);
 
+  // Check if user is following this expert
+  useEffect(() => {
+    if (isAuthenticated && expertId) {
+      checkFollowingStatus();
+    }
+  }, [isAuthenticated, expertId]);
+
+  async function checkFollowingStatus() {
+    try {
+      const data = await api.getFollowing();
+      const following = data.following?.find(f => f.expert_id === expertId);
+      setIsFollowing(!!following);
+    } catch (err) {
+      console.error('Error checking following status:', err);
+    }
+  }
+
+  async function handleFollow() {
+    if (!isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
+
+    setFollowLoading(true);
+    setFollowError(null);
+
+    try {
+      if (isFollowing) {
+        await api.unfollowExpert(expertId);
+        setIsFollowing(false);
+      } else {
+        await api.followExpert(expertId);
+        setIsFollowing(true);
+      }
+    } catch (err) {
+      setFollowError(err.message);
+      // Show error briefly then clear
+      setTimeout(() => setFollowError(null), 3000);
+    } finally {
+      setFollowLoading(false);
+    }
+  }
+
   async function loadExpert() {
     try {
       setLoading(true);
@@ -54,6 +105,10 @@ function ExpertView() {
       setExpert(expertData.expert);
       setRecommendations(expertData.recommendations);
       setMetrics(metricsData?.metrics || null);
+      // Get expert ID for follow functionality
+      if (metricsData?.metrics?.expert_id) {
+        setExpertId(metricsData.metrics.expert_id);
+      }
       setLoading(false);
 
       // Load chart data in background
@@ -203,7 +258,37 @@ function ExpertView() {
               </>
             )}
           </div>
+
+          {/* Follow Button */}
+          {expertId && (
+            <button
+              onClick={handleFollow}
+              disabled={followLoading}
+              className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isFollowing
+                  ? 'bg-primary-100 text-primary-700 hover:bg-primary-200'
+                  : 'bg-primary-600 text-white hover:bg-primary-700'
+              } disabled:opacity-50`}
+            >
+              {followLoading ? (
+                <span className="flex items-center gap-1">
+                  <span className="animate-spin">⟳</span>
+                </span>
+              ) : isFollowing ? (
+                '✓ Following'
+              ) : (
+                '+ Follow'
+              )}
+            </button>
+          )}
         </div>
+
+        {/* Follow Error */}
+        {followError && (
+          <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-1 rounded">
+            {followError}
+          </div>
+        )}
 
         {/* Mobile Stats Row */}
         <div className="md:hidden flex justify-around mt-3 pt-3 border-t border-gray-100">
@@ -221,6 +306,23 @@ function ExpertView() {
             </>
           )}
         </div>
+
+        {/* Mobile Follow Button */}
+        {expertId && (
+          <div className="md:hidden mt-3 pt-3 border-t border-gray-100">
+            <button
+              onClick={handleFollow}
+              disabled={followLoading}
+              className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
+                isFollowing
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-primary-600 text-white'
+              } disabled:opacity-50`}
+            >
+              {followLoading ? 'Loading...' : isFollowing ? '✓ Following' : '+ Follow'}
+            </button>
+          </div>
+        )}
 
         {/* Expandable Details */}
         {(expert?.experience_summary || expert?.current_associations?.length > 0 || expert?.warnings?.length > 0) && (
