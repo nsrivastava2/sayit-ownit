@@ -55,9 +55,9 @@ function Layout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-surface border-b border-slate-200 sticky top-0 z-navigation">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-navigation">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -88,7 +88,7 @@ function Layout({ children }) {
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                       isActive('/dashboard')
                         ? 'bg-primary/10 text-primary'
-                        : 'text-text-secondary hover:bg-surface-elevated hover:text-text-primary'
+                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
                     {user?.profilePicture ? (
@@ -102,7 +102,7 @@ function Layout({ children }) {
                   </Link>
                   <button
                     onClick={handleUserLogout}
-                    className="px-3 py-1.5 rounded-md text-sm text-text-tertiary hover:bg-surface-elevated hover:text-text-secondary transition-colors"
+                    className="px-3 py-1.5 rounded-md text-sm text-gray-400 hover:bg-gray-50 hover:text-gray-500 transition-colors"
                   >
                     Logout
                   </button>
@@ -127,7 +127,7 @@ function Layout({ children }) {
                       className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                         isActive(item.path)
                           ? 'bg-accent/10 text-accent-700'
-                          : 'text-text-tertiary hover:bg-surface-elevated hover:text-text-secondary'
+                          : 'text-gray-400 hover:bg-gray-50 hover:text-gray-500'
                       }`}
                     >
                       {item.label}
@@ -148,7 +148,7 @@ function Layout({ children }) {
               {!adminLoading && !isAdminAuth && (
                 <Link
                   to="/admin/login"
-                  className="px-3 py-1.5 rounded-md text-sm font-medium text-text-tertiary hover:text-text-secondary hover:bg-surface-elevated transition-colors"
+                  className="px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-gray-500 hover:bg-gray-50 transition-colors"
                   title="Admin Login"
                 >
                   Admin
@@ -162,7 +162,7 @@ function Layout({ children }) {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle mobile menu"
             >
-              <svg className="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {mobileMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -216,7 +216,7 @@ function Layout({ children }) {
                 {!adminLoading && isAdminAuth && (
                   <>
                     <div className="border-t border-slate-200 my-2"></div>
-                    <span className="px-4 py-1 text-xs font-medium text-text-tertiary uppercase tracking-wider">Admin</span>
+                    <span className="px-4 py-1 text-xs font-medium text-gray-400 uppercase tracking-wider">Admin</span>
                     {adminNavItems.map((item) => (
                       <Link
                         key={item.path}
@@ -247,26 +247,26 @@ function Layout({ children }) {
       </main>
 
       {/* Footer */}
-      <footer className="bg-surface border-t border-slate-200 mt-16">
+      <footer className="bg-white border-t border-slate-200 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Logo className="w-8 h-8" />
               <span className="font-heading font-bold text-primary">SayIt OwnIt</span>
             </div>
-            <p className="text-sm text-text-secondary">
+            <p className="text-sm text-gray-500">
               Stock Market TV Recommendation Tracker
             </p>
             <div className="flex items-center gap-4 text-sm">
-              <Link to="/privacy-policy" className="text-text-secondary hover:text-primary transition-colors">
+              <Link to="/privacy-policy" className="text-gray-500 hover:text-primary transition-colors">
                 Privacy
               </Link>
-              <Link to="/terms" className="text-text-secondary hover:text-primary transition-colors">
+              <Link to="/terms" className="text-gray-500 hover:text-primary transition-colors">
                 Terms
               </Link>
             </div>
           </div>
-          <p className="text-center text-text-tertiary text-xs mt-4">
+          <p className="text-center text-gray-400 text-xs mt-4">
             &copy; {new Date().getFullYear()} Ubinator Software Solutions LLP. All rights reserved.
           </p>
         </div>

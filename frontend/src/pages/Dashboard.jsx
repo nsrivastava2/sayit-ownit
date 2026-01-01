@@ -85,11 +85,11 @@ function RecommendationCard({ rec, onPlayVideo }) {
           <div>
             <Link
               to={`/experts/${encodeURIComponent(rec.expert_name)}`}
-              className="font-semibold text-text-primary hover:text-primary"
+              className="font-semibold text-gray-900 hover:text-primary"
             >
               {rec.expert_name}
             </Link>
-            <p className="text-xs text-text-secondary">{rec.recommendation_date}</p>
+            <p className="text-xs text-gray-500">{rec.recommendation_date}</p>
           </div>
         </div>
       </div>
@@ -99,7 +99,7 @@ function RecommendationCard({ rec, onPlayVideo }) {
           <div className="flex items-center gap-2 mb-2">
             <Link
               to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
-              className="text-lg font-bold text-text-primary hover:text-primary"
+              className="text-lg font-bold text-gray-900 hover:text-primary"
             >
               {rec.share_name}
             </Link>
@@ -107,13 +107,13 @@ function RecommendationCard({ rec, onPlayVideo }) {
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-text-secondary">Target</p>
+              <p className="text-gray-500">Target</p>
               <p className="font-semibold text-success data-value">
                 {rec.target_price ? `₹${rec.target_price}` : '-'}
               </p>
             </div>
             <div>
-              <p className="text-text-secondary">Stop Loss</p>
+              <p className="text-gray-500">Stop Loss</p>
               <p className="font-semibold text-error data-value">
                 {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
               </p>
@@ -139,7 +139,7 @@ function RecommendationCard({ rec, onPlayVideo }) {
             Watch video
           </button>
         ) : (
-          <span className="text-sm text-text-tertiary">No video</span>
+          <span className="text-sm text-gray-400">No video</span>
         )}
       </div>
     </article>
@@ -150,14 +150,14 @@ function ExpertListItem({ expert, rank }) {
   return (
     <Link
       to={`/experts/${encodeURIComponent(expert.name)}`}
-      className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors"
+      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
     >
       <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center border-2 border-success">
         <span className="text-success font-bold text-sm">{rank}</span>
       </div>
       <div className="flex-1">
-        <p className="font-semibold text-text-primary text-sm">{expert.name}</p>
-        <p className="text-xs text-text-secondary">{expert.count} picks</p>
+        <p className="font-semibold text-gray-900 text-sm">{expert.name}</p>
+        <p className="text-xs text-gray-500">{expert.count} picks</p>
       </div>
       <ArrowRightIcon />
     </Link>
@@ -168,17 +168,17 @@ function StockListItem({ share, rank }) {
   return (
     <Link
       to={`/shares/${encodeURIComponent(share.symbol || share.name)}`}
-      className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors"
+      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
     >
       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary">
         <span className="text-primary font-bold text-sm">{rank}</span>
       </div>
       <div className="flex-1">
-        <p className="font-semibold text-text-primary text-sm">
+        <p className="font-semibold text-gray-900 text-sm">
           {share.name}
-          {share.symbol && <span className="text-text-tertiary ml-1">({share.symbol})</span>}
+          {share.symbol && <span className="text-gray-400 ml-1">({share.symbol})</span>}
         </p>
-        <p className="text-xs text-text-secondary">{share.count} mentions</p>
+        <p className="text-xs text-gray-500">{share.count} mentions</p>
       </div>
       <ArrowRightIcon />
     </Link>
@@ -235,10 +235,10 @@ function Dashboard() {
       <section className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-heading font-bold text-text-primary mb-2">
+            <h1 className="text-3xl sm:text-4xl font-heading font-bold text-gray-900 mb-2">
               Dashboard
             </h1>
-            <p className="text-text-secondary">
+            <p className="text-gray-500">
               Track stock recommendations from Indian financial TV
             </p>
           </div>
@@ -288,22 +288,22 @@ function Dashboard() {
       {/* Action Breakdown */}
       {stats?.actionBreakdown && Object.keys(stats.actionBreakdown).length > 0 && (
         <section className="card">
-          <h2 className="text-lg font-heading font-bold text-text-primary mb-4">Action Breakdown</h2>
+          <h2 className="text-lg font-heading font-bold text-gray-900 mb-4">Action Breakdown</h2>
           <div className="flex flex-wrap gap-6">
             <div className="flex items-center gap-2">
               <span className="w-4 h-4 bg-success rounded"></span>
-              <span className="text-sm text-text-secondary">BUY:</span>
-              <span className="font-semibold text-text-primary data-value">{stats.actionBreakdown.BUY || 0}</span>
+              <span className="text-sm text-gray-500">BUY:</span>
+              <span className="font-semibold text-gray-900 data-value">{stats.actionBreakdown.BUY || 0}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-4 h-4 bg-error rounded"></span>
-              <span className="text-sm text-text-secondary">SELL:</span>
-              <span className="font-semibold text-text-primary data-value">{stats.actionBreakdown.SELL || 0}</span>
+              <span className="text-sm text-gray-500">SELL:</span>
+              <span className="font-semibold text-gray-900 data-value">{stats.actionBreakdown.SELL || 0}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-4 h-4 bg-warning rounded"></span>
-              <span className="text-sm text-text-secondary">HOLD:</span>
-              <span className="font-semibold text-text-primary data-value">{stats.actionBreakdown.HOLD || 0}</span>
+              <span className="text-sm text-gray-500">HOLD:</span>
+              <span className="font-semibold text-gray-900 data-value">{stats.actionBreakdown.HOLD || 0}</span>
             </div>
           </div>
         </section>
@@ -312,16 +312,16 @@ function Dashboard() {
       {/* Processing Jobs */}
       {stats?.processingJobs?.length > 0 && (
         <section className="card">
-          <h2 className="text-lg font-heading font-bold text-text-primary mb-4">Processing Jobs</h2>
+          <h2 className="text-lg font-heading font-bold text-gray-900 mb-4">Processing Jobs</h2>
           <div className="space-y-3">
             {stats.processingJobs.map((job) => (
               <div
                 key={job.id}
-                className="flex items-center justify-between bg-surface-elevated rounded-lg p-4"
+                className="flex items-center justify-between bg-gray-50 rounded-lg p-4"
               >
                 <div>
-                  <p className="font-medium text-text-primary">{job.title || 'Processing...'}</p>
-                  <p className="text-sm text-text-secondary">{job.currentStep}</p>
+                  <p className="font-medium text-gray-900">{job.title || 'Processing...'}</p>
+                  <p className="text-sm text-gray-500">{job.currentStep}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-32 bg-slate-200 rounded-full h-2 overflow-hidden">
@@ -330,7 +330,7 @@ function Dashboard() {
                       style={{ width: `${job.progress}%` }}
                     ></div>
                   </div>
-                  <span className="text-sm font-medium text-text-primary data-value w-12 text-right">
+                  <span className="text-sm font-medium text-gray-900 data-value w-12 text-right">
                     {job.progress}%
                   </span>
                 </div>
@@ -345,7 +345,7 @@ function Dashboard() {
         {/* Recent Recommendations Feed */}
         <section className="lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-heading font-bold text-text-primary">Recent Recommendations</h2>
+            <h2 className="text-2xl font-heading font-bold text-gray-900">Recent Recommendations</h2>
             <Link to="/recommendations" className="text-sm text-primary font-medium hover:text-primary-700">
               View all
             </Link>
@@ -359,7 +359,7 @@ function Dashboard() {
             </div>
           ) : (
             <div className="card text-center py-12">
-              <p className="text-text-secondary mb-4">No recommendations yet</p>
+              <p className="text-gray-500 mb-4">No recommendations yet</p>
               <Link to="/add" className="btn btn-primary">
                 Add a video to get started
               </Link>
@@ -380,7 +380,7 @@ function Dashboard() {
           {/* Top Experts */}
           <section className="card">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-heading font-bold text-text-primary">Top Experts</h3>
+              <h3 className="text-lg font-heading font-bold text-gray-900">Top Experts</h3>
               <Link to="/leaderboard" className="text-sm text-primary font-medium hover:text-primary-700">
                 View all
               </Link>
@@ -393,14 +393,14 @@ function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-text-secondary text-sm">No experts yet</p>
+              <p className="text-gray-500 text-sm">No experts yet</p>
             )}
           </section>
 
           {/* Top Stocks */}
           <section className="card">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-heading font-bold text-text-primary">Top Stocks</h3>
+              <h3 className="text-lg font-heading font-bold text-gray-900">Top Stocks</h3>
               <Link to="/recommendations" className="text-sm text-primary font-medium hover:text-primary-700">
                 View all
               </Link>
@@ -413,7 +413,7 @@ function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-text-secondary text-sm">No stocks yet</p>
+              <p className="text-gray-500 text-sm">No stocks yet</p>
             )}
           </section>
         </aside>

@@ -9,7 +9,7 @@
 
 /* Base Typography */
 body {
-  @apply bg-background text-text-primary font-body antialiased;
+  @apply bg-gray-50 text-gray-900 font-body antialiased;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -29,7 +29,7 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-background;
+  @apply bg-gray-50;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -42,18 +42,18 @@ html {
 
 /* Focus Visible Styles */
 *:focus-visible {
-  @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-gray-50;
 }
 
 /* Selection Styles */
 ::selection {
-  @apply bg-primary/20 text-text-primary;
+  @apply bg-primary/20 text-gray-900;
 }
 
 @layer components {
   /* Card Component */
   .card {
-    @apply rounded-xl border border-slate-200 bg-surface p-6 shadow-sm transition-all duration-250 ease-out;
+    @apply rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-250 ease-out;
   }
 
   .card:hover {
@@ -103,11 +103,11 @@ html {
 
   /* Input Components */
   .input {
-    @apply h-12 w-full rounded-md border border-slate-200 bg-surface px-4 text-text-primary transition-all duration-250 ease-out;
+    @apply h-12 w-full rounded-md border border-slate-200 bg-white px-4 text-gray-900 transition-all duration-250 ease-out;
   }
 
   .input:focus {
-    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-gray-50;
   }
 
   .input:disabled {
@@ -120,7 +120,7 @@ html {
 
   /* Label Component */
   .label {
-    @apply mb-2 block text-sm font-medium text-text-primary;
+    @apply mb-2 block text-sm font-medium text-gray-900;
   }
 
   /* Badge Component */
@@ -154,7 +154,7 @@ html {
   }
 
   .table th {
-    @apply border-b border-slate-200 px-4 py-4 text-left font-semibold text-text-primary;
+    @apply border-b border-slate-200 px-4 py-4 text-left font-semibold text-gray-900;
   }
 
   .table td {
@@ -163,21 +163,21 @@ html {
   }
 
   .table tbody tr:hover {
-    @apply bg-background;
+    @apply bg-gray-50;
   }
 
   /* Modal Component */
   .modal-overlay {
-    @apply fixed inset-0 z-modal flex items-start justify-center bg-background/95 px-4 pt-[8vh];
+    @apply fixed inset-0 z-modal flex items-start justify-center bg-gray-50/95 px-4 pt-[8vh];
   }
 
   .modal-content {
-    @apply max-h-[84vh] w-full max-w-2xl overflow-auto rounded-2xl bg-surface shadow-2xl;
+    @apply max-h-[84vh] w-full max-w-2xl overflow-auto rounded-2xl bg-white shadow-2xl;
   }
 
   /* Dropdown Component */
   .dropdown {
-    @apply absolute z-dropdown rounded-xl border border-slate-200 bg-surface shadow-lg animate-dropdown-open;
+    @apply absolute z-dropdown rounded-xl border border-slate-200 bg-white shadow-lg animate-dropdown-open;
   }
 
   /* Data Display - Monospace for financial data */
@@ -195,7 +195,7 @@ html {
 
   /* Nav Link */
   .nav-link {
-    @apply px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-elevated hover:text-text-primary transition-colors;
+    @apply px-4 py-2 rounded-md text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors;
   }
 
   .nav-link-active {
@@ -212,11 +212,11 @@ html {
   }
 
   .stat-card-value {
-    @apply text-2xl font-bold text-text-primary data-value;
+    @apply text-2xl font-bold text-gray-900 data-value;
   }
 
   .stat-card-label {
-    @apply text-sm text-text-secondary;
+    @apply text-sm text-gray-500;
   }
 }
 
@@ -245,7 +245,7 @@ html {
 
 /* Skeleton Loading */
 .skeleton {
-  @apply animate-pulse bg-surface-elevated rounded;
+  @apply animate-pulse bg-gray-50 rounded;
 }
 
 /* Action Colors for Recommendations */
