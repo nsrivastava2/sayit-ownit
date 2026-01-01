@@ -10,6 +10,7 @@ function RecommendationReview() {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [processing, setProcessing] = useState(false);
+  const [filterReason, setFilterReason] = useState(null); // Filter by flag reason
 
   useEffect(() => {
     loadData();
@@ -115,6 +116,14 @@ function RecommendationReview() {
     return 'bg-orange-100 text-orange-800';
   };
 
+  // Filter recommendations based on selected reason
+  const filteredRecommendations = filterReason
+    ? recommendations.filter(rec =>
+        rec.flag_reasons?.includes(filterReason) ||
+        rec.flag_messages?.some(f => f.code === filterReason)
+      )
+    : recommendations;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -168,15 +177,33 @@ function RecommendationReview() {
         </div>
       )}
 
-      {/* Flag Reason Breakdown */}
+      {/* Flag Reason Breakdown - Clickable Filters */}
       {stats?.reasonBreakdown?.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h3 className="font-medium text-gray-900 mb-3">Issues by Type</h3>
+          <h3 className="font-medium text-gray-900 mb-3">Issues by Type (click to filter)</h3>
           <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setFilterReason(null)}
+              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                filterReason === null
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              All: <strong>{stats.flagged_count}</strong>
+            </button>
             {stats.reasonBreakdown.map(({ reason, count }) => (
-              <span key={reason} className="px-3 py-1 bg-gray-100 rounded-full text-sm">
+              <button
+                key={reason}
+                onClick={() => setFilterReason(reason)}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  filterReason === reason
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+              >
                 {reason.replace(/_/g, ' ')}: <strong>{count}</strong>
-              </span>
+              </button>
             ))}
           </div>
         </div>
@@ -186,18 +213,37 @@ function RecommendationReview() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            Flagged Recommendations ({recommendations.length})
+            Flagged Recommendations ({filteredRecommendations.length})
+            {filterReason && (
+              <span className="ml-2 text-sm font-normal text-amber-600">
+                — filtered by: {filterReason.replace(/_/g, ' ')}
+              </span>
+            )}
           </h2>
         </div>
 
-        {recommendations.length === 0 ? (
+        {filteredRecommendations.length === 0 ? (
           <div className="p-12 text-center text-gray-500">
-            <p className="text-lg">No flagged recommendations</p>
-            <p className="text-sm mt-2">All recommendations have been reviewed!</p>
+            {filterReason ? (
+              <>
+                <p className="text-lg">No recommendations with "{filterReason.replace(/_/g, ' ')}"</p>
+                <button
+                  onClick={() => setFilterReason(null)}
+                  className="mt-2 text-primary-600 hover:text-primary-800"
+                >
+                  Show all flagged recommendations
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-lg">No flagged recommendations</p>
+                <p className="text-sm mt-2">All recommendations have been reviewed!</p>
+              </>
+            )}
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {recommendations.map((rec) => (
+            {filteredRecommendations.map((rec) => (
               <div key={rec.id} className="p-4 hover:bg-gray-50">
                 {/* Header Row */}
                 <div className="flex items-start justify-between mb-3">
