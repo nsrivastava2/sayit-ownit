@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+import pg from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -40,6 +42,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust proxy (required when behind Apache/Nginx reverse proxy)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -48,14 +53,34 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// PostgreSQL session store (persists sessions across restarts)
+const PgStore = connectPgSimple(session);
+const pgPool = new pg.Pool({
+  host: process.env.DB_HOST || '127.0.0.1',
+  port: parseInt(process.env.DB_PORT || '5433'),
+  user: process.env.DB_USER || 'sayitownit',
+  password: process.env.DB_PASSWORD || 'sayitownit123',
+  database: process.env.DB_NAME || 'sayitownit'
+});
+
 // Session middleware (for user auth)
 app.use(session({
+  store: new PgStore({
+    pool: pgPool,
+    tableName: 'session',
+    createTableIfMissing: true
+  }),
+  name: 'sayitownit.sid', // Custom cookie name
   secret: process.env.SESSION_SECRET || 'sayitownit-session-secret-change-in-production',
-  resave: false,
-  saveUninitialized: false,
+  resave: false, // PG store handles this
+  saveUninitialized: false, // Don't create session until something stored
+  proxy: true, // Trust the reverse proxy
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    domain: process.env.NODE_ENV === 'production' ? '.sayitownit.com' : undefined,
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   }
 }));
@@ -68,9 +93,27 @@ app.use(passport.session());
 // Serve uploaded files (expert profile images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Request logging
+// Request logging with cookie diagnostics for auth routes
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
+
+  // Log cookie details for auth routes to debug session issues
+  if (req.path.includes('/auth')) {
+    console.log('[COOKIE_DEBUG] Received cookies:', Object.keys(req.cookies || {}));
+    console.log('[COOKIE_DEBUG] Session cookie present:', !!req.cookies?.['sayitownit.sid']);
+    console.log('[COOKIE_DEBUG] Cookie header:', req.headers.cookie?.substring(0, 100) || 'none');
+
+    // Intercept response to log Set-Cookie header
+    const originalSend = res.send;
+    res.send = function(body) {
+      const setCookie = res.getHeader('Set-Cookie');
+      if (setCookie) {
+        console.log('[COOKIE_DEBUG] Set-Cookie response:',
+          Array.isArray(setCookie) ? setCookie.map(c => c.substring(0, 80)) : setCookie.substring(0, 80));
+      }
+      return originalSend.call(this, body);
+    };
+  }
   next();
 });
 

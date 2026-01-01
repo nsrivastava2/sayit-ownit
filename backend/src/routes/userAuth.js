@@ -31,16 +31,30 @@ router.get('/google', passport.authenticate('google', {
  */
 router.get('/google/callback',
   passport.authenticate('google', {
-    failureRedirect: '/login?error=auth_failed'
+    failureRedirect: (process.env.FRONTEND_URL || '') + '/login?error=auth_failed'
   }),
   (req, res) => {
     // Successful authentication
-    logger.info('OAuth callback success', { userId: req.user?.id });
+    logger.info('OAuth callback success', {
+      userId: req.user?.id,
+      sessionId: req.sessionID,
+      hasPassport: !!req.session?.passport
+    });
 
-    // Redirect to frontend (dashboard or previous page)
-    const redirectTo = req.session?.returnTo || '/dashboard';
-    delete req.session?.returnTo;
-    res.redirect(redirectTo);
+    // Explicitly save session before redirect
+    req.session.save((err) => {
+      if (err) {
+        logger.error('Session save error', { error: err.message });
+      }
+
+      // Redirect to frontend (dashboard or previous page)
+      const frontendUrl = process.env.FRONTEND_URL || '';
+      const redirectTo = req.session?.returnTo || '/dashboard';
+      delete req.session?.returnTo;
+
+      logger.info('Redirecting to', { url: frontendUrl + redirectTo });
+      res.redirect(frontendUrl + redirectTo);
+    });
   }
 );
 
@@ -49,6 +63,15 @@ router.get('/google/callback',
  * Get current authenticated user
  */
 router.get('/user', (req, res) => {
+  // Debug session info
+  logger.info('User check', {
+    sessionId: req.sessionID?.slice(0, 8),
+    hasSession: !!req.session,
+    hasPassport: !!req.session?.passport,
+    isAuth: req.isAuthenticated(),
+    userId: req.user?.id?.slice(0, 8)
+  });
+
   if (!req.isAuthenticated() || !req.user) {
     return res.json({ authenticated: false, user: null });
   }
@@ -84,7 +107,7 @@ router.post('/logout', (req, res) => {
       if (err) {
         logger.error('Session destroy error', { error: err.message });
       }
-      res.clearCookie('connect.sid');
+      res.clearCookie('sayitownit.sid');
       logger.info('User logged out', { userId });
       res.json({ success: true });
     });
