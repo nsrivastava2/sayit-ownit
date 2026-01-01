@@ -4,6 +4,7 @@
  */
 import express from 'express';
 import { expertService } from '../../services/expertService.js';
+import { expertProfileService } from '../../services/expertProfileService.js';
 
 const router = express.Router();
 
@@ -201,6 +202,65 @@ router.post('/cache/clear', async (req, res) => {
     res.json({ success: true, message: 'Expert cache cleared' });
   } catch (error) {
     console.error('Error clearing cache:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/experts/pending/:id/research
+ * Research a pending expert using Gemini AI
+ * Returns enriched profile data for admin review
+ */
+router.post('/pending/:id/research', async (req, res) => {
+  try {
+    const result = await expertProfileService.researchPendingExpert(req.params.id);
+    res.json({
+      success: true,
+      pendingExpert: result
+    });
+  } catch (error) {
+    console.error('Error researching pending expert:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/experts/:id/enrich
+ * Enrich an existing expert's profile with web research
+ */
+router.post('/:id/enrich', async (req, res) => {
+  try {
+    const expert = await expertProfileService.enrichExpertProfile(req.params.id);
+    res.json({
+      success: true,
+      expert
+    });
+  } catch (error) {
+    console.error('Error enriching expert profile:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/experts/research
+ * Research any expert name (ad-hoc research)
+ * Body: { name: string }
+ */
+router.post('/research', async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'name is required' });
+    }
+
+    const research = await expertProfileService.researchExpert(name.trim());
+    res.json({
+      success: true,
+      name: name.trim(),
+      research
+    });
+  } catch (error) {
+    console.error('Error researching expert:', error);
     res.status(500).json({ error: error.message });
   }
 });

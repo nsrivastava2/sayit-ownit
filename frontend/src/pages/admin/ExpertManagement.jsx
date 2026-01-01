@@ -10,6 +10,9 @@ function ExpertManagement() {
   const [editingExpert, setEditingExpert] = useState(null);
   const [newAlias, setNewAlias] = useState('');
   const [selectedExpertForAlias, setSelectedExpertForAlias] = useState(null);
+  const [researchingId, setResearchingId] = useState(null);
+  const [researchResult, setResearchResult] = useState(null);
+  const [enrichingId, setEnrichingId] = useState(null);
 
   // Form state for create/edit
   const [formData, setFormData] = useState({
@@ -121,9 +124,45 @@ function ExpertManagement() {
       }
 
       await api.resolvePendingExpert(pending.id, action, expertId, canonicalName);
+      setResearchResult(null);
       loadData();
     } catch (err) {
       alert('Error resolving pending expert: ' + err.message);
+    }
+  }
+
+  async function handleResearchPending(pendingId) {
+    try {
+      setResearchingId(pendingId);
+      setResearchResult(null);
+      const result = await api.researchPendingExpert(pendingId);
+      setResearchResult({
+        pendingId,
+        data: result.pendingExpert
+      });
+      // Update the pending expert in our list with research data
+      setPendingExperts(prev => prev.map(p =>
+        p.id === pendingId
+          ? { ...p, research_summary: result.pendingExpert.research_summary, research_data: result.pendingExpert.research_data }
+          : p
+      ));
+    } catch (err) {
+      alert('Error researching expert: ' + err.message);
+    } finally {
+      setResearchingId(null);
+    }
+  }
+
+  async function handleEnrichExpert(expertId) {
+    try {
+      setEnrichingId(expertId);
+      const result = await api.enrichExpertProfile(expertId);
+      loadData();
+      alert('Profile enriched successfully!');
+    } catch (err) {
+      alert('Error enriching profile: ' + err.message);
+    } finally {
+      setEnrichingId(null);
     }
   }
 
@@ -172,7 +211,7 @@ function ExpertManagement() {
             {pendingExperts.map(pending => (
               <div key={pending.id} className="bg-white p-4 rounded-lg border border-yellow-200">
                 <div className="flex justify-between items-start">
-                  <div>
+                  <div className="flex-1">
                     <p className="font-medium text-gray-900">"{pending.raw_name}"</p>
                     {pending.video_title && (
                       <p className="text-sm text-gray-500 mt-1">
@@ -195,7 +234,14 @@ function ExpertManagement() {
                       </a>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => handleResearchPending(pending.id)}
+                      disabled={researchingId === pending.id}
+                      className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded hover:bg-purple-200 disabled:opacity-50"
+                    >
+                      {researchingId === pending.id ? 'Researching...' : '🔍 Research'}
+                    </button>
                     <button
                       onClick={() => handleResolvePending(pending, 'create_new')}
                       className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
@@ -224,6 +270,88 @@ function ExpertManagement() {
                     </button>
                   </div>
                 </div>
+
+                {/* Research Results */}
+                {(pending.research_summary || pending.research_data) && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-start gap-4">
+                      {/* Profile Picture */}
+                      {pending.research_data?.profile?.profile_picture_url && (
+                        <img
+                          src={pending.research_data.profile.profile_picture_url}
+                          alt={pending.raw_name}
+                          className="w-16 h-16 rounded-full object-cover"
+                          onError={(e) => e.target.style.display = 'none'}
+                        />
+                      )}
+                      <div className="flex-1">
+                        {/* Summary */}
+                        {pending.research_summary && (
+                          <div className="prose prose-sm max-w-none text-gray-700">
+                            {pending.research_summary.split('\n').map((line, i) => (
+                              <p key={i} className="my-1">{line}</p>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Social Links */}
+                        {pending.research_data?.social_media && (
+                          <div className="flex gap-3 mt-3">
+                            {pending.research_data.social_media.twitter_handle && (
+                              <a
+                                href={`https://twitter.com/${pending.research_data.social_media.twitter_handle.replace('@', '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-500 hover:underline"
+                              >
+                                Twitter: {pending.research_data.social_media.twitter_handle}
+                              </a>
+                            )}
+                            {pending.research_data.social_media.linkedin_url && (
+                              <a
+                                href={pending.research_data.social_media.linkedin_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-700 hover:underline"
+                              >
+                                LinkedIn
+                              </a>
+                            )}
+                            {pending.research_data.social_media.youtube_channel && (
+                              <a
+                                href={pending.research_data.social_media.youtube_channel}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-red-600 hover:underline"
+                              >
+                                YouTube
+                              </a>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Warnings */}
+                        {pending.research_data?.warnings?.length > 0 && (
+                          <div className="mt-3 p-3 bg-red-50 rounded-lg">
+                            <p className="text-sm font-medium text-red-800 mb-2">⚠️ Warnings:</p>
+                            <ul className="text-sm text-red-700 space-y-1">
+                              {pending.research_data.warnings.map((w, i) => (
+                                <li key={i}>• [{w.type}] {w.description}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Confidence */}
+                        {pending.research_data?.confidence && (
+                          <p className="mt-2 text-xs text-gray-500">
+                            Research confidence: {pending.research_data.confidence}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -306,6 +434,13 @@ function ExpertManagement() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEnrichExpert(expert.id)}
+                      disabled={enrichingId === expert.id}
+                      className="text-sm text-purple-600 hover:underline disabled:opacity-50"
+                    >
+                      {enrichingId === expert.id ? 'Enriching...' : '🔍 Enrich'}
+                    </button>
                     <button
                       onClick={() => openEditModal(expert)}
                       className="text-sm text-primary-600 hover:underline"

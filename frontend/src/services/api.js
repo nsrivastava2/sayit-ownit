@@ -207,6 +207,21 @@ export const api = {
     return fetchApi('/admin/experts/cache/clear', { method: 'POST' });
   },
 
+  async researchPendingExpert(pendingId) {
+    return fetchApi(`/admin/experts/pending/${pendingId}/research`, { method: 'POST' });
+  },
+
+  async enrichExpertProfile(expertId) {
+    return fetchApi(`/admin/experts/${expertId}/enrich`, { method: 'POST' });
+  },
+
+  async researchExpertByName(name) {
+    return fetchApi('/admin/experts/research', {
+      method: 'POST',
+      body: JSON.stringify({ name })
+    });
+  },
+
   // ============================================
   // Admin API - Channel Management
   // ============================================
