@@ -1,22 +1,50 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import OutcomeBadge from '../components/OutcomeBadge';
 import FlagIndicator from '../components/FlagIndicator';
 import FloatingVideoPlayer from '../components/FloatingVideoPlayer';
 import { useVideoPlayer } from '../hooks/useVideoPlayer';
+import { useUser } from '../contexts/UserContext';
 
 function ShareView() {
   const { symbol } = useParams();
+  const { isAuthenticated } = useUser();
   const [share, setShare] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
+  // Watchlist state
+  const [watchlists, setWatchlists] = useState([]);
+  const [stockInWatchlists, setStockInWatchlists] = useState(new Set());
+  const [watchlistDropdownOpen, setWatchlistDropdownOpen] = useState(false);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
+  const [watchlistError, setWatchlistError] = useState(null);
+  const dropdownRef = useRef(null);
+
   useEffect(() => {
     loadShare();
   }, [symbol]);
+
+  // Load watchlists when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadWatchlists();
+    }
+  }, [isAuthenticated, symbol]);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setWatchlistDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   async function loadShare() {
     try {
@@ -28,6 +56,66 @@ function ShareView() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadWatchlists() {
+    try {
+      const data = await api.getWatchlists();
+      setWatchlists(data.watchlists || []);
+
+      // Check which watchlists contain this stock
+      const inWatchlists = new Set();
+      for (const wl of data.watchlists || []) {
+        if (wl.stocks?.some(s => s.nse_symbol === symbol)) {
+          inWatchlists.add(wl.id);
+        }
+      }
+      setStockInWatchlists(inWatchlists);
+    } catch (err) {
+      console.error('Failed to load watchlists:', err);
+    }
+  }
+
+  async function handleToggleWatchlist(watchlistId) {
+    setWatchlistLoading(true);
+    setWatchlistError(null);
+    try {
+      if (stockInWatchlists.has(watchlistId)) {
+        await api.removeStockFromWatchlist(watchlistId, symbol);
+        setStockInWatchlists(prev => {
+          const next = new Set(prev);
+          next.delete(watchlistId);
+          return next;
+        });
+      } else {
+        await api.addStockToWatchlist(watchlistId, symbol);
+        setStockInWatchlists(prev => new Set(prev).add(watchlistId));
+      }
+    } catch (err) {
+      setWatchlistError(err.message);
+      setTimeout(() => setWatchlistError(null), 3000);
+    } finally {
+      setWatchlistLoading(false);
+    }
+  }
+
+  async function handleCreateWatchlist() {
+    const name = prompt('Enter watchlist name:');
+    if (!name?.trim()) return;
+
+    setWatchlistLoading(true);
+    try {
+      const data = await api.createWatchlist(name.trim());
+      // Add the stock to the new watchlist
+      await api.addStockToWatchlist(data.watchlist.id, symbol);
+      setWatchlists(prev => [...prev, data.watchlist]);
+      setStockInWatchlists(prev => new Set(prev).add(data.watchlist.id));
+    } catch (err) {
+      setWatchlistError(err.message);
+      setTimeout(() => setWatchlistError(null), 3000);
+    } finally {
+      setWatchlistLoading(false);
     }
   }
 
@@ -123,14 +211,83 @@ function ShareView() {
               )}
             </div>
           </div>
-          <a
-            href={`https://www.nseindia.com/get-quotes/equity?symbol=${share?.symbol || symbol}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
-            View on NSE →
-          </a>
+          <div className="flex items-center gap-3">
+            {/* Watchlist Button */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    window.location.href = '/login';
+                    return;
+                  }
+                  setWatchlistDropdownOpen(!watchlistDropdownOpen);
+                }}
+                disabled={watchlistLoading}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
+                  stockInWatchlists.size > 0
+                    ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {watchlistLoading ? (
+                  <span className="animate-spin">⏳</span>
+                ) : stockInWatchlists.size > 0 ? (
+                  <>★ In {stockInWatchlists.size} list{stockInWatchlists.size > 1 ? 's' : ''}</>
+                ) : (
+                  <>☆ Add to Watchlist</>
+                )}
+              </button>
+
+              {/* Dropdown Menu */}
+              {watchlistDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className="py-2">
+                    {watchlists.length === 0 ? (
+                      <p className="px-4 py-2 text-sm text-gray-500">No watchlists yet</p>
+                    ) : (
+                      watchlists.map(wl => (
+                        <button
+                          key={wl.id}
+                          onClick={() => handleToggleWatchlist(wl.id)}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between"
+                        >
+                          <span>{wl.name}</span>
+                          {stockInWatchlists.has(wl.id) ? (
+                            <span className="text-green-600">✓</span>
+                          ) : (
+                            <span className="text-gray-300">○</span>
+                          )}
+                        </button>
+                      ))
+                    )}
+                    <hr className="my-2" />
+                    <button
+                      onClick={handleCreateWatchlist}
+                      className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
+                    >
+                      + Create New Watchlist
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {watchlistError && (
+                <div className="absolute right-0 mt-2 w-56 bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg border border-red-200">
+                  {watchlistError}
+                </div>
+              )}
+            </div>
+
+            <a
+              href={`https://www.nseindia.com/get-quotes/equity?symbol=${share?.symbol || symbol}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              View on NSE →
+            </a>
+          </div>
         </div>
 
         {/* Stats */}
