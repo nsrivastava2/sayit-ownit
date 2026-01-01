@@ -155,6 +155,14 @@ export const api = {
     return fetchApi(`/prices/metrics/${encodeURIComponent(expertName)}/history?days=${days}`);
   },
 
+  async getExpertSectors(expertName) {
+    return fetchApi(`/experts/${encodeURIComponent(expertName)}/sectors`);
+  },
+
+  async getExpertMonthlyReturns(expertName, months = 12) {
+    return fetchApi(`/experts/${encodeURIComponent(expertName)}/monthly-returns?months=${months}`);
+  },
+
   // ============================================
   // Admin API - Expert Management
   // ============================================

@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import OutcomeBadge from '../components/OutcomeBadge';
 import FlagIndicator from '../components/FlagIndicator';
 import FloatingVideoPlayer from '../components/FloatingVideoPlayer';
 import { useVideoPlayer } from '../hooks/useVideoPlayer';
+import { SectorBreakdownChart, MonthlyReturnsChart, WinRateChart } from '../components/charts';
 
 function ExpertView() {
   const { name } = useParams();
@@ -15,6 +16,27 @@ function ExpertView() {
   const [error, setError] = useState(null);
   const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
+  // Chart data states
+  const [sectors, setSectors] = useState([]);
+  const [monthlyReturns, setMonthlyReturns] = useState([]);
+  const [metricsHistory, setMetricsHistory] = useState([]);
+  const [chartsLoading, setChartsLoading] = useState(true);
+
+  // Expandable row state
+  const [expandedRows, setExpandedRows] = useState(new Set());
+
+  const toggleRowExpansion = (id) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   useEffect(() => {
     loadExpert();
   }, [name]);
@@ -22,6 +44,9 @@ function ExpertView() {
   async function loadExpert() {
     try {
       setLoading(true);
+      setChartsLoading(true);
+
+      // Load main data first
       const [expertData, metricsData] = await Promise.all([
         api.getExpert(name),
         api.getExpertMetrics(name).catch(() => null)
@@ -29,10 +54,22 @@ function ExpertView() {
       setExpert(expertData.expert);
       setRecommendations(expertData.recommendations);
       setMetrics(metricsData?.metrics || null);
+      setLoading(false);
+
+      // Load chart data in background
+      const [sectorsData, monthlyData, historyData] = await Promise.all([
+        api.getExpertSectors(name).catch(() => ({ sectors: [] })),
+        api.getExpertMonthlyReturns(name).catch(() => ({ monthlyReturns: [] })),
+        api.getExpertMetricsHistory(name, 90).catch(() => ({ history: [] }))
+      ]);
+      setSectors(sectorsData.sectors || []);
+      setMonthlyReturns(monthlyData.monthlyReturns || []);
+      setMetricsHistory(historyData.history || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
+      setChartsLoading(false);
     }
   }
 
@@ -201,6 +238,27 @@ function ExpertView() {
         )}
       </div>
 
+      {/* Performance Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Win Rate Over Time */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Win Rate Trend</h3>
+          <WinRateChart history={metricsHistory} loading={chartsLoading} />
+        </div>
+
+        {/* Monthly Returns */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Monthly Returns</h3>
+          <MonthlyReturnsChart monthlyReturns={monthlyReturns} loading={chartsLoading} />
+        </div>
+
+        {/* Sector Breakdown */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Sector Distribution</h3>
+          <SectorBreakdownChart sectors={sectors} loading={chartsLoading} />
+        </div>
+      </div>
+
       {/* Recommendations table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
@@ -216,6 +274,7 @@ function ExpertView() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase w-8"></th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
@@ -227,58 +286,135 @@ function ExpertView() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {recommendations.map((rec) => (
-                  <tr key={rec.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-900">{formatDate(rec.recommendation_date)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <FlagIndicator isFlagged={rec.is_flagged} flagReasons={rec.flag_reasons} />
-                        <Link
-                          to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
-                          className="text-sm font-medium text-primary-600 hover:text-primary-800"
-                        >
-                          {rec.share_name}
-                          {rec.nse_symbol && (
-                            <span className="text-xs text-gray-500 ml-1">({rec.nse_symbol})</span>
+                {recommendations.map((rec) => {
+                  const isExpanded = expandedRows.has(rec.id);
+                  const hasDetails = rec.reason || rec.raw_extract || rec.timeline || rec.tags?.length > 0;
+
+                  return (
+                    <React.Fragment key={rec.id}>
+                      <tr className={`hover:bg-gray-50 ${isExpanded ? 'bg-blue-50' : ''}`}>
+                        <td className="px-2 py-3 text-center">
+                          {hasDetails && (
+                            <button
+                              onClick={() => toggleRowExpansion(rec.id)}
+                              className="text-gray-400 hover:text-gray-600 transition-transform"
+                              style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                            >
+                              ▶
+                            </button>
                           )}
-                        </Link>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${actionColors[rec.action]}`}>
-                        {rec.action}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {rec.recommended_price ? `₹${rec.recommended_price}` : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {rec.target_price ? `₹${rec.target_price}` : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <OutcomeBadge
-                        outcome={rec.outcome}
-                        status={rec.status}
-                        returnPct={rec.outcome?.return_percentage}
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {rec.videos?.youtube_url ? (
-                        <button
-                          onClick={() => openVideoPlayer(rec.videos.youtube_url, rec.timestamp_in_video, rec.videos.title)}
-                          className="text-primary-600 hover:text-primary-800 flex items-center whitespace-nowrap"
-                          title={rec.videos.title}
-                        >
-                          <span className="mr-1">▶</span>
-                          {formatTimestamp(rec.timestamp_in_video)}
-                        </button>
-                      ) : '-'}
-                    </td>
-                  </tr>
-                ))}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{formatDate(rec.recommendation_date)}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            <FlagIndicator isFlagged={rec.is_flagged} flagReasons={rec.flag_reasons} />
+                            <Link
+                              to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
+                              className="text-sm font-medium text-primary-600 hover:text-primary-800"
+                            >
+                              {rec.share_name}
+                              {rec.nse_symbol && (
+                                <span className="text-xs text-gray-500 ml-1">({rec.nse_symbol})</span>
+                              )}
+                            </Link>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${actionColors[rec.action]}`}>
+                            {rec.action}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {rec.recommended_price ? `₹${rec.recommended_price}` : '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {rec.target_price ? `₹${rec.target_price}` : '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <OutcomeBadge
+                            outcome={rec.outcome}
+                            status={rec.status}
+                            returnPct={rec.outcome?.return_percentage}
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {rec.videos?.youtube_url ? (
+                            <button
+                              onClick={() => openVideoPlayer(rec.videos.youtube_url, rec.timestamp_in_video, rec.videos.title)}
+                              className="text-primary-600 hover:text-primary-800 flex items-center whitespace-nowrap"
+                              title={rec.videos.title}
+                            >
+                              <span className="mr-1">▶</span>
+                              {formatTimestamp(rec.timestamp_in_video)}
+                            </button>
+                          ) : '-'}
+                        </td>
+                      </tr>
+                      {/* Expanded Details Row */}
+                      {isExpanded && (
+                        <tr className="bg-blue-50/50">
+                          <td colSpan={9} className="px-4 py-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                              {rec.reason && (
+                                <div>
+                                  <span className="font-medium text-gray-700">Reason: </span>
+                                  <span className="text-gray-600">{rec.reason}</span>
+                                </div>
+                              )}
+                              {rec.timeline && (
+                                <div>
+                                  <span className="font-medium text-gray-700">Timeline: </span>
+                                  <span className="text-gray-600">{rec.timeline}</span>
+                                </div>
+                              )}
+                              {rec.confidence_score && (
+                                <div>
+                                  <span className="font-medium text-gray-700">Confidence: </span>
+                                  <span className="text-gray-600">{(rec.confidence_score * 100).toFixed(0)}%</span>
+                                </div>
+                              )}
+                              {rec.tags?.length > 0 && (
+                                <div>
+                                  <span className="font-medium text-gray-700">Tags: </span>
+                                  <div className="inline-flex flex-wrap gap-1 mt-1">
+                                    {rec.tags.map((tag, i) => (
+                                      <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {rec.outcome?.outcome_date && (
+                                <div>
+                                  <span className="font-medium text-gray-700">Closed On: </span>
+                                  <span className="text-gray-600">
+                                    {formatDate(rec.outcome.outcome_date)} ({rec.outcome.days_held} days)
+                                  </span>
+                                </div>
+                              )}
+                              {rec.outcome?.outcome_price && (
+                                <div>
+                                  <span className="font-medium text-gray-700">Exit Price: </span>
+                                  <span className="text-gray-600">₹{rec.outcome.outcome_price}</span>
+                                </div>
+                              )}
+                              {rec.raw_extract && (
+                                <div className="md:col-span-2 lg:col-span-3">
+                                  <span className="font-medium text-gray-700">Original Quote: </span>
+                                  <span className="text-gray-500 italic">"{rec.raw_extract}"</span>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
