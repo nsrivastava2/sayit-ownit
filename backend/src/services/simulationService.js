@@ -139,7 +139,7 @@ export async function runSimulation({
       r.stop_loss,
       ro.outcome_type,
       ro.outcome_date,
-      ro.exit_price,
+      ro.outcome_price,
       ro.return_percentage,
       ro.days_held
     FROM recommendations r
@@ -237,10 +237,10 @@ export async function runSimulation({
       });
 
       // If we have an outcome, process the exit
-      if (rec.outcome_type && rec.outcome_type !== 'ACTIVE' && rec.exit_price) {
-        const exitValue = shares * rec.exit_price;
+      if (rec.outcome_type && rec.outcome_type !== 'ACTIVE' && rec.outcome_price) {
+        const exitValue = shares * rec.outcome_price;
         const pnl = exitValue - actualCost;
-        const returnPct = ((rec.exit_price - entryPrice) / entryPrice) * 100;
+        const returnPct = ((rec.outcome_price - entryPrice) / entryPrice) * 100;
 
         cashBalance += exitValue;
         cashFlows.push({
@@ -265,7 +265,7 @@ export async function runSimulation({
           entryDate: rec.recommendation_date,
           entryPrice: parseFloat(entryPrice),
           exitDate: rec.outcome_date,
-          exitPrice: parseFloat(rec.exit_price),
+          exitPrice: parseFloat(rec.outcome_price),
           shares,
           pnl: parseFloat(pnl.toFixed(2)),
           returnPct: parseFloat(returnPct.toFixed(2)),
@@ -295,10 +295,10 @@ export async function runSimulation({
 
       const actualCost = shares * entryPrice;
 
-      if (rec.outcome_type && rec.outcome_type !== 'ACTIVE' && rec.exit_price) {
+      if (rec.outcome_type && rec.outcome_type !== 'ACTIVE' && rec.outcome_price) {
         // For shorts: profit when price drops, loss when price rises
-        const pnl = (entryPrice - rec.exit_price) * shares;
-        const returnPct = ((entryPrice - rec.exit_price) / entryPrice) * 100;
+        const pnl = (entryPrice - rec.outcome_price) * shares;
+        const returnPct = ((entryPrice - rec.outcome_price) / entryPrice) * 100;
 
         totalTrades++;
         totalReturn += returnPct;
@@ -328,7 +328,7 @@ export async function runSimulation({
           entryDate: rec.recommendation_date,
           entryPrice: parseFloat(entryPrice),
           exitDate: rec.outcome_date,
-          exitPrice: parseFloat(rec.exit_price),
+          exitPrice: parseFloat(rec.outcome_price),
           shares,
           pnl: parseFloat(pnl.toFixed(2)),
           returnPct: parseFloat(returnPct.toFixed(2)),

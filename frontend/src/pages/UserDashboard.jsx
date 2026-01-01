@@ -155,12 +155,22 @@ function UserDashboard() {
                 {/* Expert Image */}
                 <div className="flex-shrink-0">
                   {rec.expert_picture ? (
-                    <img src={rec.expert_picture} alt="" className="w-10 h-10 rounded-full" />
-                  ) : (
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold">
-                      {rec.expert_name?.charAt(0)}
-                    </div>
-                  )}
+                    <img
+                      src={rec.expert_picture}
+                      alt=""
+                      className="w-10 h-10 rounded-full"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center text-gray-600 font-bold"
+                    style={{ display: rec.expert_picture ? 'none' : 'flex' }}
+                  >
+                    {rec.expert_name?.charAt(0)}
+                  </div>
                 </div>
 
                 {/* Details */}
