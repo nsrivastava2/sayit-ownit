@@ -3,8 +3,46 @@
  * Handles CRUD operations for experts, aliases, and pending expert review
  */
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { expertService } from '../../services/expertService.js';
 import { expertProfileService } from '../../services/expertProfileService.js';
+import { db } from '../../config/index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, '../../uploads/experts');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for image uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `expert-${req.params.id}-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'));
+    }
+  }
+});
 
 const router = express.Router();
 
@@ -261,6 +299,142 @@ router.post('/research', async (req, res) => {
     });
   } catch (error) {
     console.error('Error researching expert:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * PUT /api/admin/experts/:id/profile
+ * Update expert's enriched profile fields
+ * Body: { experience_summary?, education?, twitter_handle?, linkedin_url?, youtube_channel?, website_url?, current_associations?, certifications?, warnings? }
+ */
+router.put('/:id/profile', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      experience_summary,
+      education,
+      twitter_handle,
+      linkedin_url,
+      youtube_channel,
+      website_url,
+      current_associations,
+      certifications,
+      warnings
+    } = req.body;
+
+    // Build dynamic update query
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (experience_summary !== undefined) {
+      updates.push(`experience_summary = $${paramIndex++}`);
+      values.push(experience_summary);
+    }
+    if (education !== undefined) {
+      updates.push(`education = $${paramIndex++}`);
+      values.push(education);
+    }
+    if (twitter_handle !== undefined) {
+      updates.push(`twitter_handle = $${paramIndex++}`);
+      values.push(twitter_handle);
+    }
+    if (linkedin_url !== undefined) {
+      updates.push(`linkedin_url = $${paramIndex++}`);
+      values.push(linkedin_url);
+    }
+    if (youtube_channel !== undefined) {
+      updates.push(`youtube_channel = $${paramIndex++}`);
+      values.push(youtube_channel);
+    }
+    if (website_url !== undefined) {
+      updates.push(`website_url = $${paramIndex++}`);
+      values.push(website_url);
+    }
+    if (current_associations !== undefined) {
+      updates.push(`current_associations = $${paramIndex++}`);
+      values.push(current_associations);
+    }
+    if (certifications !== undefined) {
+      updates.push(`certifications = $${paramIndex++}`);
+      values.push(certifications);
+    }
+    if (warnings !== undefined) {
+      updates.push(`warnings = $${paramIndex++}`);
+      values.push(warnings);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    // Mark as manually edited
+    updates.push(`profile_source = $${paramIndex++}`);
+    values.push('manual');
+
+    // If not enriched before, set enriched timestamp
+    updates.push(`profile_enriched_at = COALESCE(profile_enriched_at, NOW())`);
+
+    values.push(id);
+
+    const result = await db.query(
+      `UPDATE experts SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Expert not found' });
+    }
+
+    res.json({
+      success: true,
+      expert: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error updating expert profile:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/experts/:id/upload-image
+ * Upload a profile image for an expert
+ */
+router.post('/:id/upload-image', upload.single('image'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    // Generate the URL path for the uploaded image
+    const imageUrl = `/uploads/experts/${req.file.filename}`;
+
+    // Update expert with new profile picture URL
+    const result = await db.query(
+      `UPDATE experts SET profile_picture_url = $1, profile_source = 'manual' WHERE id = $2 RETURNING *`,
+      [imageUrl, id]
+    );
+
+    if (result.rows.length === 0) {
+      // Clean up uploaded file if expert not found
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({ error: 'Expert not found' });
+    }
+
+    res.json({
+      success: true,
+      imageUrl,
+      expert: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error uploading expert image:', error);
+    // Clean up uploaded file on error
+    if (req.file) {
+      try { fs.unlinkSync(req.file.path); } catch (e) {}
+    }
     res.status(500).json({ error: error.message });
   }
 });

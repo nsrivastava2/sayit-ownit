@@ -226,6 +226,32 @@ export const api = {
     });
   },
 
+  async updateExpertProfile(expertId, profileData) {
+    return fetchApi(`/admin/experts/${expertId}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(profileData)
+    });
+  },
+
+  async uploadExpertImage(expertId, imageFile) {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    const response = await fetch(`/api/admin/experts/${expertId}/upload-image`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+      // Note: Don't set Content-Type header - browser sets it with boundary for FormData
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+      throw new Error(error.error || error.message || 'Upload failed');
+    }
+
+    return response.json();
+  },
+
   // ============================================
   // Admin API - Channel Management
   // ============================================

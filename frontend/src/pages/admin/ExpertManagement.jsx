@@ -10,12 +10,15 @@ function ExpertManagement() {
   const [error, setError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingExpert, setEditingExpert] = useState(null);
+  const [editingProfileExpert, setEditingProfileExpert] = useState(null);
   const [newAlias, setNewAlias] = useState('');
   const [selectedExpertForAlias, setSelectedExpertForAlias] = useState(null);
   const [researchingId, setResearchingId] = useState(null);
   const [enrichingId, setEnrichingId] = useState(null);
   const [expandedExpertId, setExpandedExpertId] = useState(null);
   const [toast, setToast] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
   const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
   // Form state for create/edit
@@ -24,6 +27,19 @@ function ExpertManagement() {
     bio: '',
     specialization: '',
     aliases: ''
+  });
+
+  // Form state for profile editing
+  const [profileFormData, setProfileFormData] = useState({
+    experience_summary: '',
+    education: '',
+    twitter_handle: '',
+    linkedin_url: '',
+    youtube_channel: '',
+    website_url: '',
+    current_associations: '',
+    certifications: '',
+    warnings: ''
   });
 
   // Show toast notification
@@ -201,6 +217,73 @@ function ExpertManagement() {
 
   function toggleExpandExpert(expertId) {
     setExpandedExpertId(prev => prev === expertId ? null : expertId);
+  }
+
+  function openProfileEditModal(expert) {
+    setEditingProfileExpert(expert);
+    setProfileFormData({
+      experience_summary: expert.experience_summary || '',
+      education: expert.education || '',
+      twitter_handle: expert.twitter_handle || '',
+      linkedin_url: expert.linkedin_url || '',
+      youtube_channel: expert.youtube_channel || '',
+      website_url: expert.website_url || '',
+      current_associations: (expert.current_associations || []).join(', '),
+      certifications: (expert.certifications || []).join(', '),
+      warnings: (expert.warnings || []).join('\n')
+    });
+  }
+
+  async function handleSaveProfile(e) {
+    e.preventDefault();
+    try {
+      setSavingProfile(true);
+
+      // Parse array fields
+      const profileData = {
+        experience_summary: profileFormData.experience_summary || null,
+        education: profileFormData.education || null,
+        twitter_handle: profileFormData.twitter_handle || null,
+        linkedin_url: profileFormData.linkedin_url || null,
+        youtube_channel: profileFormData.youtube_channel || null,
+        website_url: profileFormData.website_url || null,
+        current_associations: profileFormData.current_associations
+          ? profileFormData.current_associations.split(',').map(s => s.trim()).filter(Boolean)
+          : null,
+        certifications: profileFormData.certifications
+          ? profileFormData.certifications.split(',').map(s => s.trim()).filter(Boolean)
+          : null,
+        warnings: profileFormData.warnings
+          ? profileFormData.warnings.split('\n').map(s => s.trim()).filter(Boolean)
+          : null
+      };
+
+      await api.updateExpertProfile(editingProfileExpert.id, profileData);
+      setEditingProfileExpert(null);
+      await loadDataSilent();
+      showToast('Profile updated');
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
+  async function handleImageUpload(expertId, file) {
+    try {
+      setUploadingImage(true);
+      const result = await api.uploadExpertImage(expertId, file);
+      await loadDataSilent();
+      // Update the editing expert with new image URL so modal shows it
+      if (editingProfileExpert && editingProfileExpert.id === expertId) {
+        setEditingProfileExpert(prev => ({ ...prev, profile_picture_url: result.imageUrl }));
+      }
+      showToast('Image uploaded');
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    } finally {
+      setUploadingImage(false);
+    }
   }
 
   if (loading) {
@@ -558,19 +641,49 @@ function ExpertManagement() {
                       </div>
                     )}
 
+                    {/* Enrichment Sources */}
+                    {expert.enrichment_sources?.length > 0 && (
+                      <div className="col-span-2">
+                        <h4 className="text-sm font-medium text-gray-700 mb-1">Sources</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {expert.enrichment_sources.map((source, i) => (
+                            <a
+                              key={i}
+                              href={source}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary-600 hover:underline bg-white px-2 py-1 rounded border"
+                            >
+                              [{i + 1}] {new URL(source).hostname}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Meta info */}
                     <div className="col-span-2 pt-2 border-t border-purple-200">
-                      <p className="text-xs text-gray-500">
-                        Enriched: {new Date(expert.profile_enriched_at).toLocaleDateString()}
-                        {expert.profile_source && ` via ${expert.profile_source}`}
-                      </p>
-                      <button
-                        onClick={() => handleEnrichExpert(expert.id)}
-                        disabled={enrichingId === expert.id}
-                        className="mt-2 text-xs text-purple-600 hover:underline disabled:opacity-50"
-                      >
-                        {enrichingId === expert.id ? 'Re-enriching...' : '🔄 Re-enrich profile'}
-                      </button>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-gray-500">
+                          Enriched: {new Date(expert.profile_enriched_at).toLocaleDateString()}
+                          {expert.profile_source && ` via ${expert.profile_source}`}
+                        </p>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => openProfileEditModal(expert)}
+                            className="text-xs text-primary-600 hover:underline"
+                          >
+                            ✏️ Edit Profile
+                          </button>
+                          <button
+                            onClick={() => handleEnrichExpert(expert.id)}
+                            disabled={enrichingId === expert.id}
+                            className="text-xs text-purple-600 hover:underline disabled:opacity-50"
+                          >
+                            {enrichingId === expert.id ? 'Re-enriching...' : '🔄 Re-enrich'}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -671,6 +784,177 @@ function ExpertManagement() {
               <div className="flex justify-end gap-2 pt-4">
                 <button type="button" onClick={() => setEditingExpert(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
                 <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {editingProfileExpert && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Edit Profile: {editingProfileExpert.canonical_name}</h2>
+              <button onClick={() => setEditingProfileExpert(null)} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="p-6 space-y-6">
+              {/* Profile Image Section */}
+              <div className="flex items-center gap-6 p-4 bg-gray-50 rounded-lg">
+                <div className="flex-shrink-0">
+                  {editingProfileExpert.profile_picture_url ? (
+                    <img
+                      src={editingProfileExpert.profile_picture_url}
+                      alt={editingProfileExpert.canonical_name}
+                      className="w-20 h-20 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-2xl font-semibold">
+                      {editingProfileExpert.canonical_name?.charAt(0)?.toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleImageUpload(editingProfileExpert.id, file);
+                    }}
+                    className="text-sm"
+                    disabled={uploadingImage}
+                  />
+                  {uploadingImage && <p className="text-xs text-gray-500 mt-1">Uploading...</p>}
+                  <p className="text-xs text-gray-400 mt-1">Max 5MB. JPEG, PNG, GIF, or WebP.</p>
+                </div>
+              </div>
+
+              {/* Experience Summary */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Experience Summary</label>
+                <textarea
+                  value={profileFormData.experience_summary}
+                  onChange={(e) => setProfileFormData({ ...profileFormData, experience_summary: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  rows={3}
+                  placeholder="Brief 2-3 sentence summary of their experience and expertise"
+                />
+              </div>
+
+              {/* Education */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Education</label>
+                <input
+                  type="text"
+                  value={profileFormData.education}
+                  onChange={(e) => setProfileFormData({ ...profileFormData, education: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  placeholder="e.g., MBA from IIM Ahmedabad, B.Tech from IIT Delhi"
+                />
+              </div>
+
+              {/* Social Links */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Twitter Handle</label>
+                  <input
+                    type="text"
+                    value={profileFormData.twitter_handle}
+                    onChange={(e) => setProfileFormData({ ...profileFormData, twitter_handle: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    placeholder="@username"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn URL</label>
+                  <input
+                    type="url"
+                    value={profileFormData.linkedin_url}
+                    onChange={(e) => setProfileFormData({ ...profileFormData, linkedin_url: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    placeholder="https://linkedin.com/in/..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">YouTube Channel</label>
+                  <input
+                    type="url"
+                    value={profileFormData.youtube_channel}
+                    onChange={(e) => setProfileFormData({ ...profileFormData, youtube_channel: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    placeholder="https://youtube.com/..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Website URL</label>
+                  <input
+                    type="url"
+                    value={profileFormData.website_url}
+                    onChange={(e) => setProfileFormData({ ...profileFormData, website_url: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              {/* Associations & Certifications */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Current Associations</label>
+                  <input
+                    type="text"
+                    value={profileFormData.current_associations}
+                    onChange={(e) => setProfileFormData({ ...profileFormData, current_associations: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    placeholder="Zee Business, ET Now (comma-separated)"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Comma-separated list</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Certifications</label>
+                  <input
+                    type="text"
+                    value={profileFormData.certifications}
+                    onChange={(e) => setProfileFormData({ ...profileFormData, certifications: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    placeholder="CFA, SEBI RIA, CFP (comma-separated)"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Comma-separated list</p>
+                </div>
+              </div>
+
+              {/* Warnings */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Warnings / Red Flags</label>
+                <textarea
+                  value={profileFormData.warnings}
+                  onChange={(e) => setProfileFormData({ ...profileFormData, warnings: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  rows={3}
+                  placeholder="One warning per line (e.g., SEBI actions, controversies)"
+                />
+                <p className="text-xs text-gray-400 mt-1">One warning per line</p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setEditingProfileExpert(null)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingProfile}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                >
+                  {savingProfile ? 'Saving...' : 'Save Profile'}
+                </button>
               </div>
             </form>
           </div>

@@ -23,12 +23,19 @@ router.get('/', async (req, res) => {
 
 /**
  * GET /api/experts/:name
- * Get expert details with all their recommendations
+ * Get expert details with all their recommendations and profile data
  */
 router.get('/:name', async (req, res) => {
   try {
     const { name } = req.params;
     const { limit = 50, offset = 0 } = req.query;
+
+    // Fetch expert profile from experts table
+    const expertResult = await db.query(
+      `SELECT * FROM experts WHERE canonical_name ILIKE $1`,
+      [`%${name}%`]
+    );
+    const expertProfile = expertResult.rows[0] || null;
 
     const { data, count } = await db.getRecommendations({
       expert: name,
@@ -52,9 +59,24 @@ router.get('/:name', async (req, res) => {
 
     res.json({
       expert: {
-        name,
+        name: expertProfile?.canonical_name || name,
         stats,
-        uniqueShares: sharesSet.size
+        uniqueShares: sharesSet.size,
+        // Profile fields
+        profile_picture_url: expertProfile?.profile_picture_url,
+        experience_summary: expertProfile?.experience_summary,
+        education: expertProfile?.education,
+        certifications: expertProfile?.certifications,
+        current_associations: expertProfile?.current_associations,
+        twitter_handle: expertProfile?.twitter_handle,
+        linkedin_url: expertProfile?.linkedin_url,
+        youtube_channel: expertProfile?.youtube_channel,
+        website_url: expertProfile?.website_url,
+        warnings: expertProfile?.warnings,
+        enrichment_sources: expertProfile?.enrichment_sources,
+        profile_enriched_at: expertProfile?.profile_enriched_at,
+        bio: expertProfile?.bio,
+        specialization: expertProfile?.specialization
       },
       recommendations: data,
       total: count,

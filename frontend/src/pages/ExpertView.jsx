@@ -84,23 +84,123 @@ function ExpertView() {
 
       {/* Expert header */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              <span className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 text-xl mr-4">
-                {name.charAt(0)}
-              </span>
-              {name}
-              {/* Rank badge */}
+        <div className="flex items-start gap-6">
+          {/* Profile Picture */}
+          <div className="flex-shrink-0">
+            {expert?.profile_picture_url ? (
+              <img
+                src={expert.profile_picture_url}
+                alt={expert?.name || name}
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+              />
+            ) : null}
+            <div className={`w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 text-3xl font-bold ${expert?.profile_picture_url ? 'hidden' : ''}`}>
+              {(expert?.name || name).charAt(0)}
+            </div>
+          </div>
+
+          {/* Name & Basic Info */}
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-gray-900">{expert?.name || name}</h1>
               {metrics?.rank_position && (
-                <span className="ml-3 inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-primary-100 text-primary-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-primary-100 text-primary-800">
                   {metrics.rank_position === 1 ? '🥇' : metrics.rank_position === 2 ? '🥈' : metrics.rank_position === 3 ? '🥉' : '#'}{metrics.rank_position}
                 </span>
               )}
-            </h1>
-            <p className="text-gray-500 mt-2">Stock Market Analyst</p>
+              {expert?.profile_enriched_at && (
+                <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded">✓ Verified</span>
+              )}
+            </div>
+
+            <p className="text-gray-600 mt-1">{expert?.specialization || 'Stock Market Analyst'}</p>
+
+            {/* Experience Summary */}
+            {expert?.experience_summary && (
+              <p className="text-gray-600 mt-2 text-sm">{expert.experience_summary}</p>
+            )}
+
+            {/* Social Links */}
+            {(expert?.twitter_handle || expert?.linkedin_url || expert?.youtube_channel || expert?.website_url) && (
+              <div className="flex gap-4 mt-3">
+                {expert.twitter_handle && (
+                  <a href={`https://twitter.com/${expert.twitter_handle.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline flex items-center gap-1">
+                    <span>🐦</span> {expert.twitter_handle}
+                  </a>
+                )}
+                {expert.linkedin_url && (
+                  <a href={expert.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-700 hover:underline flex items-center gap-1">
+                    <span>💼</span> LinkedIn
+                  </a>
+                )}
+                {expert.youtube_channel && (
+                  <a href={expert.youtube_channel} target="_blank" rel="noopener noreferrer" className="text-sm text-red-600 hover:underline flex items-center gap-1">
+                    <span>📺</span> YouTube
+                  </a>
+                )}
+                {expert.website_url && (
+                  <a href={expert.website_url} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-600 hover:underline flex items-center gap-1">
+                    <span>🌐</span> Website
+                  </a>
+                )}
+              </div>
+            )}
+
+            {/* Current Associations & Certifications */}
+            <div className="flex flex-wrap gap-4 mt-3">
+              {expert?.current_associations?.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Associated with:</span>
+                  {expert.current_associations.map((assoc, i) => (
+                    <span key={i} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">{assoc}</span>
+                  ))}
+                </div>
+              )}
+              {expert?.certifications?.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Certifications:</span>
+                  {expert.certifications.map((cert, i) => (
+                    <span key={i} className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">{cert}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Education */}
+            {expert?.education && (
+              <p className="text-xs text-gray-500 mt-2">📚 {expert.education}</p>
+            )}
           </div>
         </div>
+
+        {/* Warnings */}
+        {expert?.warnings?.length > 0 && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm font-medium text-red-800 mb-1">⚠️ Important Notices</p>
+            <ul className="text-sm text-red-700 space-y-1">
+              {expert.warnings.map((warning, i) => (
+                <li key={i}>• {warning}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Sources */}
+        {expert?.enrichment_sources?.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-gray-100">
+            <p className="text-xs text-gray-500">
+              Sources: {expert.enrichment_sources.map((src, i) => (
+                <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline mr-2">
+                  [{i + 1}]
+                </a>
+              ))}
+              <span className="text-gray-400 ml-2">
+                Last updated: {new Date(expert.profile_enriched_at).toLocaleDateString()}
+              </span>
+            </p>
+          </div>
+        )}
 
         {/* Performance Metrics (if available) */}
         {metrics && (

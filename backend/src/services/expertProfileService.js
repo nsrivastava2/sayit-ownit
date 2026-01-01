@@ -250,7 +250,7 @@ export const expertProfileService = {
       return expert;
     }
 
-    // Update expert profile
+    // Update expert profile with sources and raw data
     await db.query(
       `UPDATE experts SET
         profile_picture_url = COALESCE($1, profile_picture_url),
@@ -263,9 +263,11 @@ export const expertProfileService = {
         education = COALESCE($8, education),
         certifications = COALESCE($9, certifications),
         warnings = COALESCE($10, warnings),
+        enrichment_sources = $11,
+        enrichment_raw_data = $12,
         profile_enriched_at = NOW(),
         profile_source = 'gemini'
-       WHERE id = $11`,
+       WHERE id = $13`,
       [
         research.profile?.profile_picture_url,
         research.social_media?.twitter_handle,
@@ -277,6 +279,8 @@ export const expertProfileService = {
         research.profile?.education,
         research.profile?.certifications,
         research.warnings?.map(w => `[${w.type}] ${w.description}`),
+        research.sources || [],
+        JSON.stringify(research),
         expertId
       ]
     );
