@@ -314,9 +314,12 @@ export const recommendationValidator = {
     `);
 
     const reasonCounts = await db.query(`
-      SELECT unnest(flag_reasons) as reason, COUNT(*) as count
-      FROM recommendations
-      WHERE is_flagged = TRUE
+      SELECT reason, COUNT(*) as count
+      FROM (
+        SELECT unnest(flag_reasons) as reason
+        FROM recommendations
+        WHERE is_flagged = TRUE
+      ) AS reasons
       GROUP BY reason
       ORDER BY count DESC
     `);
