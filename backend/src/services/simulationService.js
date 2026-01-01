@@ -352,19 +352,21 @@ export async function runSimulation({
 
     try {
       const priceResult = await pool.query(`
-        SELECT close_price, price_date
-        FROM stock_prices
-        WHERE nse_symbol = $1
-        ORDER BY price_date DESC
+        SELECT sp.close_price, sp.price_date
+        FROM stocks s
+        JOIN stock_prices sp ON s.id = sp.stock_id
+        WHERE s.symbol = $1
+        ORDER BY sp.price_date DESC
         LIMIT 1
       `, [symbol]);
 
-      if (priceResult.rows.length > 0) {
+      if (priceResult.rows.length > 0 && priceResult.rows[0].close_price) {
         currentPrice = parseFloat(priceResult.rows[0].close_price);
         priceDate = priceResult.rows[0].price_date;
       }
     } catch (err) {
       // Ignore price lookup errors, use entry price
+      logger.warn('Failed to fetch current price', { symbol, error: err.message });
     }
 
     const currentValue = pos.shares * currentPrice;
