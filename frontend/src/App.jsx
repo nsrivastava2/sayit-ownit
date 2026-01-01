@@ -16,6 +16,8 @@ import AdminLogin from './pages/admin/AdminLogin';
 import ExpertManagement from './pages/admin/ExpertManagement';
 import ChannelManagement from './pages/admin/ChannelManagement';
 import RecommendationReview from './pages/admin/RecommendationReview';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
             <Route path="/experts/:name" element={<ExpertView />} />
             <Route path="/shares/:symbol" element={<ShareView />} />
             <Route path="/videos/:id" element={<VideoDetails />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
 
             {/* User Auth Routes */}
             <Route path="/login" element={<Login />} />

@@ -161,8 +161,22 @@ function Layout({ children }) {
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <p className="text-center text-gray-500 text-sm">
-            Stock Market TV Recommendation Tracker - Extracting insights from Indian financial TV
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p className="text-gray-500 text-sm">
+              Stock Market TV Recommendation Tracker - Extracting insights from Indian financial TV
+            </p>
+            <div className="flex items-center gap-4 text-sm">
+              <Link to="/privacy-policy" className="text-gray-500 hover:text-gray-700">
+                Privacy Policy
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link to="/terms" className="text-gray-500 hover:text-gray-700">
+                Terms of Service
+              </Link>
+            </div>
+          </div>
+          <p className="text-center text-gray-400 text-xs mt-2">
+            &copy; {new Date().getFullYear()} Ubinator Software Solutions LLP. All rights reserved.
           </p>
         </div>
       </footer>
