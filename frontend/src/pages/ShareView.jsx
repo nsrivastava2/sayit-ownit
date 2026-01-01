@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import OutcomeBadge from '../components/OutcomeBadge';
+import FlagIndicator from '../components/FlagIndicator';
 
 function ShareView() {
   const { symbol } = useParams();
@@ -215,12 +216,15 @@ function ShareView() {
                     <tr key={rec.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm text-gray-900">{rec.recommendation_date}</td>
                       <td className="px-4 py-3">
-                        <Link
-                          to={`/experts/${encodeURIComponent(rec.expert_name)}`}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                        >
-                          {rec.expert_name}
-                        </Link>
+                        <div className="flex items-center gap-1">
+                          <FlagIndicator isFlagged={rec.is_flagged} flagReasons={rec.flag_reasons} />
+                          <Link
+                            to={`/experts/${encodeURIComponent(rec.expert_name)}`}
+                            className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                          >
+                            {rec.expert_name}
+                          </Link>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${actionColors[rec.action]}`}>

@@ -12,6 +12,7 @@ import Leaderboard from './pages/Leaderboard';
 import AdminLogin from './pages/admin/AdminLogin';
 import ExpertManagement from './pages/admin/ExpertManagement';
 import ChannelManagement from './pages/admin/ChannelManagement';
+import RecommendationReview from './pages/admin/RecommendationReview';
 
 function App() {
   return (
@@ -38,6 +39,9 @@ function App() {
           } />
           <Route path="/admin/channels" element={
             <ProtectedRoute><ChannelManagement /></ProtectedRoute>
+          } />
+          <Route path="/admin/recommendations" element={
+            <ProtectedRoute><RecommendationReview /></ProtectedRoute>
           } />
         </Routes>
       </Layout>

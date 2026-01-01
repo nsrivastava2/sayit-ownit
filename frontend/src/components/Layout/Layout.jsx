@@ -16,6 +16,7 @@ function Layout({ children }) {
   // Admin nav items (only visible when authenticated)
   const adminNavItems = [
     { path: '/add', label: 'Add Video', icon: '➕' },
+    { path: '/admin/recommendations', label: 'Review', icon: '🚩' },
     { path: '/admin/experts', label: 'Experts', icon: '👤' },
     { path: '/admin/channels', label: 'Channels', icon: '📺' }
   ];

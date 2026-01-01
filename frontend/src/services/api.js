@@ -239,6 +239,36 @@ export const api = {
 
   async clearPromptCache() {
     return fetchApi('/admin/channels/cache/clear', { method: 'POST' });
+  },
+
+  // ============================================
+  // Admin API - Recommendation Review
+  // ============================================
+
+  async getFlaggedRecommendations() {
+    return fetchApi('/admin/recommendations/flagged');
+  },
+
+  async getFlagStats() {
+    return fetchApi('/admin/recommendations/stats');
+  },
+
+  async approveRecommendation(id, notes = null) {
+    return fetchApi(`/admin/recommendations/${id}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ notes })
+    });
+  },
+
+  async editRecommendation(id, updates, notes = null) {
+    return fetchApi(`/admin/recommendations/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ ...updates, notes })
+    });
+  },
+
+  async validateAllRecommendations() {
+    return fetchApi('/admin/recommendations/validate-all', { method: 'POST' });
   }
 };
 

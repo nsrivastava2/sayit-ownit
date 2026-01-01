@@ -6,6 +6,7 @@ import videoService from './videoService.js';
 import geminiVideoService from './geminiVideoService.js';
 import youtubeTranscriptService from './youtubeTranscriptService.js';
 import { expertService } from './expertService.js';
+import { recommendationValidator } from './recommendationValidator.js';
 
 /**
  * Job queue service for processing videos
@@ -295,6 +296,7 @@ export const queueService = {
       recommendationDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     }
 
+    let flaggedCount = 0;
     for (const rec of recommendations) {
       // Resolve expert name using expertService (maps aliases to canonical names)
       const expertResolution = await expertService.resolveExpertName(
@@ -302,6 +304,10 @@ export const queueService = {
         job.videoId,
         rec.timestamp_seconds
       );
+
+      // Validate recommendation before saving
+      const flagReasons = recommendationValidator.validate(rec);
+      const isFlagged = flagReasons.length > 0;
 
       await db.createRecommendation({
         video_id: job.videoId,
@@ -316,8 +322,15 @@ export const queueService = {
         reason: rec.reason,
         confidence_score: rec.confidence_score,
         timestamp_in_video: rec.timestamp_seconds,
-        raw_extract: JSON.stringify(rec)
+        raw_extract: JSON.stringify(rec),
+        is_flagged: isFlagged,
+        flag_reasons: isFlagged ? flagReasons : null
       });
+
+      if (isFlagged) {
+        flaggedCount++;
+        console.log(`Flagged recommendation: ${rec.share_name} - ${flagReasons.join(', ')}`);
+      }
 
       // Log if this is a new expert (added to pending)
       if (expertResolution.isNew) {
@@ -325,7 +338,7 @@ export const queueService = {
       }
     }
 
-    console.log(`Saved ${recommendations.length} recommendations (via ${processingMethod})`);
+    console.log(`Saved ${recommendations.length} recommendations (${flaggedCount} flagged) via ${processingMethod}`);
 
     // Mark as completed
     job.status = 'completed';

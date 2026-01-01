@@ -17,6 +17,7 @@ import pricesRouter from './routes/prices.js';
 // Import admin routes
 import adminExpertsRouter from './routes/admin/experts.js';
 import adminChannelsRouter from './routes/admin/channels.js';
+import adminRecommendationsRouter from './routes/admin/recommendations.js';
 
 // Import middleware
 import { adminAuth } from './middleware/adminAuth.js';
@@ -66,6 +67,7 @@ app.use('/api/prices', pricesRouter);
 // Protected Admin Routes
 app.use('/api/admin/experts', adminAuth, adminExpertsRouter);
 app.use('/api/admin/channels', adminAuth, adminChannelsRouter);
+app.use('/api/admin/recommendations', adminRecommendationsRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

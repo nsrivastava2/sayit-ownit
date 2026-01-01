@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import OutcomeBadge from '../components/OutcomeBadge';
+import FlagIndicator from '../components/FlagIndicator';
 
 function Recommendations() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -303,15 +304,18 @@ function Recommendations() {
                       </Link>
                     </td>
                     <td className="px-4 py-3">
-                      <Link
-                        to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
-                        className="text-sm font-medium text-gray-900"
-                      >
-                        {rec.share_name}
-                        {rec.nse_symbol && (
-                          <span className="text-xs text-gray-500 ml-1">({rec.nse_symbol})</span>
-                        )}
-                      </Link>
+                      <div className="flex items-center gap-1">
+                        <FlagIndicator isFlagged={rec.is_flagged} flagReasons={rec.flag_reasons} />
+                        <Link
+                          to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
+                          className="text-sm font-medium text-gray-900"
+                        >
+                          {rec.share_name}
+                          {rec.nse_symbol && (
+                            <span className="text-xs text-gray-500 ml-1">({rec.nse_symbol})</span>
+                          )}
+                        </Link>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${actionColors[rec.action]}`}>

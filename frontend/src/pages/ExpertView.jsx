@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import OutcomeBadge from '../components/OutcomeBadge';
+import FlagIndicator from '../components/FlagIndicator';
 
 function ExpertView() {
   const { name } = useParams();
@@ -187,15 +188,18 @@ function ExpertView() {
                   <tr key={rec.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm text-gray-900">{rec.recommendation_date}</td>
                     <td className="px-4 py-3">
-                      <Link
-                        to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
-                        className="text-sm font-medium text-primary-600 hover:text-primary-800"
-                      >
-                        {rec.share_name}
-                        {rec.nse_symbol && (
-                          <span className="text-xs text-gray-500 ml-1">({rec.nse_symbol})</span>
-                        )}
-                      </Link>
+                      <div className="flex items-center gap-1">
+                        <FlagIndicator isFlagged={rec.is_flagged} flagReasons={rec.flag_reasons} />
+                        <Link
+                          to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
+                          className="text-sm font-medium text-primary-600 hover:text-primary-800"
+                        >
+                          {rec.share_name}
+                          {rec.nse_symbol && (
+                            <span className="text-xs text-gray-500 ml-1">({rec.nse_symbol})</span>
+                          )}
+                        </Link>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${actionColors[rec.action]}`}>
