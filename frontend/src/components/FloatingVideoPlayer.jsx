@@ -36,6 +36,7 @@ function FloatingVideoPlayer({ videoId, timestamp = 0, title = 'Video', onClose 
       </div>
       <div className="aspect-video">
         <iframe
+          key={`${videoId}-${timestamp}`}
           src={`https://www.youtube.com/embed/${videoId}?start=${Math.floor(timestamp)}&autoplay=1`}
           className="w-full h-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

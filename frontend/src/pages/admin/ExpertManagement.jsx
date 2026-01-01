@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../services/api';
 import FloatingVideoPlayer from '../../components/FloatingVideoPlayer';
 import { useVideoPlayer } from '../../hooks/useVideoPlayer';
@@ -13,8 +13,9 @@ function ExpertManagement() {
   const [newAlias, setNewAlias] = useState('');
   const [selectedExpertForAlias, setSelectedExpertForAlias] = useState(null);
   const [researchingId, setResearchingId] = useState(null);
-  const [researchResult, setResearchResult] = useState(null);
   const [enrichingId, setEnrichingId] = useState(null);
+  const [expandedExpertId, setExpandedExpertId] = useState(null);
+  const [toast, setToast] = useState(null);
   const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
   // Form state for create/edit
@@ -25,12 +26,14 @@ function ExpertManagement() {
     aliases: ''
   });
 
-  useEffect(() => {
-    loadData();
+  // Show toast notification
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
   }, []);
 
-  async function loadData() {
-    setLoading(true);
+  // Load data without scrolling to top
+  const loadDataSilent = useCallback(async () => {
     try {
       const [expertsRes, pendingRes] = await Promise.all([
         api.getAdminExperts(),
@@ -40,10 +43,17 @@ function ExpertManagement() {
       setPendingExperts(pendingRes.pending || []);
     } catch (err) {
       setError(err.message);
-    } finally {
+    }
+  }, []);
+
+  useEffect(() => {
+    async function initialLoad() {
+      setLoading(true);
+      await loadDataSilent();
       setLoading(false);
     }
-  }
+    initialLoad();
+  }, [loadDataSilent]);
 
   async function handleCreateExpert(e) {
     e.preventDefault();
@@ -62,9 +72,10 @@ function ExpertManagement() {
 
       setShowCreateModal(false);
       setFormData({ canonical_name: '', bio: '', specialization: '', aliases: '' });
-      loadData();
+      await loadDataSilent();
+      showToast(`Expert "${formData.canonical_name}" created`);
     } catch (err) {
-      alert('Error creating expert: ' + err.message);
+      showToast('Error: ' + err.message, 'error');
     }
   }
 
@@ -79,9 +90,10 @@ function ExpertManagement() {
 
       setEditingExpert(null);
       setFormData({ canonical_name: '', bio: '', specialization: '', aliases: '' });
-      loadData();
+      await loadDataSilent();
+      showToast('Expert updated');
     } catch (err) {
-      alert('Error updating expert: ' + err.message);
+      showToast('Error: ' + err.message, 'error');
     }
   }
 
@@ -91,30 +103,34 @@ function ExpertManagement() {
     }
     try {
       await api.deleteAdminExpert(expert.id);
-      loadData();
+      await loadDataSilent();
+      showToast(`Expert "${expert.canonical_name}" deleted`);
     } catch (err) {
-      alert('Error deleting expert: ' + err.message);
+      showToast('Error: ' + err.message, 'error');
     }
   }
 
   async function handleAddAlias(expertId) {
     if (!newAlias.trim()) return;
+    const aliasToAdd = newAlias.trim();
     try {
-      await api.addExpertAlias(expertId, newAlias.trim());
+      await api.addExpertAlias(expertId, aliasToAdd);
       setNewAlias('');
       setSelectedExpertForAlias(null);
-      loadData();
+      await loadDataSilent();
+      showToast(`Alias "${aliasToAdd}" added`);
     } catch (err) {
-      alert('Error adding alias: ' + err.message);
+      showToast('Error: ' + err.message, 'error');
     }
   }
 
-  async function handleRemoveAlias(aliasId) {
+  async function handleRemoveAlias(aliasId, aliasName) {
     try {
       await api.removeExpertAlias(aliasId);
-      loadData();
+      await loadDataSilent();
+      showToast(`Alias "${aliasName}" removed`);
     } catch (err) {
-      alert('Error removing alias: ' + err.message);
+      showToast('Error: ' + err.message, 'error');
     }
   }
 
@@ -127,30 +143,33 @@ function ExpertManagement() {
       }
 
       await api.resolvePendingExpert(pending.id, action, expertId, canonicalName);
-      setResearchResult(null);
-      loadData();
+      await loadDataSilent();
+
+      if (action === 'create_new') {
+        showToast(`Expert "${canonicalName}" created from "${pending.raw_name}"`);
+      } else if (action === 'assign_existing') {
+        const expert = experts.find(e => e.id === expertId);
+        showToast(`"${pending.raw_name}" assigned to ${expert?.canonical_name || 'expert'}`);
+      } else if (action === 'reject') {
+        showToast(`"${pending.raw_name}" rejected`);
+      }
     } catch (err) {
-      alert('Error resolving pending expert: ' + err.message);
+      showToast('Error: ' + err.message, 'error');
     }
   }
 
   async function handleResearchPending(pendingId) {
     try {
       setResearchingId(pendingId);
-      setResearchResult(null);
       const result = await api.researchPendingExpert(pendingId);
-      setResearchResult({
-        pendingId,
-        data: result.pendingExpert
-      });
-      // Update the pending expert in our list with research data
       setPendingExperts(prev => prev.map(p =>
         p.id === pendingId
           ? { ...p, research_summary: result.pendingExpert.research_summary, research_data: result.pendingExpert.research_data }
           : p
       ));
+      showToast('Research completed');
     } catch (err) {
-      alert('Error researching expert: ' + err.message);
+      showToast('Error: ' + err.message, 'error');
     } finally {
       setResearchingId(null);
     }
@@ -159,11 +178,12 @@ function ExpertManagement() {
   async function handleEnrichExpert(expertId) {
     try {
       setEnrichingId(expertId);
-      const result = await api.enrichExpertProfile(expertId);
-      loadData();
-      alert('Profile enriched successfully!');
+      await api.enrichExpertProfile(expertId);
+      await loadDataSilent();
+      setExpandedExpertId(expertId); // Auto-expand to show enriched data
+      showToast('Profile enriched - click to view details');
     } catch (err) {
-      alert('Error enriching profile: ' + err.message);
+      showToast('Error: ' + err.message, 'error');
     } finally {
       setEnrichingId(null);
     }
@@ -179,6 +199,10 @@ function ExpertManagement() {
     });
   }
 
+  function toggleExpandExpert(expertId) {
+    setExpandedExpertId(prev => prev === expertId ? null : expertId);
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -189,6 +213,15 @@ function ExpertManagement() {
 
   return (
     <div className="space-y-8">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all ${
+          toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-green-600 text-white'
+        }`}>
+          {toast.message}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Expert Management</h1>
@@ -276,7 +309,6 @@ function ExpertManagement() {
                 {(pending.research_summary || pending.research_data) && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex items-start gap-4">
-                      {/* Profile Picture */}
                       {pending.research_data?.profile?.profile_picture_url && (
                         <img
                           src={pending.research_data.profile.profile_picture_url}
@@ -286,7 +318,6 @@ function ExpertManagement() {
                         />
                       )}
                       <div className="flex-1">
-                        {/* Summary */}
                         {pending.research_summary && (
                           <div className="prose prose-sm max-w-none text-gray-700">
                             {pending.research_summary.split('\n').map((line, i) => (
@@ -294,44 +325,21 @@ function ExpertManagement() {
                             ))}
                           </div>
                         )}
-
-                        {/* Social Links */}
                         {pending.research_data?.social_media && (
                           <div className="flex gap-3 mt-3">
                             {pending.research_data.social_media.twitter_handle && (
-                              <a
-                                href={`https://twitter.com/${pending.research_data.social_media.twitter_handle.replace('@', '')}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-blue-500 hover:underline"
-                              >
+                              <a href={`https://twitter.com/${pending.research_data.social_media.twitter_handle.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline">
                                 Twitter: {pending.research_data.social_media.twitter_handle}
                               </a>
                             )}
                             {pending.research_data.social_media.linkedin_url && (
-                              <a
-                                href={pending.research_data.social_media.linkedin_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-blue-700 hover:underline"
-                              >
-                                LinkedIn
-                              </a>
+                              <a href={pending.research_data.social_media.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-700 hover:underline">LinkedIn</a>
                             )}
                             {pending.research_data.social_media.youtube_channel && (
-                              <a
-                                href={pending.research_data.social_media.youtube_channel}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-red-600 hover:underline"
-                              >
-                                YouTube
-                              </a>
+                              <a href={pending.research_data.social_media.youtube_channel} target="_blank" rel="noopener noreferrer" className="text-sm text-red-600 hover:underline">YouTube</a>
                             )}
                           </div>
                         )}
-
-                        {/* Warnings */}
                         {pending.research_data?.warnings?.length > 0 && (
                           <div className="mt-3 p-3 bg-red-50 rounded-lg">
                             <p className="text-sm font-medium text-red-800 mb-2">⚠️ Warnings:</p>
@@ -341,13 +349,6 @@ function ExpertManagement() {
                               ))}
                             </ul>
                           </div>
-                        )}
-
-                        {/* Confidence */}
-                        {pending.research_data?.confidence && (
-                          <p className="mt-2 text-xs text-gray-500">
-                            Research confidence: {pending.research_data.confidence}
-                          </p>
                         )}
                       </div>
                     </div>
@@ -359,39 +360,65 @@ function ExpertManagement() {
         </div>
       )}
 
-      {/* Experts Table */}
+      {/* Experts List */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aliases</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Specialization</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recommendations</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {experts.map(expert => (
-              <tr key={expert.id} className={!expert.is_active ? 'bg-gray-50 opacity-60' : ''}>
-                <td className="px-6 py-4">
-                  <div className="font-medium text-gray-900">{expert.canonical_name}</div>
-                  {expert.bio && <div className="text-sm text-gray-500">{expert.bio}</div>}
-                </td>
-                <td className="px-6 py-4">
+        <div className="divide-y divide-gray-200">
+          {experts.map(expert => (
+            <div key={expert.id} className={!expert.is_active ? 'bg-gray-50 opacity-60' : ''}>
+              {/* Expert Row */}
+              <div className="px-6 py-4 flex items-center gap-4">
+                {/* Profile Picture (if enriched) */}
+                <div className="flex-shrink-0">
+                  {expert.profile_picture_url ? (
+                    <img
+                      src={expert.profile_picture_url}
+                      alt={expert.canonical_name}
+                      className="w-12 h-12 rounded-full object-cover"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-lg font-semibold">
+                      {expert.canonical_name?.charAt(0)?.toUpperCase()}
+                    </div>
+                  )}
+                </div>
+
+                {/* Name & Bio */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-900">{expert.canonical_name}</span>
+                    {expert.profile_enriched_at && (
+                      <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded">
+                        ✓ Enriched
+                      </span>
+                    )}
+                  </div>
+                  {expert.specialization && (
+                    <p className="text-sm text-gray-500">{expert.specialization}</p>
+                  )}
+                  {/* Social Links (compact) */}
+                  {(expert.twitter_handle || expert.linkedin_url || expert.youtube_channel) && (
+                    <div className="flex gap-2 mt-1">
+                      {expert.twitter_handle && (
+                        <a href={`https://twitter.com/${expert.twitter_handle.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Twitter</a>
+                      )}
+                      {expert.linkedin_url && (
+                        <a href={expert.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-700 hover:underline">LinkedIn</a>
+                      )}
+                      {expert.youtube_channel && (
+                        <a href={expert.youtube_channel} target="_blank" rel="noopener noreferrer" className="text-xs text-red-600 hover:underline">YouTube</a>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Aliases */}
+                <div className="flex-1">
                   <div className="flex flex-wrap gap-1">
                     {(expert.aliases || []).map(alias => (
-                      <span
-                        key={alias.id}
-                        className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700"
-                      >
+                      <span key={alias.id} className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700">
                         {alias.alias}
-                        <button
-                          onClick={() => handleRemoveAlias(alias.id)}
-                          className="ml-1 text-gray-400 hover:text-red-500"
-                        >
-                          x
-                        </button>
+                        <button onClick={() => handleRemoveAlias(alias.id, alias.alias)} className="ml-1 text-gray-400 hover:text-red-500">×</button>
                       </span>
                     ))}
                     {selectedExpertForAlias === expert.id ? (
@@ -400,41 +427,36 @@ function ExpertManagement() {
                           type="text"
                           value={newAlias}
                           onChange={(e) => setNewAlias(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleAddAlias(expert.id)}
                           placeholder="New alias"
                           className="px-2 py-0.5 text-xs border rounded w-24"
                           autoFocus
                         />
-                        <button
-                          onClick={() => handleAddAlias(expert.id)}
-                          className="text-green-600 text-xs"
-                        >
-                          Add
-                        </button>
-                        <button
-                          onClick={() => { setSelectedExpertForAlias(null); setNewAlias(''); }}
-                          className="text-gray-400 text-xs"
-                        >
-                          Cancel
-                        </button>
+                        <button onClick={() => handleAddAlias(expert.id)} className="text-green-600 text-xs">Add</button>
+                        <button onClick={() => { setSelectedExpertForAlias(null); setNewAlias(''); }} className="text-gray-400 text-xs">×</button>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => setSelectedExpertForAlias(expert.id)}
-                        className="text-xs text-primary-600 hover:underline"
-                      >
-                        + Add alias
-                      </button>
+                      <button onClick={() => setSelectedExpertForAlias(expert.id)} className="text-xs text-primary-600 hover:underline">+ Alias</button>
                     )}
                   </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500">
-                  {expert.specialization || '-'}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {expert.recommendation_count || 0}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex gap-2">
+                </div>
+
+                {/* Recommendations Count */}
+                <div className="text-center w-16">
+                  <span className="text-lg font-semibold text-gray-900">{expert.recommendation_count || 0}</span>
+                  <p className="text-xs text-gray-500">Picks</p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 flex-shrink-0">
+                  {expert.profile_enriched_at ? (
+                    <button
+                      onClick={() => toggleExpandExpert(expert.id)}
+                      className="text-sm text-purple-600 hover:underline"
+                    >
+                      {expandedExpertId === expert.id ? '▲ Hide' : '▼ Profile'}
+                    </button>
+                  ) : (
                     <button
                       onClick={() => handleEnrichExpert(expert.id)}
                       disabled={enrichingId === expert.id}
@@ -442,24 +464,120 @@ function ExpertManagement() {
                     >
                       {enrichingId === expert.id ? 'Enriching...' : '🔍 Enrich'}
                     </button>
-                    <button
-                      onClick={() => openEditModal(expert)}
-                      className="text-sm text-primary-600 hover:underline"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteExpert(expert)}
-                      className="text-sm text-red-600 hover:underline"
-                    >
-                      Delete
-                    </button>
+                  )}
+                  <button onClick={() => openEditModal(expert)} className="text-sm text-primary-600 hover:underline">Edit</button>
+                  <button onClick={() => handleDeleteExpert(expert)} className="text-sm text-red-600 hover:underline">Delete</button>
+                </div>
+              </div>
+
+              {/* Expanded Profile Section */}
+              {expandedExpertId === expert.id && (
+                <div className="px-6 py-4 bg-purple-50 border-t border-purple-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Experience Summary */}
+                    {expert.experience_summary && (
+                      <div className="col-span-2">
+                        <h4 className="text-sm font-medium text-gray-700 mb-1">Experience</h4>
+                        <p className="text-sm text-gray-600">{expert.experience_summary}</p>
+                      </div>
+                    )}
+
+                    {/* Current Associations */}
+                    {expert.current_associations?.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-1">Current Associations</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {expert.current_associations.map((assoc, i) => (
+                            <span key={i} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">{assoc}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Education */}
+                    {expert.education && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-1">Education</h4>
+                        <p className="text-sm text-gray-600">{expert.education}</p>
+                      </div>
+                    )}
+
+                    {/* Certifications */}
+                    {expert.certifications?.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-1">Certifications</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {expert.certifications.map((cert, i) => (
+                            <span key={i} className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">{cert}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Social Links */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-1">Social & Web</h4>
+                      <div className="flex flex-wrap gap-3">
+                        {expert.twitter_handle && (
+                          <a href={`https://twitter.com/${expert.twitter_handle.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline">
+                            🐦 {expert.twitter_handle}
+                          </a>
+                        )}
+                        {expert.linkedin_url && (
+                          <a href={expert.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-700 hover:underline">
+                            💼 LinkedIn
+                          </a>
+                        )}
+                        {expert.youtube_channel && (
+                          <a href={expert.youtube_channel} target="_blank" rel="noopener noreferrer" className="text-sm text-red-600 hover:underline">
+                            📺 YouTube
+                          </a>
+                        )}
+                        {expert.website_url && (
+                          <a href={expert.website_url} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-600 hover:underline">
+                            🌐 Website
+                          </a>
+                        )}
+                        {!expert.twitter_handle && !expert.linkedin_url && !expert.youtube_channel && !expert.website_url && (
+                          <span className="text-sm text-gray-400">No social links found</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Warnings */}
+                    {expert.warnings?.length > 0 && (
+                      <div className="col-span-2">
+                        <div className="p-3 bg-red-100 rounded-lg">
+                          <h4 className="text-sm font-medium text-red-800 mb-1">⚠️ Warnings</h4>
+                          <ul className="text-sm text-red-700 space-y-1">
+                            {expert.warnings.map((warning, i) => (
+                              <li key={i}>• {warning}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Meta info */}
+                    <div className="col-span-2 pt-2 border-t border-purple-200">
+                      <p className="text-xs text-gray-500">
+                        Enriched: {new Date(expert.profile_enriched_at).toLocaleDateString()}
+                        {expert.profile_source && ` via ${expert.profile_source}`}
+                      </p>
+                      <button
+                        onClick={() => handleEnrichExpert(expert.id)}
+                        disabled={enrichingId === expert.id}
+                        className="mt-2 text-xs text-purple-600 hover:underline disabled:opacity-50"
+                      >
+                        {enrichingId === expert.id ? 'Re-enriching...' : '🔄 Re-enrich profile'}
+                      </button>
+                    </div>
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Create Modal */}
@@ -508,19 +626,8 @@ function ExpertManagement() {
                 />
               </div>
               <div className="flex justify-end gap-2 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-                >
-                  Create
-                </button>
+                <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">Create</button>
               </div>
             </form>
           </div>
@@ -562,19 +669,8 @@ function ExpertManagement() {
                 />
               </div>
               <div className="flex justify-end gap-2 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setEditingExpert(null)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-                >
-                  Save
-                </button>
+                <button type="button" onClick={() => setEditingExpert(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">Save</button>
               </div>
             </form>
           </div>
