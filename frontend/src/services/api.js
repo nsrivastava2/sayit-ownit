@@ -431,6 +431,17 @@ export const api = {
 
   async getUserSimulations(limit = 20) {
     return fetchApi(`/simulations/user/history?limit=${limit}`);
+  },
+
+  // ============================================
+  // Price Refresh API
+  // ============================================
+
+  async refreshPrices(symbols) {
+    return fetchApi('/prices/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ symbols })
+    });
   }
 };
 

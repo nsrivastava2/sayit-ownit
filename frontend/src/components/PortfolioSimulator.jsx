@@ -10,9 +10,11 @@ import api from '../services/api';
 
 function PortfolioSimulator({ expertId, expertName }) {
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [results, setResults] = useState(null);
   const [showTradeLog, setShowTradeLog] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState(null);
 
   // Form state
   const [capital, setCapital] = useState(100000);
@@ -48,6 +50,39 @@ function PortfolioSimulator({ expertId, expertName }) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function refreshPrices() {
+    if (!results?.activePositions?.length) return;
+
+    setRefreshing(true);
+    setError(null);
+
+    try {
+      // Get symbols from active positions
+      const symbols = results.activePositions.map(pos => pos.symbol);
+
+      // Refresh prices from Yahoo/Google Finance
+      await api.refreshPrices(symbols);
+
+      // Re-run simulation to get updated values
+      const response = await api.runSimulation({
+        expertId,
+        initialCapital: capital,
+        startDate,
+        endDate,
+        positionSizingMethod: positionSizing,
+        positionSizeValue: positionValue,
+        maxConcurrentPositions: maxPositions
+      });
+
+      setResults(response.simulation);
+      setLastRefreshed(new Date());
+    } catch (err) {
+      setError('Failed to refresh prices: ' + err.message);
+    } finally {
+      setRefreshing(false);
     }
   }
 
@@ -294,10 +329,34 @@ function PortfolioSimulator({ expertId, expertName }) {
             {/* Active Positions */}
             {results.activePositions && results.activePositions.length > 0 && (
               <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                <h3 className="font-medium text-yellow-800 mb-3 flex items-center gap-2">
-                  <span>&#128200;</span>
-                  Active Positions ({results.activePositions.length})
-                </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-yellow-800 flex items-center gap-2">
+                    <span>&#128200;</span>
+                    Active Positions ({results.activePositions.length})
+                  </h3>
+                  <button
+                    onClick={refreshPrices}
+                    disabled={refreshing}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:bg-yellow-300 transition-colors"
+                  >
+                    {refreshing ? (
+                      <>
+                        <span className="animate-spin">&#8987;</span>
+                        Refreshing...
+                      </>
+                    ) : (
+                      <>
+                        <span>&#8635;</span>
+                        Refresh Prices
+                      </>
+                    )}
+                  </button>
+                </div>
+                {lastRefreshed && (
+                  <p className="text-xs text-yellow-600 mb-2">
+                    Last refreshed: {lastRefreshed.toLocaleTimeString()}
+                  </p>
+                )}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-yellow-100">
@@ -346,7 +405,7 @@ function PortfolioSimulator({ expertId, expertName }) {
                   </table>
                 </div>
                 <p className="text-xs text-yellow-600 mt-2">
-                  * These positions are still open. Current prices are from the latest available market data.
+                  * These positions are still open. Click "Refresh Prices" to fetch live prices from Yahoo Finance / Google Finance.
                 </p>
               </div>
             )}

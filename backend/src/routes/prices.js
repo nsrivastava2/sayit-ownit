@@ -7,6 +7,38 @@ import { adminAuth } from '../middleware/adminAuth.js';
 const router = express.Router();
 
 /**
+ * POST /api/prices/refresh
+ * Refresh prices for specific symbols (public - for simulation refresh button)
+ * Rate limited to prevent abuse
+ */
+router.post('/refresh', async (req, res) => {
+  try {
+    const { symbols } = req.body;
+
+    if (!symbols || !Array.isArray(symbols) || symbols.length === 0) {
+      return res.status(400).json({ error: 'symbols array is required' });
+    }
+
+    // Limit to 10 symbols per request to prevent abuse
+    if (symbols.length > 10) {
+      return res.status(400).json({ error: 'Maximum 10 symbols per request' });
+    }
+
+    const results = await priceService.refreshPricesForSymbols(symbols);
+
+    res.json({
+      success: true,
+      message: 'Price refresh completed',
+      results,
+      refreshedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error refreshing prices:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * GET /api/prices/:stockId/latest
  * Get latest price for a stock
  */

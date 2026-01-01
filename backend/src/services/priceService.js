@@ -1,6 +1,6 @@
 /**
  * Price Service
- * Fetches and manages stock prices from Yahoo Finance
+ * Fetches and manages stock prices from Yahoo Finance (primary) and Google Finance (fallback)
  */
 
 import yahooFinance from 'yahoo-finance2';
@@ -16,6 +16,79 @@ const logger = {
 const NSE_SUFFIX = '.NS';
 const BSE_SUFFIX = '.BO';
 
+/**
+ * Fetch price from Google Finance (fallback)
+ * Uses the public Google Finance page to scrape price data
+ */
+async function fetchFromGoogleFinance(symbol, exchange = 'NSE') {
+  // Google Finance uses symbol:exchange format
+  const googleSymbol = `${symbol}:${exchange}`;
+  const url = `https://www.google.com/finance/quote/${googleSymbol}`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Google Finance returned ${response.status}`);
+    }
+
+    const html = await response.text();
+
+    // Try multiple patterns to extract price
+    // Pattern 1: Look for price with ₹ symbol (Indian stocks)
+    let priceMatch = html.match(/₹([\d,]+\.?\d*)/);
+
+    // Pattern 2: Look for data-last-price attribute
+    if (!priceMatch) {
+      priceMatch = html.match(/data-last-price="([\d.]+)"/);
+    }
+
+    // Pattern 3: Look for price in specific div structure
+    if (!priceMatch) {
+      // Look for the main price display which is typically the first large number
+      priceMatch = html.match(/class="YMlKec fxKbKc"[^>]*>([\d,]+\.?\d*)/);
+    }
+
+    if (!priceMatch) {
+      logger.warn('Could not parse Google Finance price', { symbol, url });
+      return null;
+    }
+
+    // Parse the price, removing commas
+    const priceStr = priceMatch[1].replace(/,/g, '');
+    const currentPrice = parseFloat(priceStr);
+
+    if (isNaN(currentPrice) || currentPrice <= 0) {
+      logger.warn('Invalid price parsed from Google Finance', { symbol, priceStr });
+      return null;
+    }
+
+    logger.info('Google Finance price fetched', { symbol, price: currentPrice });
+
+    return {
+      symbol,
+      exchange,
+      date: new Date(),
+      close: currentPrice,
+      previousClose: null,
+      open: null,
+      high: null,
+      low: null,
+      volume: null,
+      change: null,
+      changePercent: null,
+      source: 'google'
+    };
+  } catch (error) {
+    logger.error('Google Finance fetch failed', { symbol, error: error.message });
+    return null;
+  }
+}
+
 export const priceService = {
   /**
    * Get Yahoo Finance symbol for a stock
@@ -26,40 +99,94 @@ export const priceService = {
   },
 
   /**
-   * Fetch current/latest price for a stock from Yahoo Finance
+   * Fetch current/latest price for a stock from Yahoo Finance (with Google Finance fallback)
    */
   async fetchPrice(symbol, exchange = 'NSE') {
     const yahooSymbol = this.getYahooSymbol(symbol, exchange);
-    logger.info('Fetching price', { symbol, yahooSymbol });
+    logger.info('Fetching price', { symbol, yahooSymbol, source: 'yahoo' });
 
+    // Try Yahoo Finance first
     try {
       const quote = await yahooFinance.quote(yahooSymbol);
 
-      if (!quote || !quote.regularMarketPrice) {
-        logger.warn('No price data', { symbol, yahooSymbol });
-        return null;
+      if (quote && quote.regularMarketPrice) {
+        return {
+          symbol,
+          exchange,
+          date: quote.regularMarketTime instanceof Date
+            ? quote.regularMarketTime
+            : new Date(quote.regularMarketTime * 1000),
+          open: quote.regularMarketOpen,
+          high: quote.regularMarketDayHigh,
+          low: quote.regularMarketDayLow,
+          close: quote.regularMarketPrice,
+          previousClose: quote.regularMarketPreviousClose,
+          volume: quote.regularMarketVolume,
+          change: quote.regularMarketChange,
+          changePercent: quote.regularMarketChangePercent,
+          source: 'yahoo'
+        };
       }
-
-      return {
-        symbol,
-        exchange,
-        // regularMarketTime is already a Date object in yahoo-finance2 v2
-        date: quote.regularMarketTime instanceof Date
-          ? quote.regularMarketTime
-          : new Date(quote.regularMarketTime * 1000),
-        open: quote.regularMarketOpen,
-        high: quote.regularMarketDayHigh,
-        low: quote.regularMarketDayLow,
-        close: quote.regularMarketPrice,
-        previousClose: quote.regularMarketPreviousClose,
-        volume: quote.regularMarketVolume,
-        change: quote.regularMarketChange,
-        changePercent: quote.regularMarketChangePercent
-      };
     } catch (error) {
-      logger.error('Fetch failed', { symbol, yahooSymbol, error: error.message });
-      return null;
+      logger.warn('Yahoo Finance failed, trying Google Finance', { symbol, error: error.message });
     }
+
+    // Fallback to Google Finance
+    logger.info('Fetching price', { symbol, source: 'google' });
+    const googlePrice = await fetchFromGoogleFinance(symbol, exchange);
+
+    if (googlePrice) {
+      return googlePrice;
+    }
+
+    logger.error('All price sources failed', { symbol });
+    return null;
+  },
+
+  /**
+   * Fetch and save prices for multiple symbols (for simulation refresh)
+   */
+  async refreshPricesForSymbols(symbols) {
+    logger.info('Refreshing prices for symbols', { symbols });
+    const results = [];
+
+    for (const symbol of symbols) {
+      try {
+        // Find stock in database
+        const stockResult = await db.query(
+          'SELECT id, symbol, exchange FROM stocks WHERE symbol = $1',
+          [symbol]
+        );
+
+        if (stockResult.rows.length === 0) {
+          results.push({ symbol, success: false, error: 'Stock not found' });
+          continue;
+        }
+
+        const stock = stockResult.rows[0];
+        const priceData = await this.fetchPrice(stock.symbol, stock.exchange);
+
+        if (priceData) {
+          await this.savePrice(stock.id, priceData);
+          results.push({
+            symbol,
+            success: true,
+            price: priceData.close,
+            date: priceData.date,
+            source: priceData.source
+          });
+        } else {
+          results.push({ symbol, success: false, error: 'Could not fetch price' });
+        }
+
+        // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } catch (error) {
+        results.push({ symbol, success: false, error: error.message });
+      }
+    }
+
+    return results;
   },
 
   /**
