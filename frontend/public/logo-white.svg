@@ -1,24 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <defs>
-    <linearGradient id="chartWhite" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#34d399"/>
-      <stop offset="100%" style="stop-color:#10b981"/>
-    </linearGradient>
-  </defs>
-
   <!-- White version for dark backgrounds - no background -->
 
   <!-- Microphone -->
   <rect x="18" y="8" width="12" height="18" rx="6" fill="white"/>
-  <line x1="20" y1="12" x2="28" y2="12" stroke="#e2e8f0" stroke-width="1"/>
-  <line x1="20" y1="15" x2="28" y2="15" stroke="#e2e8f0" stroke-width="1"/>
-  <line x1="20" y1="18" x2="28" y2="18" stroke="#e2e8f0" stroke-width="1"/>
-  <line x1="20" y1="21" x2="28" y2="21" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="20" y1="12" x2="28" y2="12" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="20" y1="15" x2="28" y2="15" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="20" y1="18" x2="28" y2="18" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="20" y1="21" x2="28" y2="21" stroke="#cbd5e1" stroke-width="1"/>
 
   <path d="M14 22 Q14 30 24 30 Q34 30 34 22" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
   <line x1="24" y1="30" x2="24" y2="35" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
 
-  <!-- Chart -->
-  <path d="M8 40 L16 36 L26 38 L40 28" stroke="url(#chartWhite)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M36 26 L40 28 L38 32" stroke="url(#chartWhite)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Chart - cyan -->
+  <path d="M8 40 L16 36 L26 38 L40 28" stroke="#22d3ee" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M36 26 L40 28 L38 32" stroke="#22d3ee" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="8" cy="40" r="2" fill="#22d3ee"/>
 </svg>

@@ -1,26 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
   <defs>
     <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3b82f6"/>
-      <stop offset="100%" style="stop-color:#1e40af"/>
-    </linearGradient>
-    <linearGradient id="greenGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#10b981"/>
-      <stop offset="100%" style="stop-color:#059669"/>
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
     </linearGradient>
   </defs>
 
-  <!-- Background -->
+  <!-- Dark navy background for better contrast -->
   <rect x="2" y="2" width="44" height="44" rx="10" fill="url(#blueGrad)"/>
 
   <!-- Microphone body -->
   <rect x="18" y="8" width="12" height="18" rx="6" fill="white"/>
 
   <!-- Microphone grille lines -->
-  <line x1="20" y1="12" x2="28" y2="12" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="20" y1="15" x2="28" y2="15" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="20" y1="18" x2="28" y2="18" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="20" y1="21" x2="28" y2="21" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="20" y1="12" x2="28" y2="12" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="20" y1="15" x2="28" y2="15" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="20" y1="18" x2="28" y2="18" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="20" y1="21" x2="28" y2="21" stroke="#94a3b8" stroke-width="1"/>
 
   <!-- Microphone stand arc -->
   <path d="M14 22 Q14 30 24 30 Q34 30 34 22"
@@ -32,9 +28,9 @@
   <!-- Microphone stand vertical -->
   <line x1="24" y1="30" x2="24" y2="35" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
 
-  <!-- Stock chart line (upward trend) -->
+  <!-- Stock chart line - bright vibrant green/cyan -->
   <path d="M8 40 L16 36 L26 38 L40 28"
-        stroke="url(#greenGrad)"
+        stroke="#22d3ee"
         stroke-width="3"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -42,9 +38,12 @@
 
   <!-- Arrow tip on chart -->
   <path d="M36 26 L40 28 L38 32"
-        stroke="url(#greenGrad)"
+        stroke="#22d3ee"
         stroke-width="3"
         stroke-linecap="round"
         stroke-linejoin="round"
         fill="none"/>
+
+  <!-- Small glow effect for chart -->
+  <circle cx="8" cy="40" r="2" fill="#22d3ee" opacity="0.8"/>
 </svg>
