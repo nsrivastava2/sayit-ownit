@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import FloatingVideoPlayer from '../../components/FloatingVideoPlayer';
+import { useVideoPlayer } from '../../hooks/useVideoPlayer';
 
 function RecommendationReview() {
   const [recommendations, setRecommendations] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
-  const [processing, setProcessing] = useState(false);
-  const [filterReason, setFilterReason] = useState(null); // Filter by flag reason
+  const [editedValues, setEditedValues] = useState({}); // Track inline edits per recommendation
+  const [processing, setProcessing] = useState({});
+  const [filterReason, setFilterReason] = useState(null);
+  const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
   useEffect(() => {
     loadData();
@@ -25,6 +27,18 @@ function RecommendationReview() {
       ]);
       setRecommendations(flaggedData.recommendations || []);
       setStats(statsData.stats);
+
+      // Initialize edited values with current values
+      const initialEdits = {};
+      (flaggedData.recommendations || []).forEach(rec => {
+        initialEdits[rec.id] = {
+          recommended_price: rec.recommended_price || '',
+          target_price: rec.target_price || '',
+          stop_loss: rec.stop_loss || '',
+          timeline: rec.timeline || 'SHORT_TERM'
+        };
+      });
+      setEditedValues(initialEdits);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -32,54 +46,38 @@ function RecommendationReview() {
     }
   }
 
-  async function handleApprove(id) {
-    if (!confirm('Approve this recommendation as-is? The flag will be cleared.')) return;
+  function updateField(recId, field, value) {
+    setEditedValues(prev => ({
+      ...prev,
+      [recId]: { ...prev[recId], [field]: value }
+    }));
+  }
+
+  function hasChanges(rec) {
+    const edited = editedValues[rec.id];
+    if (!edited) return false;
+    return (
+      (edited.recommended_price || '') !== (rec.recommended_price?.toString() || '') ||
+      (edited.target_price || '') !== (rec.target_price?.toString() || '') ||
+      (edited.stop_loss || '') !== (rec.stop_loss?.toString() || '') ||
+      (edited.timeline || '') !== (rec.timeline || '')
+    );
+  }
+
+  async function handleSave(rec) {
+    const edited = editedValues[rec.id];
+    if (!edited) return;
 
     try {
-      setProcessing(true);
-      await api.approveRecommendation(id);
-      setRecommendations(prev => prev.filter(r => r.id !== id));
-      if (stats) {
-        setStats(prev => ({
-          ...prev,
-          flagged_count: parseInt(prev.flagged_count) - 1,
-          clean_count: parseInt(prev.clean_count) + 1
-        }));
-      }
-    } catch (err) {
-      alert('Error approving: ' + err.message);
-    } finally {
-      setProcessing(false);
-    }
-  }
-
-  function startEdit(rec) {
-    setEditingId(rec.id);
-    setEditForm({
-      recommended_price: rec.recommended_price || '',
-      target_price: rec.target_price || '',
-      stop_loss: rec.stop_loss || '',
-      action: rec.action || 'BUY'
-    });
-  }
-
-  function cancelEdit() {
-    setEditingId(null);
-    setEditForm({});
-  }
-
-  async function handleSaveEdit(id) {
-    try {
-      setProcessing(true);
+      setProcessing(prev => ({ ...prev, [rec.id]: true }));
       const updates = {
-        recommended_price: editForm.recommended_price ? parseFloat(editForm.recommended_price) : null,
-        target_price: editForm.target_price ? parseFloat(editForm.target_price) : null,
-        stop_loss: editForm.stop_loss ? parseFloat(editForm.stop_loss) : null,
-        action: editForm.action
+        recommended_price: edited.recommended_price ? parseFloat(edited.recommended_price) : null,
+        target_price: edited.target_price ? parseFloat(edited.target_price) : null,
+        stop_loss: edited.stop_loss ? parseFloat(edited.stop_loss) : null,
+        timeline: edited.timeline || null
       };
-      await api.editRecommendation(id, updates);
-      setRecommendations(prev => prev.filter(r => r.id !== id));
-      setEditingId(null);
+      await api.editRecommendation(rec.id, updates);
+      setRecommendations(prev => prev.filter(r => r.id !== rec.id));
       if (stats) {
         setStats(prev => ({
           ...prev,
@@ -90,30 +88,54 @@ function RecommendationReview() {
     } catch (err) {
       alert('Error saving: ' + err.message);
     } finally {
-      setProcessing(false);
+      setProcessing(prev => ({ ...prev, [rec.id]: false }));
     }
   }
 
-  async function handleRevalidateAll() {
-    if (!confirm('Re-validate all recommendations? This may flag more recommendations.')) return;
-
+  async function handleApprove(rec) {
     try {
-      setProcessing(true);
-      const result = await api.validateAllRecommendations();
-      alert(`Validated ${result.total} recommendations. ${result.flagged} flagged.`);
-      loadData();
+      setProcessing(prev => ({ ...prev, [rec.id]: true }));
+      await api.approveRecommendation(rec.id);
+      setRecommendations(prev => prev.filter(r => r.id !== rec.id));
+      if (stats) {
+        setStats(prev => ({
+          ...prev,
+          flagged_count: parseInt(prev.flagged_count) - 1,
+          clean_count: parseInt(prev.clean_count) + 1
+        }));
+      }
     } catch (err) {
-      alert('Error: ' + err.message);
+      alert('Error approving: ' + err.message);
     } finally {
-      setProcessing(false);
+      setProcessing(prev => ({ ...prev, [rec.id]: false }));
     }
   }
 
-  // Get severity color for flag reasons
-  const getSeverityColor = (reasons) => {
-    if (reasons.some(r => r.code.includes('ILLOGICAL'))) return 'bg-red-100 text-red-800';
-    if (reasons.some(r => r.code.includes('MISSING'))) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-orange-100 text-orange-800';
+  async function handleDelete(rec) {
+    if (!confirm(`Delete recommendation for ${rec.share_name}?`)) return;
+    try {
+      setProcessing(prev => ({ ...prev, [rec.id]: true }));
+      await api.deleteRecommendation(rec.id);
+      setRecommendations(prev => prev.filter(r => r.id !== rec.id));
+      if (stats) {
+        setStats(prev => ({
+          ...prev,
+          flagged_count: parseInt(prev.flagged_count) - 1
+        }));
+      }
+    } catch (err) {
+      alert('Error deleting: ' + err.message);
+    } finally {
+      setProcessing(prev => ({ ...prev, [rec.id]: false }));
+    }
+  }
+
+  // Format date as 12-Dec-2025
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${date.getDate()}-${months[date.getMonth()]}-${date.getFullYear()}`;
   };
 
   // Format timestamp as MM:SS or HH:MM:SS
@@ -129,15 +151,21 @@ function RecommendationReview() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Get YouTube URL with timestamp
-  const getVideoUrl = (url, timestamp) => {
-    if (!url) return null;
-    if (!timestamp && timestamp !== 0) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}t=${Math.floor(timestamp)}s`;
+  const timelineOptions = [
+    { value: 'INTRADAY', label: 'Intraday', color: 'bg-red-100 text-red-700' },
+    { value: 'BTST', label: 'BTST', color: 'bg-orange-100 text-orange-700' },
+    { value: 'SHORT_TERM', label: 'Short Term', color: 'bg-yellow-100 text-yellow-700' },
+    { value: 'POSITIONAL', label: 'Positional', color: 'bg-blue-100 text-blue-700' },
+    { value: 'MEDIUM_TERM', label: 'Medium Term', color: 'bg-indigo-100 text-indigo-700' },
+    { value: 'LONG_TERM', label: 'Long Term', color: 'bg-purple-100 text-purple-700' }
+  ];
+
+  const getTimelineColor = (timeline) => {
+    const opt = timelineOptions.find(o => o.value === timeline);
+    return opt?.color || 'bg-gray-100 text-gray-700';
   };
 
-  // Filter recommendations based on selected reason
+  // Filter recommendations
   const filteredRecommendations = filterReason
     ? recommendations.filter(rec =>
         rec.flag_reasons?.includes(filterReason) ||
@@ -162,284 +190,240 @@ function RecommendationReview() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Recommendation Review</h1>
-          <p className="text-gray-500 mt-1">
-            Review and approve flagged recommendations
-          </p>
+    <div className="space-y-4">
+      {/* Compact Header with Stats */}
+      <div className="flex items-center justify-between bg-white rounded-lg shadow-sm border p-3">
+        <div className="flex items-center gap-6">
+          <h1 className="text-xl font-bold text-gray-900">Review Recommendations</h1>
+          {stats && (
+            <div className="flex gap-4 text-sm">
+              <span className="text-amber-600 font-semibold">{stats.flagged_count} Flagged</span>
+              <span className="text-green-600">{stats.clean_count} Clean</span>
+              <span className="text-gray-500">{stats.total_count} Total</span>
+            </div>
+          )}
         </div>
-        <button
-          onClick={handleRevalidateAll}
-          disabled={processing}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-        >
-          Re-validate All
-        </button>
       </div>
 
-      {/* Stats */}
-      {stats && (
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Flagged</p>
-            <p className="text-3xl font-bold text-amber-600">{stats.flagged_count}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Clean</p>
-            <p className="text-3xl font-bold text-green-600">{stats.clean_count}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Total</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.total_count}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Flag Reason Breakdown - Clickable Filters */}
+      {/* Issue Filters - Compact */}
       {stats?.reasonBreakdown?.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h3 className="font-medium text-gray-900 mb-3">Issues by Type (click to filter)</h3>
-          <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 px-1">
+          <button
+            onClick={() => setFilterReason(null)}
+            className={`px-2 py-1 rounded text-xs transition-colors ${
+              filterReason === null
+                ? 'bg-primary-600 text-white'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+            }`}
+          >
+            All ({stats.flagged_count})
+          </button>
+          {stats.reasonBreakdown.map(({ reason, count }) => (
             <button
-              onClick={() => setFilterReason(null)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                filterReason === null
-                  ? 'bg-primary-600 text-white'
+              key={reason}
+              onClick={() => setFilterReason(reason)}
+              className={`px-2 py-1 rounded text-xs transition-colors ${
+                filterReason === reason
+                  ? 'bg-amber-600 text-white'
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
               }`}
             >
-              All: <strong>{stats.flagged_count}</strong>
+              {reason.replace(/_/g, ' ')} ({count})
             </button>
-            {stats.reasonBreakdown.map(({ reason, count }) => (
-              <button
-                key={reason}
-                onClick={() => setFilterReason(reason)}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  filterReason === reason
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                }`}
-              >
-                {reason.replace(/_/g, ' ')}: <strong>{count}</strong>
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
       )}
 
-      {/* Flagged Recommendations */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Flagged Recommendations ({filteredRecommendations.length})
-            {filterReason && (
-              <span className="ml-2 text-sm font-normal text-amber-600">
-                — filtered by: {filterReason.replace(/_/g, ' ')}
-              </span>
-            )}
-          </h2>
-        </div>
-
+      {/* Recommendations Table */}
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         {filteredRecommendations.length === 0 ? (
-          <div className="p-12 text-center text-gray-500">
+          <div className="p-8 text-center text-gray-500">
             {filterReason ? (
-              <>
-                <p className="text-lg">No recommendations with "{filterReason.replace(/_/g, ' ')}"</p>
-                <button
-                  onClick={() => setFilterReason(null)}
-                  className="mt-2 text-primary-600 hover:text-primary-800"
-                >
-                  Show all flagged recommendations
-                </button>
-              </>
+              <button onClick={() => setFilterReason(null)} className="text-primary-600 hover:underline">
+                No items - Show all
+              </button>
             ) : (
-              <>
-                <p className="text-lg">No flagged recommendations</p>
-                <p className="text-sm mt-2">All recommendations have been reviewed!</p>
-              </>
+              <p>All recommendations reviewed!</p>
             )}
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
-            {filteredRecommendations.map((rec) => (
-              <div key={rec.id} className="p-4 hover:bg-gray-50">
-                {/* Header Row */}
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded ${
-                        rec.action === 'BUY' ? 'bg-green-100 text-green-800' :
-                        rec.action === 'SELL' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {rec.action}
-                      </span>
-                      <Link
-                        to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
-                        className="font-semibold text-primary-600 hover:text-primary-800"
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+              <tr>
+                <th className="px-3 py-2 text-left">Date</th>
+                <th className="px-3 py-2 text-left">Stock / Expert</th>
+                <th className="px-3 py-2 text-left">Issues</th>
+                <th className="px-3 py-2 text-left w-24">Entry</th>
+                <th className="px-3 py-2 text-left w-24">Target</th>
+                <th className="px-3 py-2 text-left w-24">SL</th>
+                <th className="px-3 py-2 text-left w-32">Timeline</th>
+                <th className="px-3 py-2 text-left">Video</th>
+                <th className="px-3 py-2 text-right w-36">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredRecommendations.map((rec) => {
+                const edited = editedValues[rec.id] || {};
+                const isProcessing = processing[rec.id];
+                const changed = hasChanges(rec);
+
+                return (
+                  <tr key={rec.id} className="hover:bg-gray-50">
+                    {/* Date */}
+                    <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                      {formatDate(rec.recommendation_date)}
+                    </td>
+
+                    {/* Stock / Expert */}
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-1">
+                        <span className={`px-1.5 py-0.5 text-xs font-semibold rounded ${
+                          rec.action === 'BUY' ? 'bg-green-100 text-green-800' :
+                          rec.action === 'SELL' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {rec.action}
+                        </span>
+                        <Link
+                          to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
+                          className="font-medium text-primary-600 hover:underline"
+                        >
+                          {rec.share_name}
+                        </Link>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">{rec.expert_name}</div>
+                    </td>
+
+                    {/* Issues */}
+                    <td className="px-3 py-2">
+                      <div className="flex flex-wrap gap-1">
+                        {rec.flag_messages?.slice(0, 2).map((flag, idx) => (
+                          <span
+                            key={idx}
+                            className="px-1.5 py-0.5 text-xs rounded bg-amber-100 text-amber-700"
+                            title={flag.message}
+                          >
+                            {flag.code.replace(/^(MISSING_|ILLOGICAL_)/, '')}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+
+                    {/* Entry Price - Editable */}
+                    <td className="px-3 py-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={edited.recommended_price || ''}
+                        onChange={(e) => updateField(rec.id, 'recommended_price', e.target.value)}
+                        className={`w-full px-2 py-1 text-sm border rounded ${
+                          !edited.recommended_price ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                        }`}
+                        placeholder="Entry"
+                      />
+                    </td>
+
+                    {/* Target - Editable */}
+                    <td className="px-3 py-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={edited.target_price || ''}
+                        onChange={(e) => updateField(rec.id, 'target_price', e.target.value)}
+                        className={`w-full px-2 py-1 text-sm border rounded ${
+                          !edited.target_price ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                        }`}
+                        placeholder="Target"
+                      />
+                    </td>
+
+                    {/* Stop Loss - Editable */}
+                    <td className="px-3 py-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={edited.stop_loss || ''}
+                        onChange={(e) => updateField(rec.id, 'stop_loss', e.target.value)}
+                        className={`w-full px-2 py-1 text-sm border rounded ${
+                          !edited.stop_loss ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                        }`}
+                        placeholder="SL"
+                      />
+                    </td>
+
+                    {/* Timeline - Editable */}
+                    <td className="px-3 py-2">
+                      <select
+                        value={edited.timeline || ''}
+                        onChange={(e) => updateField(rec.id, 'timeline', e.target.value)}
+                        className={`w-full px-2 py-1 text-xs border rounded ${getTimelineColor(edited.timeline)}`}
                       >
-                        {rec.share_name}
-                      </Link>
-                      {rec.nse_symbol && (
-                        <span className="text-sm text-gray-500">({rec.nse_symbol})</span>
+                        <option value="">Select...</option>
+                        {timelineOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </td>
+
+                    {/* Video Link */}
+                    <td className="px-3 py-2">
+                      {rec.youtube_url && (
+                        <button
+                          onClick={() => openVideoPlayer(rec.youtube_url, rec.timestamp_in_video, rec.video_title)}
+                          className="text-xs text-primary-600 hover:underline flex items-center gap-1"
+                        >
+                          <span>▶</span>
+                          {rec.timestamp_in_video ? formatTimestamp(rec.timestamp_in_video) : 'Play'}
+                        </button>
                       )}
-                    </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {rec.expert_name} • {rec.recommendation_date}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    {editingId !== rec.id && (
-                      <>
-                        <button
-                          onClick={() => startEdit(rec)}
-                          disabled={processing}
-                          className="px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleApprove(rec.id)}
-                          disabled={processing}
-                          className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                        >
-                          Approve
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
+                    </td>
 
-                {/* Flag Reasons */}
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {rec.flag_messages?.map((flag, idx) => (
-                    <span
-                      key={idx}
-                      className={`px-2 py-1 text-xs rounded ${getSeverityColor([flag])}`}
-                      title={flag.message}
-                    >
-                      {flag.message}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Current Values or Edit Form */}
-                {editingId === rec.id ? (
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                    <div className="grid grid-cols-4 gap-4">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Action</label>
-                        <select
-                          value={editForm.action}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, action: e.target.value }))}
-                          className="w-full px-2 py-1 border rounded text-sm"
-                        >
-                          <option value="BUY">BUY</option>
-                          <option value="SELL">SELL</option>
-                          <option value="HOLD">HOLD</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Entry Price</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={editForm.recommended_price}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, recommended_price: e.target.value }))}
-                          className="w-full px-2 py-1 border rounded text-sm"
-                          placeholder="Entry"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Target Price</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={editForm.target_price}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, target_price: e.target.value }))}
-                          className="w-full px-2 py-1 border rounded text-sm"
-                          placeholder="Target"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Stop Loss</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={editForm.stop_loss}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, stop_loss: e.target.value }))}
-                          className="w-full px-2 py-1 border rounded text-sm"
-                          placeholder="Stop Loss"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={cancelEdit}
-                        className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => handleSaveEdit(rec.id)}
-                        disabled={processing}
-                        className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                      >
-                        Save & Approve
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Entry: </span>
-                      <span className={!rec.recommended_price ? 'text-red-600 font-medium' : ''}>
-                        {rec.recommended_price ? `₹${rec.recommended_price}` : 'Missing'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Target: </span>
-                      <span className={!rec.target_price ? 'text-red-600 font-medium' : ''}>
-                        {rec.target_price ? `₹${rec.target_price}` : 'Missing'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">SL: </span>
-                      <span className={!rec.stop_loss ? 'text-red-600 font-medium' : ''}>
-                        {rec.stop_loss ? `₹${rec.stop_loss}` : 'Missing'}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Video Source */}
-                {rec.video_title && (
-                  <div className="mt-2 text-xs text-gray-500">
-                    Source: {rec.video_title}
-                    {rec.youtube_url && (
-                      <a
-                        href={getVideoUrl(rec.youtube_url, rec.timestamp_in_video)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-2 text-primary-600 hover:underline"
-                      >
-                        {rec.timestamp_in_video ? (
-                          <>▶ Watch @ {formatTimestamp(rec.timestamp_in_video)}</>
+                    {/* Actions */}
+                    <td className="px-3 py-2 text-right">
+                      <div className="flex justify-end gap-1">
+                        {changed ? (
+                          <button
+                            onClick={() => handleSave(rec)}
+                            disabled={isProcessing}
+                            className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                          >
+                            {isProcessing ? '...' : 'Save'}
+                          </button>
                         ) : (
-                          'Watch'
+                          <button
+                            onClick={() => handleApprove(rec)}
+                            disabled={isProcessing}
+                            className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                          >
+                            {isProcessing ? '...' : 'OK'}
+                          </button>
                         )}
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                        <button
+                          onClick={() => handleDelete(rec)}
+                          disabled={isProcessing}
+                          className="px-2 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 disabled:opacity-50"
+                        >
+                          Del
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         )}
       </div>
+
+      {/* Floating Video Player */}
+      {videoPlayer && (
+        <FloatingVideoPlayer
+          videoId={videoPlayer.videoId}
+          timestamp={videoPlayer.timestamp}
+          title={videoPlayer.title}
+          onClose={closeVideoPlayer}
+        />
+      )}
     </div>
   );
 }

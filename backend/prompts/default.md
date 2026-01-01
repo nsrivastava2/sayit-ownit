@@ -93,6 +93,31 @@ Extract tags to identify the show segment or occasion. Look for:
 
 Add ALL applicable tags. If no specific segment is identified, use general tags like "Market Analysis".
 
+### 10. TIMELINE - Investment Horizon (REQUIRED):
+Extract the investment timeline/holding period. This is CRITICAL for investors.
+
+**Timeline Values** (use EXACTLY these values):
+- **"INTRADAY"** - Same day trade, exit before market close
+  - Keywords: "intraday", "today's trade", "day trade", "aaj ke liye"
+- **"BTST"** - Buy Today Sell Tomorrow
+  - Keywords: "BTST", "tomorrow sell", "kal tak"
+- **"SHORT_TERM"** - Few days to 2 weeks
+  - Keywords: "short term", "1-2 weeks", "thode din ke liye"
+- **"POSITIONAL"** - 2 weeks to 2 months
+  - Keywords: "positional", "positional trade", "swing trade", "2-4 weeks"
+- **"MEDIUM_TERM"** - 2-6 months
+  - Keywords: "medium term", "3-6 months", "quarterly"
+- **"LONG_TERM"** - 6+ months / Investment pick
+  - Keywords: "long term", "investment", "1 year", "multibagger"
+
+**Default Logic:**
+- If timeline not explicitly stated but segment suggests it:
+  - "Intraday Ideas" → INTRADAY
+  - "BTST" segment → BTST
+  - "Positional Pick" → POSITIONAL
+  - "Investment Pick" → LONG_TERM
+- If no hint available, default to "SHORT_TERM"
+
 ## LANGUAGE NOTES:
 - Content may be in English, Hindi, or Hinglish (mixed Hindi-English)
 - Hindi terms: "kharidna/kharido/buy karo" = BUY, "becho/sell karo" = SELL
@@ -112,7 +137,8 @@ Return a JSON array (empty if no valid recommendations):
     "reason": "Technical breakout above resistance",
     "timestamp_seconds": 330,
     "confidence": "high",
-    "tags": ["Editor's Pick", "Positional Pick", "Largecap Pick"]
+    "tags": ["Editor's Pick", "Positional Pick", "Largecap Pick"],
+    "timeline": "SHORT_TERM"
   }
 ]
 ```

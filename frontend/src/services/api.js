@@ -286,6 +286,10 @@ export const api = {
     });
   },
 
+  async deleteRecommendation(id) {
+    return fetchApi(`/admin/recommendations/${id}`, { method: 'DELETE' });
+  },
+
   async validateAllRecommendations() {
     return fetchApi('/admin/recommendations/validate-all', { method: 'POST' });
   }

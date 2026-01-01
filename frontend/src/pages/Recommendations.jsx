@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import OutcomeBadge from '../components/OutcomeBadge';
 import FlagIndicator from '../components/FlagIndicator';
+import FloatingVideoPlayer from '../components/FloatingVideoPlayer';
+import { useVideoPlayer } from '../hooks/useVideoPlayer';
 
 function Recommendations() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -13,6 +15,7 @@ function Recommendations() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
   // Filter state from URL params
   const filters = {
@@ -22,6 +25,7 @@ function Recommendations() {
     status: searchParams.get('status') || '',
     outcome: searchParams.get('outcome') || '',
     tag: searchParams.get('tag') || '',
+    timeline: searchParams.get('timeline') || '',
     date_from: searchParams.get('date_from') || '',
     date_to: searchParams.get('date_to') || '',
     page: parseInt(searchParams.get('page') || '1')
@@ -47,6 +51,7 @@ function Recommendations() {
           status: filters.status,
           outcome: filters.outcome,
           tag: filters.tag,
+          timeline: filters.timeline,
           date_from: filters.date_from,
           date_to: filters.date_to,
           limit,
@@ -97,6 +102,32 @@ function Recommendations() {
     SELL: 'bg-red-100 text-red-800',
     HOLD: 'bg-yellow-100 text-yellow-800'
   };
+
+  const timelineColors = {
+    INTRADAY: 'bg-red-100 text-red-700',
+    BTST: 'bg-orange-100 text-orange-700',
+    SHORT_TERM: 'bg-yellow-100 text-yellow-700',
+    POSITIONAL: 'bg-blue-100 text-blue-700',
+    MEDIUM_TERM: 'bg-indigo-100 text-indigo-700',
+    LONG_TERM: 'bg-purple-100 text-purple-700'
+  };
+
+  const timelineLabels = {
+    INTRADAY: 'Intraday',
+    BTST: 'BTST',
+    SHORT_TERM: 'Short Term',
+    POSITIONAL: 'Positional',
+    MEDIUM_TERM: 'Medium Term',
+    LONG_TERM: 'Long Term'
+  };
+
+  // Format date as 12-Dec-2025
+  function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${date.getDate()}-${months[date.getMonth()]}-${date.getFullYear()}`;
+  }
 
   // Format seconds as MM:SS
   function formatTimestamp(seconds) {
@@ -206,7 +237,7 @@ function Recommendations() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mt-4">
           {/* Outcome filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Outcome</label>
@@ -239,6 +270,24 @@ function Recommendations() {
             </select>
           </div>
 
+          {/* Timeline filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Timeline</label>
+            <select
+              value={filters.timeline}
+              onChange={(e) => updateFilter('timeline', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            >
+              <option value="">All Timelines</option>
+              <option value="INTRADAY">Intraday</option>
+              <option value="BTST">BTST</option>
+              <option value="SHORT_TERM">Short Term</option>
+              <option value="POSITIONAL">Positional</option>
+              <option value="MEDIUM_TERM">Medium Term</option>
+              <option value="LONG_TERM">Long Term</option>
+            </select>
+          </div>
+
           {/* Date from */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
@@ -263,7 +312,7 @@ function Recommendations() {
 
           {/* Clear filters button */}
           <div className="flex items-end">
-            {(filters.expert || filters.share || filters.action || filters.status || filters.outcome || filters.tag || filters.date_from || filters.date_to) && (
+            {(filters.expert || filters.share || filters.action || filters.status || filters.outcome || filters.tag || filters.timeline || filters.date_from || filters.date_to) && (
               <button
                 onClick={clearFilters}
                 className="w-full px-3 py-2 text-sm text-primary-600 hover:text-primary-800 border border-primary-300 rounded-lg hover:bg-primary-50"
@@ -306,6 +355,7 @@ function Recommendations() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expert</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timeline</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entry Price</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stop Loss</th>
@@ -317,7 +367,7 @@ function Recommendations() {
               <tbody className="divide-y divide-gray-200">
                 {recommendations.map((rec) => (
                   <tr key={rec.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-900">{rec.recommendation_date}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{formatDate(rec.recommendation_date)}</td>
                     <td className="px-4 py-3">
                       <Link
                         to={`/experts/${encodeURIComponent(rec.expert_name)}`}
@@ -344,6 +394,15 @@ function Recommendations() {
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${actionColors[rec.action]}`}>
                         {rec.action}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {rec.timeline ? (
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${timelineColors[rec.timeline] || 'bg-gray-100 text-gray-700'}`}>
+                          {timelineLabels[rec.timeline] || rec.timeline}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {rec.recommended_price ? `₹${rec.recommended_price}` : '-'}
@@ -383,28 +442,22 @@ function Recommendations() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      {rec.videos && (
-                        <div className="flex flex-col space-y-1">
-                          {rec.timestamp_in_video !== null && rec.videos.youtube_url ? (
-                            <a
-                              href={getYouTubeUrlWithTimestamp(rec.videos.youtube_url, rec.timestamp_in_video)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-primary-600 hover:text-primary-800 flex items-center"
-                            >
-                              <span className="mr-1">▶</span>
-                              {formatTimestamp(rec.timestamp_in_video)}
-                            </a>
-                          ) : (
-                            <Link
-                              to={`/videos/${rec.video_id}`}
-                              className="text-xs text-primary-600 hover:text-primary-800"
-                            >
-                              View video
-                            </Link>
-                          )}
-                        </div>
-                      )}
+                      {rec.videos && rec.videos.youtube_url ? (
+                        <button
+                          onClick={() => openVideoPlayer(rec.videos.youtube_url, rec.timestamp_in_video, rec.videos.title)}
+                          className="text-xs text-primary-600 hover:text-primary-800 flex items-center gap-1"
+                        >
+                          <span>▶</span>
+                          {rec.timestamp_in_video ? formatTimestamp(rec.timestamp_in_video) : 'Play'}
+                        </button>
+                      ) : rec.video_id ? (
+                        <Link
+                          to={`/videos/${rec.video_id}`}
+                          className="text-xs text-primary-600 hover:text-primary-800"
+                        >
+                          View
+                        </Link>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -464,6 +517,16 @@ function Recommendations() {
           </div>
         )}
       </div>
+
+      {/* Floating Video Player */}
+      {videoPlayer && (
+        <FloatingVideoPlayer
+          videoId={videoPlayer.videoId}
+          timestamp={videoPlayer.timestamp}
+          title={videoPlayer.title}
+          onClose={closeVideoPlayer}
+        />
+      )}
     </div>
   );
 }

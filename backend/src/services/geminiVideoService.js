@@ -330,7 +330,8 @@ export const geminiVideoService = {
           reason: r.reason || null,
           timestamp_seconds: typeof r.timestamp_seconds === 'number' ? Math.floor(r.timestamp_seconds) : 0,
           confidence_score: this.confidenceToScore(r.confidence),
-          tags: Array.isArray(r.tags) ? r.tags : null
+          tags: Array.isArray(r.tags) ? r.tags : null,
+          timeline: this.normalizeTimeline(r.timeline)
         }));
     };
 
@@ -623,6 +624,22 @@ Extract ONLY actionable stock recommendations. Convert MM:SS to seconds (05:30 =
       return normalized;
     }
     return 'BUY';
+  },
+
+  normalizeTimeline(timeline) {
+    if (!timeline) return 'SHORT_TERM';
+    const normalized = timeline.toUpperCase().trim().replace(/\s+/g, '_');
+    const validTimelines = ['INTRADAY', 'BTST', 'SHORT_TERM', 'POSITIONAL', 'MEDIUM_TERM', 'LONG_TERM'];
+    if (validTimelines.includes(normalized)) {
+      return normalized;
+    }
+    // Handle common variations
+    if (normalized.includes('INTRA') || normalized.includes('DAY')) return 'INTRADAY';
+    if (normalized.includes('SHORT')) return 'SHORT_TERM';
+    if (normalized.includes('MEDIUM')) return 'MEDIUM_TERM';
+    if (normalized.includes('LONG') || normalized.includes('INVEST')) return 'LONG_TERM';
+    if (normalized.includes('POSITION') || normalized.includes('SWING')) return 'POSITIONAL';
+    return 'SHORT_TERM';
   },
 
   parsePrice(price) {

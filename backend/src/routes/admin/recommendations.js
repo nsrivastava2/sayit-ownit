@@ -76,13 +76,14 @@ router.post('/:id/approve', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { recommended_price, target_price, stop_loss, action, notes } = req.body;
+    const { recommended_price, target_price, stop_loss, action, timeline, notes } = req.body;
 
     const updates = {};
     if (recommended_price !== undefined) updates.recommended_price = recommended_price;
     if (target_price !== undefined) updates.target_price = target_price;
     if (stop_loss !== undefined) updates.stop_loss = stop_loss;
     if (action !== undefined) updates.action = action;
+    if (timeline !== undefined) updates.timeline = timeline;
 
     await recommendationValidator.editRecommendation(id, updates, notes);
 
@@ -92,6 +93,25 @@ router.put('/:id', async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating recommendation:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/recommendations/:id
+ * Delete a recommendation
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await recommendationValidator.deleteRecommendation(id);
+
+    res.json({
+      success: true,
+      message: 'Recommendation deleted'
+    });
+  } catch (error) {
+    console.error('Error deleting recommendation:', error);
     res.status(500).json({ error: error.message });
   }
 });

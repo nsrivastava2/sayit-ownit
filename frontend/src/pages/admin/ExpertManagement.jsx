@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
+import FloatingVideoPlayer from '../../components/FloatingVideoPlayer';
+import { useVideoPlayer } from '../../hooks/useVideoPlayer';
 
 function ExpertManagement() {
   const [experts, setExperts] = useState([]);
@@ -13,6 +15,7 @@ function ExpertManagement() {
   const [researchingId, setResearchingId] = useState(null);
   const [researchResult, setResearchResult] = useState(null);
   const [enrichingId, setEnrichingId] = useState(null);
+  const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
   // Form state for create/edit
   const [formData, setFormData] = useState({
@@ -224,14 +227,12 @@ function ExpertManagement() {
                       </p>
                     )}
                     {pending.youtube_url && (
-                      <a
-                        href={`${pending.youtube_url}${pending.timestamp_in_video ? `&t=${pending.timestamp_in_video}` : ''}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => openVideoPlayer(pending.youtube_url, pending.timestamp_in_video, pending.video_title)}
                         className="text-sm text-primary-600 hover:underline"
                       >
-                        View in video
-                      </a>
+                        ▶ View in video
+                      </button>
                     )}
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
@@ -578,6 +579,16 @@ function ExpertManagement() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Floating Video Player */}
+      {videoPlayer && (
+        <FloatingVideoPlayer
+          videoId={videoPlayer.videoId}
+          timestamp={videoPlayer.timestamp}
+          title={videoPlayer.title}
+          onClose={closeVideoPlayer}
+        />
       )}
     </div>
   );

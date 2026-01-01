@@ -48,6 +48,7 @@ router.get('/', async (req, res) => {
       status,
       outcome,
       tag,
+      timeline,
       limit = 50,
       offset = 0
     } = req.query;
@@ -61,6 +62,7 @@ router.get('/', async (req, res) => {
       status,
       outcome,
       tag,
+      timeline,
       limit: parseInt(limit),
       offset: parseInt(offset)
     });

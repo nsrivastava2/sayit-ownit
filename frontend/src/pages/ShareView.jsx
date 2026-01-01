@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import OutcomeBadge from '../components/OutcomeBadge';
 import FlagIndicator from '../components/FlagIndicator';
+import FloatingVideoPlayer from '../components/FloatingVideoPlayer';
+import { useVideoPlayer } from '../hooks/useVideoPlayer';
 
 function ShareView() {
   const { symbol } = useParams();
@@ -10,6 +12,7 @@ function ShareView() {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
   useEffect(() => {
     loadShare();
@@ -207,70 +210,72 @@ function ShareView() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {recommendations.map((rec) => {
-                  const videoUrl = rec.videos?.youtube_url
-                    ? `${rec.videos.youtube_url}${rec.videos.youtube_url.includes('?') ? '&' : '?'}t=${rec.timestamp_in_video || 0}`
-                    : null;
-
-                  return (
-                    <tr key={rec.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-900">{rec.recommendation_date}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
-                          <FlagIndicator isFlagged={rec.is_flagged} flagReasons={rec.flag_reasons} />
-                          <Link
-                            to={`/experts/${encodeURIComponent(rec.expert_name)}`}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                          >
-                            {rec.expert_name}
-                          </Link>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${actionColors[rec.action]}`}>
-                          {rec.action}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {rec.recommended_price ? `₹${rec.recommended_price}` : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {rec.target_price ? `₹${rec.target_price}` : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <OutcomeBadge
-                          outcome={rec.outcome}
-                          status={rec.status}
-                          returnPct={rec.outcome?.return_percentage}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        {videoUrl ? (
-                          <a
-                            href={videoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-blue-600 hover:text-blue-800 flex items-center whitespace-nowrap"
-                            title={rec.videos?.title}
-                          >
-                            <span className="mr-1">▶</span>
-                            {formatTimestamp(rec.timestamp_in_video)}
-                          </a>
-                        ) : (
-                          <span className="text-sm text-gray-400">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {recommendations.map((rec) => (
+                  <tr key={rec.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-900">{rec.recommendation_date}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        <FlagIndicator isFlagged={rec.is_flagged} flagReasons={rec.flag_reasons} />
+                        <Link
+                          to={`/experts/${encodeURIComponent(rec.expert_name)}`}
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          {rec.expert_name}
+                        </Link>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${actionColors[rec.action]}`}>
+                        {rec.action}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {rec.recommended_price ? `₹${rec.recommended_price}` : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {rec.target_price ? `₹${rec.target_price}` : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <OutcomeBadge
+                        outcome={rec.outcome}
+                        status={rec.status}
+                        returnPct={rec.outcome?.return_percentage}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      {rec.videos?.youtube_url ? (
+                        <button
+                          onClick={() => openVideoPlayer(rec.videos.youtube_url, rec.timestamp_in_video, rec.videos.title)}
+                          className="text-sm text-blue-600 hover:text-blue-800 flex items-center whitespace-nowrap"
+                          title={rec.videos?.title}
+                        >
+                          <span className="mr-1">▶</span>
+                          {formatTimestamp(rec.timestamp_in_video)}
+                        </button>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         )}
       </div>
+
+      {/* Floating Video Player */}
+      {videoPlayer && (
+        <FloatingVideoPlayer
+          videoId={videoPlayer.videoId}
+          timestamp={videoPlayer.timestamp}
+          title={videoPlayer.title}
+          onClose={closeVideoPlayer}
+        />
+      )}
     </div>
   );
 }

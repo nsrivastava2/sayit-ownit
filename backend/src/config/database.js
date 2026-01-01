@@ -130,19 +130,19 @@ export const db = {
       video_id, expert_name, recommendation_date, share_name, nse_symbol,
       action, recommended_price, target_price, stop_loss, reason,
       confidence_score, timestamp_in_video, raw_extract,
-      is_flagged, flag_reasons, tags
+      is_flagged, flag_reasons, tags, timeline
     } = recommendationData;
 
     const result = await pool.query(
       `INSERT INTO recommendations
        (video_id, expert_name, recommendation_date, share_name, nse_symbol, action,
         recommended_price, target_price, stop_loss, reason, confidence_score, timestamp_in_video, raw_extract,
-        is_flagged, flag_reasons, tags)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        is_flagged, flag_reasons, tags, timeline)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
        RETURNING *`,
       [video_id, expert_name, recommendation_date, share_name, nse_symbol, action,
        recommended_price, target_price, stop_loss, reason, confidence_score, timestamp_in_video, raw_extract,
-       is_flagged || false, flag_reasons || null, tags || null]
+       is_flagged || false, flag_reasons || null, tags || null, timeline || null]
     );
     return result.rows[0];
   },
@@ -158,7 +158,7 @@ export const db = {
     return results;
   },
 
-  async getRecommendations({ expert, share, dateFrom, dateTo, action, status, outcome, tag, limit = 50, offset = 0 }) {
+  async getRecommendations({ expert, share, dateFrom, dateTo, action, status, outcome, tag, timeline, limit = 50, offset = 0 }) {
     // Build WHERE conditions
     const conditions = ['1=1'];
     const params = [];
@@ -199,6 +199,11 @@ export const db = {
       params.push(tag);
       paramIndex++;
     }
+    if (timeline) {
+      conditions.push(`timeline = $${paramIndex}`);
+      params.push(timeline.toUpperCase());
+      paramIndex++;
+    }
 
     const whereClause = conditions.join(' AND ');
 
@@ -214,7 +219,8 @@ export const db = {
       .replace(/recommendation_date/g, 'r.recommendation_date')
       .replace(/action(?![_])/g, 'r.action')
       .replace(/status/g, 'r.status')
-      .replace(/ANY\(tags\)/g, 'ANY(r.tags)');
+      .replace(/ANY\(tags\)/g, 'ANY(r.tags)')
+      .replace(/timeline/g, 'r.timeline');
 
     // Build outcome filter if specified
     let outcomeJoin = 'LEFT JOIN recommendation_outcomes ro ON r.id = ro.recommendation_id';

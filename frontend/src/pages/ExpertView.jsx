@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import OutcomeBadge from '../components/OutcomeBadge';
 import FlagIndicator from '../components/FlagIndicator';
+import FloatingVideoPlayer from '../components/FloatingVideoPlayer';
+import { useVideoPlayer } from '../hooks/useVideoPlayer';
 
 function ExpertView() {
   const { name } = useParams();
@@ -11,6 +13,7 @@ function ExpertView() {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
   useEffect(() => {
     loadExpert();
@@ -224,16 +227,14 @@ function ExpertView() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {rec.videos?.youtube_url ? (
-                        <a
-                          href={`${rec.videos.youtube_url}${rec.videos.youtube_url.includes('?') ? '&' : '?'}t=${rec.timestamp_in_video || 0}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={() => openVideoPlayer(rec.videos.youtube_url, rec.timestamp_in_video, rec.videos.title)}
                           className="text-primary-600 hover:text-primary-800 flex items-center whitespace-nowrap"
                           title={rec.videos.title}
                         >
                           <span className="mr-1">▶</span>
                           {formatTimestamp(rec.timestamp_in_video)}
-                        </a>
+                        </button>
                       ) : '-'}
                     </td>
                   </tr>
@@ -243,6 +244,16 @@ function ExpertView() {
           </div>
         )}
       </div>
+
+      {/* Floating Video Player */}
+      {videoPlayer && (
+        <FloatingVideoPlayer
+          videoId={videoPlayer.videoId}
+          timestamp={videoPlayer.timestamp}
+          title={videoPlayer.title}
+          onClose={closeVideoPlayer}
+        />
+      )}
     </div>
   );
 }

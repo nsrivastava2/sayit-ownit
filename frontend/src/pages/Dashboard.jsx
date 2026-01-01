@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import FloatingVideoPlayer from '../components/FloatingVideoPlayer';
+import { useVideoPlayer } from '../hooks/useVideoPlayer';
 
 function StatCard({ title, value, icon, color = 'primary' }) {
   const colors = {
@@ -26,25 +28,14 @@ function StatCard({ title, value, icon, color = 'primary' }) {
   );
 }
 
-function RecommendationRow({ rec }) {
+function RecommendationRow({ rec, onPlayVideo }) {
   const actionColors = {
     BUY: 'bg-green-100 text-green-800',
     SELL: 'bg-red-100 text-red-800',
     HOLD: 'bg-yellow-100 text-yellow-800'
   };
 
-  // Build YouTube URL with timestamp
-  const getVideoUrl = () => {
-    if (!rec.videos?.youtube_url) return null;
-    const url = rec.videos.youtube_url;
-    const timestamp = rec.timestamp_in_video;
-    if (timestamp) {
-      return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
-    }
-    return url;
-  };
-
-  const videoUrl = getVideoUrl();
+  const hasVideo = rec.videos?.youtube_url;
 
   return (
     <tr className="hover:bg-gray-50">
@@ -80,17 +71,15 @@ function RecommendationRow({ rec }) {
         {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
       </td>
       <td className="px-4 py-3">
-        {videoUrl ? (
-          <a
-            href={videoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+        {hasVideo ? (
+          <button
+            onClick={() => onPlayVideo(rec.videos.youtube_url, rec.timestamp_in_video, rec.videos.title)}
             className="text-sm text-primary-600 hover:text-primary-800 flex items-center"
             title={rec.videos?.title}
           >
             <span className="mr-1">▶</span>
             Video
-          </a>
+          </button>
         ) : (
           <span className="text-sm text-gray-400">-</span>
         )}
@@ -103,6 +92,7 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
   useEffect(() => {
     loadStats();
@@ -322,7 +312,7 @@ function Dashboard() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {stats.recentRecommendations.map((rec) => (
-                  <RecommendationRow key={rec.id} rec={rec} />
+                  <RecommendationRow key={rec.id} rec={rec} onPlayVideo={openVideoPlayer} />
                 ))}
               </tbody>
             </table>
@@ -336,6 +326,16 @@ function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Floating Video Player */}
+      {videoPlayer && (
+        <FloatingVideoPlayer
+          videoId={videoPlayer.videoId}
+          timestamp={videoPlayer.timestamp}
+          title={videoPlayer.title}
+          onClose={closeVideoPlayer}
+        />
+      )}
     </div>
   );
 }

@@ -110,6 +110,31 @@ Extract tags to identify the show segment or occasion. Look for:
 
 Add ALL applicable tags. If no specific segment is identified, use general tags like "Market Analysis" or the show name.
 
+### 10. TIMELINE - Investment Horizon (REQUIRED):
+Extract the investment timeline/holding period. This is CRITICAL for investors.
+
+**Timeline Values** (use EXACTLY these values):
+- **"INTRADAY"** - Same day trade, exit before market close
+  - Keywords: "intraday", "aaj ke liye", "today's trade", "day trade"
+- **"BTST"** - Buy Today Sell Tomorrow
+  - Keywords: "BTST", "kal tak", "tomorrow sell"
+- **"SHORT_TERM"** - Few days to 2 weeks
+  - Keywords: "short term", "1-2 weeks", "thode din ke liye"
+- **"POSITIONAL"** - 2 weeks to 2 months
+  - Keywords: "positional", "positional trade", "swing trade", "2-4 weeks"
+- **"MEDIUM_TERM"** - 2-6 months
+  - Keywords: "medium term", "3-6 months", "quarterly"
+- **"LONG_TERM"** - 6+ months / Investment pick
+  - Keywords: "long term", "investment", "1 year", "multibagger"
+
+**Default Logic:**
+- If timeline not explicitly stated but segment suggests it:
+  - "Stock 20-20", "Intraday Ideas" → INTRADAY
+  - "BTST" segment → BTST
+  - "Positional Pick" → POSITIONAL
+  - "Investment Pick" → LONG_TERM
+- If no hint available, default to "SHORT_TERM"
+
 ## LANGUAGE NOTES:
 - Primarily Hindi with English stock names and financial terms
 - "kharidiye/kharido" = BUY
@@ -131,7 +156,8 @@ Return a JSON array (empty if no valid recommendations):
     "reason": "Breakout with volume",
     "timestamp_seconds": 450,
     "confidence": "high",
-    "tags": ["Technical View", "Positional Pick"]
+    "tags": ["Technical View", "Positional Pick"],
+    "timeline": "POSITIONAL"
   }
 ]
 ```

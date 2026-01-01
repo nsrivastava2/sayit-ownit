@@ -200,6 +200,7 @@ export const recommendationValidator = {
         r.reviewer_notes,
         r.created_at,
         r.timestamp_in_video,
+        r.timeline,
         v.title as video_title,
         v.youtube_url,
         v.id as video_id
@@ -276,6 +277,11 @@ export const recommendationValidator = {
       values.push(updates.action.toUpperCase());
       paramIndex++;
     }
+    if (updates.timeline !== undefined) {
+      updateFields.push(`timeline = $${paramIndex}`);
+      values.push(updates.timeline);
+      paramIndex++;
+    }
 
     // Clear flag and set review info
     updateFields.push(`is_flagged = FALSE`);
@@ -329,6 +335,33 @@ export const recommendationValidator = {
       ...result.rows[0],
       reasonBreakdown: reasonCounts.rows
     };
+  },
+
+  /**
+   * Delete a recommendation
+   */
+  async deleteRecommendation(recommendationId) {
+    // Get current values for logging
+    const current = await db.query(
+      'SELECT share_name, expert_name FROM recommendations WHERE id = $1',
+      [recommendationId]
+    );
+
+    if (current.rows.length === 0) {
+      throw new Error('Recommendation not found');
+    }
+
+    await db.query('DELETE FROM recommendations WHERE id = $1', [recommendationId]);
+
+    // Log to history
+    await db.query(
+      `INSERT INTO recommendation_flag_history
+       (recommendation_id, action, notes, created_at)
+       VALUES ($1, 'DELETED', $2, NOW())`,
+      [recommendationId, `Deleted: ${current.rows[0].share_name} by ${current.rows[0].expert_name}`]
+    );
+
+    return { success: true };
   }
 };
 
