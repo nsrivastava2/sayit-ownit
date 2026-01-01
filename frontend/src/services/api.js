@@ -93,6 +93,10 @@ export const api = {
     return fetchApi('/recommendations/by-share');
   },
 
+  async getTags() {
+    return fetchApi('/recommendations/tags');
+  },
+
   // Experts
   async getExperts() {
     return fetchApi('/experts');

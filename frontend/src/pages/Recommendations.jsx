@@ -9,6 +9,7 @@ function Recommendations() {
   const [recommendations, setRecommendations] = useState([]);
   const [experts, setExperts] = useState([]);
   const [shares, setShares] = useState([]);
+  const [tags, setTags] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +21,7 @@ function Recommendations() {
     action: searchParams.get('action') || '',
     status: searchParams.get('status') || '',
     outcome: searchParams.get('outcome') || '',
+    tag: searchParams.get('tag') || '',
     date_from: searchParams.get('date_from') || '',
     date_to: searchParams.get('date_to') || '',
     page: parseInt(searchParams.get('page') || '1')
@@ -37,26 +39,29 @@ function Recommendations() {
       setLoading(true);
 
       // Load recommendations and filter options in parallel
-      const [recsResult, expertsResult, sharesResult] = await Promise.all([
+      const [recsResult, expertsResult, sharesResult, tagsResult] = await Promise.all([
         api.getRecommendations({
           expert: filters.expert,
           share: filters.share,
           action: filters.action,
           status: filters.status,
           outcome: filters.outcome,
+          tag: filters.tag,
           date_from: filters.date_from,
           date_to: filters.date_to,
           limit,
           offset
         }),
         api.getExperts(),
-        api.getShares()
+        api.getShares(),
+        api.getTags()
       ]);
 
       setRecommendations(recsResult.recommendations);
       setTotal(recsResult.total);
       setExperts(expertsResult.experts);
       setShares(sharesResult.shares);
+      setTags(tagsResult.tags || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -201,7 +206,7 @@ function Recommendations() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
           {/* Outcome filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Outcome</label>
@@ -214,6 +219,23 @@ function Recommendations() {
               <option value="TARGET_HIT">Target Hit</option>
               <option value="SL_HIT">Stop Loss Hit</option>
               <option value="EXPIRED">Expired</option>
+            </select>
+          </div>
+
+          {/* Tag filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tag/Segment</label>
+            <select
+              value={filters.tag}
+              onChange={(e) => updateFilter('tag', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            >
+              <option value="">All Tags</option>
+              {tags.map((t) => (
+                <option key={t.name} value={t.name}>
+                  {t.name} ({t.count})
+                </option>
+              ))}
             </select>
           </div>
 
@@ -241,7 +263,7 @@ function Recommendations() {
 
           {/* Clear filters button */}
           <div className="flex items-end">
-            {(filters.expert || filters.share || filters.action || filters.status || filters.outcome || filters.date_from || filters.date_to) && (
+            {(filters.expert || filters.share || filters.action || filters.status || filters.outcome || filters.tag || filters.date_from || filters.date_to) && (
               <button
                 onClick={clearFilters}
                 className="w-full px-3 py-2 text-sm text-primary-600 hover:text-primary-800 border border-primary-300 rounded-lg hover:bg-primary-50"
@@ -288,6 +310,7 @@ function Recommendations() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stop Loss</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Outcome</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                 </tr>
               </thead>
@@ -337,6 +360,27 @@ function Recommendations() {
                         status={rec.status}
                         returnPct={rec.outcome?.return_percentage}
                       />
+                    </td>
+                    <td className="px-4 py-3">
+                      {rec.tags && rec.tags.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {rec.tags.slice(0, 3).map((tag, idx) => (
+                            <span
+                              key={idx}
+                              onClick={() => updateFilter('tag', tag)}
+                              className="inline-block px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full cursor-pointer hover:bg-blue-200"
+                              title={`Filter by: ${tag}`}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {rec.tags.length > 3 && (
+                            <span className="text-xs text-gray-500">+{rec.tags.length - 3}</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {rec.videos && (

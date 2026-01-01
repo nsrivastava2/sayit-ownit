@@ -60,6 +60,34 @@ CNBC Awaaz typically shows:
 - **medium**: Either visible OR spoken clearly
 - **low**: Partially heard/seen
 
+### 8. TAGS - Segment/Show Identification:
+Extract tags to identify the show segment or occasion. Look for:
+
+**Show Segments** (common on CNBC Awaaz):
+- "Stock 20-20" - Quick stock picks segment
+- "Top Picks" - Expert recommendations
+- "Technical View" - Chart-based analysis
+- "Halftime Report" - Midday market update
+- "Closing Bell" - End of day picks
+- "Opening Bell" - Morning trade ideas
+- "Intraday Ideas" - Same-day trading picks
+- "Positional Pick" - Short-term positional trades
+- "Investment Pick" - Long-term investment ideas
+
+**Occasion-Based Tags**:
+- "Diwali Pick" - Diwali/Muhurat trading recommendations
+- "New Year Pick" - New year special picks
+- "Budget Pick" - Union Budget related picks
+- "Samvat Pick" - Hindu new year picks
+
+**Category Tags**:
+- "Midcap Focus" - Midcap stocks
+- "Smallcap Ideas" - Smallcap stocks
+- "Largecap Pick" - Bluechip recommendations
+- "IT Sector", "Banking Sector", "Pharma Sector" - Sector specific
+
+Add ALL applicable tags. If no specific segment is identified, use general tags like "Market Analysis" or the show name.
+
 ## LANGUAGE NOTES:
 - Primarily Hindi with English stock names and financial terms
 - "kharidiye/kharido" = BUY
@@ -80,7 +108,8 @@ Return a JSON array (empty if no valid recommendations):
     "stop_loss": 720,
     "reason": "Breakout with volume",
     "timestamp_seconds": 450,
-    "confidence": "high"
+    "confidence": "high",
+    "tags": ["Technical View", "Positional Pick"]
   }
 ]
 ```
@@ -89,4 +118,5 @@ Return a JSON array (empty if no valid recommendations):
 - **timestamp_seconds**: NUMBER only (330, not "05:30")
 - **All prices**: NUMBER or null (2850, not "2850-2900")
 - **action**: "BUY" or "SELL" only
+- **tags**: Array of strings identifying segment/occasion (at least 1 tag required)
 - Return `[]` if no valid stock recommendations found

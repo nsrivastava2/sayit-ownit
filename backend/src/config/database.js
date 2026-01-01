@@ -130,19 +130,19 @@ export const db = {
       video_id, expert_name, recommendation_date, share_name, nse_symbol,
       action, recommended_price, target_price, stop_loss, reason,
       confidence_score, timestamp_in_video, raw_extract,
-      is_flagged, flag_reasons
+      is_flagged, flag_reasons, tags
     } = recommendationData;
 
     const result = await pool.query(
       `INSERT INTO recommendations
        (video_id, expert_name, recommendation_date, share_name, nse_symbol, action,
         recommended_price, target_price, stop_loss, reason, confidence_score, timestamp_in_video, raw_extract,
-        is_flagged, flag_reasons)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        is_flagged, flag_reasons, tags)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
        RETURNING *`,
       [video_id, expert_name, recommendation_date, share_name, nse_symbol, action,
        recommended_price, target_price, stop_loss, reason, confidence_score, timestamp_in_video, raw_extract,
-       is_flagged || false, flag_reasons || null]
+       is_flagged || false, flag_reasons || null, tags || null]
     );
     return result.rows[0];
   },
@@ -158,7 +158,7 @@ export const db = {
     return results;
   },
 
-  async getRecommendations({ expert, share, dateFrom, dateTo, action, status, outcome, limit = 50, offset = 0 }) {
+  async getRecommendations({ expert, share, dateFrom, dateTo, action, status, outcome, tag, limit = 50, offset = 0 }) {
     // Build WHERE conditions
     const conditions = ['1=1'];
     const params = [];
@@ -194,6 +194,11 @@ export const db = {
       params.push(status.toUpperCase());
       paramIndex++;
     }
+    if (tag) {
+      conditions.push(`$${paramIndex} = ANY(tags)`);
+      params.push(tag);
+      paramIndex++;
+    }
 
     const whereClause = conditions.join(' AND ');
 
@@ -208,7 +213,8 @@ export const db = {
       .replace(/nse_symbol/g, 'r.nse_symbol')
       .replace(/recommendation_date/g, 'r.recommendation_date')
       .replace(/action(?![_])/g, 'r.action')
-      .replace(/status/g, 'r.status');
+      .replace(/status/g, 'r.status')
+      .replace(/ANY\(tags\)/g, 'ANY(r.tags)');
 
     // Build outcome filter if specified
     let outcomeJoin = 'LEFT JOIN recommendation_outcomes ro ON r.id = ro.recommendation_id';
@@ -273,6 +279,20 @@ export const db = {
 
   async getShares() {
     return this.getRecommendationsByShare();
+  },
+
+  async getTags() {
+    const result = await pool.query(`
+      SELECT tag, COUNT(*) as count
+      FROM (
+        SELECT unnest(tags) as tag
+        FROM recommendations
+        WHERE tags IS NOT NULL
+      ) AS tag_list
+      GROUP BY tag
+      ORDER BY count DESC, tag ASC
+    `);
+    return result.rows.map(row => ({ name: row.tag, count: parseInt(row.count) }));
   },
 
   async getStats() {

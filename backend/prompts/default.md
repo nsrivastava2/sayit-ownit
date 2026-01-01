@@ -49,6 +49,27 @@ Look for these price indicators:
 - **medium**: Either visible OR spoken clearly
 - **low**: Partially heard/seen
 
+### 8. TAGS - Segment/Show Identification:
+Extract tags to identify the show segment or occasion. Look for:
+
+**Show Segments** (examples):
+- Show names: "10 Ki Kamai", "Stock 20-20", "Top Picks", etc.
+- Segment types: "Editor's Pick", "Expert Ki Pasand", "Technical View"
+- Trade types: "Intraday Ideas", "Positional Pick", "Investment Pick"
+
+**Occasion-Based Tags**:
+- "Diwali Pick" - Diwali/Muhurat trading recommendations
+- "New Year Pick" - New year special picks
+- "Budget Pick" - Union Budget related picks
+- "Samvat Pick" - Hindu new year picks
+
+**Category Tags**:
+- Market cap: "Midcap Focus", "Smallcap Ideas", "Largecap Pick"
+- Sector: "IT Sector", "Banking Sector", "Pharma Sector"
+- Time horizon: "Short Term", "Long Term"
+
+Add ALL applicable tags. If no specific segment is identified, use general tags like "Market Analysis".
+
 ## LANGUAGE NOTES:
 - Content may be in English, Hindi, or Hinglish (mixed Hindi-English)
 - Hindi terms: "kharidna/kharido/buy karo" = BUY, "becho/sell karo" = SELL
@@ -67,7 +88,8 @@ Return a JSON array (empty if no valid recommendations):
     "stop_loss": 2750,
     "reason": "Technical breakout above resistance",
     "timestamp_seconds": 330,
-    "confidence": "high"
+    "confidence": "high",
+    "tags": ["Editor's Pick", "Positional Pick", "Largecap Pick"]
   }
 ]
 ```
@@ -76,4 +98,5 @@ Return a JSON array (empty if no valid recommendations):
 - **timestamp_seconds**: NUMBER only (330, not "05:30")
 - **All prices**: NUMBER or null (2850, not "2850-2900")
 - **action**: "BUY" or "SELL" only
+- **tags**: Array of strings identifying segment/occasion (at least 1 tag required)
 - Return `[]` if no valid stock recommendations found

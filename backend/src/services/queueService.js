@@ -324,7 +324,8 @@ export const queueService = {
         timestamp_in_video: rec.timestamp_seconds,
         raw_extract: JSON.stringify(rec),
         is_flagged: isFlagged,
-        flag_reasons: isFlagged ? flagReasons : null
+        flag_reasons: isFlagged ? flagReasons : null,
+        tags: rec.tags || null
       });
 
       if (isFlagged) {

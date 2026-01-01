@@ -62,6 +62,36 @@ Zee Business typically shows prices as:
 - **medium**: Either visible OR spoken clearly
 - **low**: Partially heard/seen
 
+### 8. TAGS - Segment/Show Identification:
+Extract tags to identify the show segment or occasion. Look for:
+
+**Show Segments** (common on Zee Business):
+- "10 Ki Kamai" - Morning quick picks
+- "Anil Singhvi Ki Pick" - Editor's personal picks
+- "Jain Sahab Ke Gems" - Sandeep Jain's segment
+- "Pehla Sauda" - Opening trade ideas
+- "Final Trade" - Closing recommendations
+- "Action Zone" - Technical analysis picks
+- "Expert Ki Pasand" - Guest expert picks
+- "Intraday Ideas" - Same-day trading picks
+- "Positional Pick" - Short-term positional trades
+- "Investment Pick" - Long-term investment ideas
+
+**Occasion-Based Tags**:
+- "Diwali Pick" - Diwali/Muhurat trading recommendations
+- "New Year Pick" - New year special picks
+- "Budget Pick" - Union Budget related picks
+- "Republic Day Pick", "Independence Day Pick" - Patriotic occasion picks
+- "Samvat Pick" - Hindu new year picks
+
+**Category Tags**:
+- "Midcap Mantra" - Midcap focused picks
+- "Smallcap Ideas" - Smallcap stocks
+- "Largecap Focus" - Bluechip recommendations
+- "IT Sector Pick", "Banking Pick", "Pharma Pick" - Sector specific
+
+Add ALL applicable tags. If no specific segment is identified, use general tags like "Market Analysis" or the show name.
+
 ## LANGUAGE NOTES:
 - Primarily Hindi/Hinglish with English stock names
 - "kharidna/kharido/buy karo/lena" = BUY
@@ -82,7 +112,8 @@ Return a JSON array (empty if no valid recommendations):
     "stop_loss": 2750,
     "reason": "Technical breakout above resistance",
     "timestamp_seconds": 330,
-    "confidence": "high"
+    "confidence": "high",
+    "tags": ["Anil Singhvi Ki Pick", "Positional Pick", "Largecap Focus"]
   }
 ]
 ```
@@ -91,4 +122,5 @@ Return a JSON array (empty if no valid recommendations):
 - **timestamp_seconds**: NUMBER only (330, not "05:30")
 - **All prices**: NUMBER or null (2850, not "2850-2900")
 - **action**: "BUY" or "SELL" only
+- **tags**: Array of strings identifying segment/occasion (at least 1 tag required)
 - Return `[]` if no valid stock recommendations found

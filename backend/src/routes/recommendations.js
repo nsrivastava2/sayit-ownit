@@ -35,7 +35,7 @@ function enrichRecommendation(rec) {
 /**
  * GET /api/recommendations
  * List all recommendations with filters
- * Supports: expert, share, date_from, date_to, action, status, outcome
+ * Supports: expert, share, date_from, date_to, action, status, outcome, tag
  */
 router.get('/', async (req, res) => {
   try {
@@ -47,6 +47,7 @@ router.get('/', async (req, res) => {
       action,
       status,
       outcome,
+      tag,
       limit = 50,
       offset = 0
     } = req.query;
@@ -59,6 +60,7 @@ router.get('/', async (req, res) => {
       action,
       status,
       outcome,
+      tag,
       limit: parseInt(limit),
       offset: parseInt(offset)
     });
@@ -107,6 +109,24 @@ router.get('/by-share', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching recommendations by share:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/recommendations/tags
+ * Get all unique tags with counts
+ */
+router.get('/tags', async (req, res) => {
+  try {
+    const tags = await db.getTags();
+
+    res.json({
+      tags,
+      total: tags.length
+    });
+  } catch (error) {
+    console.error('Error fetching tags:', error);
     res.status(500).json({ error: error.message });
   }
 });
