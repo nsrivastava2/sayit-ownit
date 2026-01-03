@@ -8,6 +8,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
+import RedisStore from 'rate-limit-redis';
+import Redis from 'ioredis';
 import { config, ollama } from './config/index.js';
 import { configurePassport } from './config/passport.js';
 import passport from 'passport';
@@ -49,6 +51,13 @@ const app = express();
 // Trust proxy (required when behind Apache/Nginx reverse proxy)
 app.set('trust proxy', 1);
 
+// Redis client for rate limiting (shared across cluster workers)
+const rateLimitRedis = new Redis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: process.env.REDIS_PORT || 6379,
+  enableOfflineQueue: false,
+});
+
 // Rate limiting configuration - 100 requests per minute per IP
 const apiLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
@@ -56,6 +65,10 @@ const apiLimiter = rateLimit({
   message: { error: 'Too many requests, please try again later', code: 'RATE_LIMITED' },
   standardHeaders: true,
   legacyHeaders: false,
+  store: new RedisStore({
+    sendCommand: (...args) => rateLimitRedis.call(...args),
+    prefix: 'rl:api:',
+  }),
 });
 
 // Middleware

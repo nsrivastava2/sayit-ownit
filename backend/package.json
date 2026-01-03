@@ -25,6 +25,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.11.3",
+    "rate-limit-redis": "^4.3.1",
     "uuid": "^9.0.1",
     "xlsx": "^0.18.5",
     "yahoo-finance2": "^2.11.3"

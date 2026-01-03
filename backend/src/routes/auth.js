@@ -10,10 +10,19 @@ import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import rateLimit from 'express-rate-limit';
+import RedisStore from 'rate-limit-redis';
+import Redis from 'ioredis';
 import { db } from '../config/index.js';
 import { adminAuth } from '../middleware/adminAuth.js';
 
 const router = Router();
+
+// Redis client for rate limiting (shared across cluster workers)
+const redisClient = new Redis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: process.env.REDIS_PORT || 6379,
+  enableOfflineQueue: false,
+});
 
 // Rate limiter for login attempts: 5 attempts per 15 minutes
 const loginLimiter = rateLimit({
@@ -23,6 +32,10 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.call(...args),
+    prefix: 'rl:login:',
+  }),
 });
 
 const logger = {
