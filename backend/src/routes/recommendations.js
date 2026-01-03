@@ -1,5 +1,6 @@
 import express from 'express';
 import { db } from '../config/index.js';
+import { sanitizeError } from '../utils/errorHandler.js';
 
 const router = express.Router();
 
@@ -75,7 +76,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching recommendations:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -93,7 +94,7 @@ router.get('/by-expert', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching recommendations by expert:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -111,7 +112,7 @@ router.get('/by-share', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching recommendations by share:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -129,7 +130,7 @@ router.get('/tags', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching tags:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -151,7 +152,7 @@ router.get('/recent', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching recent recommendations:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -223,7 +224,7 @@ router.get('/export', async (req, res) => {
     res.send(csv);
   } catch (error) {
     console.error('Error exporting recommendations:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 

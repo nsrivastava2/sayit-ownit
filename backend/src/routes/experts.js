@@ -1,5 +1,6 @@
 import express from 'express';
 import { db } from '../config/index.js';
+import { sanitizeError } from '../utils/errorHandler.js';
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching experts:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -85,7 +86,7 @@ router.get('/:name', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching expert:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -123,7 +124,7 @@ router.get('/:name/metrics', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching expert metrics:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -172,7 +173,7 @@ router.get('/:name/metrics/history', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching expert metrics history:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -216,7 +217,7 @@ router.get('/:name/sectors', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching expert sectors:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -251,7 +252,7 @@ router.get('/:name/monthly-returns', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching monthly returns:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 

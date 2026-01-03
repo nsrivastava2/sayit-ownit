@@ -1,6 +1,7 @@
 import express from 'express';
 import { db } from '../config/index.js';
 import stockService from '../services/stockService.js';
+import { sanitizeError } from '../utils/errorHandler.js';
 
 const router = express.Router();
 
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching shares:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -79,7 +80,7 @@ router.get('/:symbol', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching share:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 

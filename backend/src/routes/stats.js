@@ -2,6 +2,7 @@ import express from 'express';
 import { db } from '../config/index.js';
 import queueService from '../services/queueService.js';
 import cacheService from '../services/cacheService.js';
+import { sanitizeError } from '../utils/errorHandler.js';
 
 const router = express.Router();
 
@@ -63,7 +64,7 @@ router.get('/', async (req, res) => {
     res.json({ ...response, processingJobs });
   } catch (error) {
     console.error('Error fetching stats:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 
@@ -81,7 +82,7 @@ router.get('/jobs', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching jobs:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: sanitizeError(error) });
   }
 });
 

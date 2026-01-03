@@ -7,6 +7,7 @@ import pg from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import rateLimit from 'express-rate-limit';
 import { config, ollama } from './config/index.js';
 import { configurePassport } from './config/passport.js';
 import passport from 'passport';
@@ -47,6 +48,24 @@ const app = express();
 
 // Trust proxy (required when behind Apache/Nginx reverse proxy)
 app.set('trust proxy', 1);
+
+// Rate limiting configuration
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: { error: 'Too many requests, please try again later', code: 'RATE_LIMITED' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 login attempts per 15 minutes
+  message: { error: 'Too many login attempts, please try again later', code: 'LOGIN_RATE_LIMITED' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // Don't count successful logins
+});
 
 // Middleware
 app.use(cors({
@@ -128,6 +147,13 @@ app.get('/api/health', (req, res) => {
     environment: config.nodeEnv
   });
 });
+
+// Apply rate limiting to all API routes
+app.use('/api', apiLimiter);
+
+// Apply stricter rate limiting to login endpoints
+app.post('/api/auth/admin-login', loginLimiter);
+app.post('/api/auth/login', loginLimiter);
 
 // Auth Routes (public)
 app.use('/api/auth', authRouter);
