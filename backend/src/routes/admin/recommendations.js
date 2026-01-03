@@ -121,6 +121,25 @@ router.delete('/:id', async (req, res) => {
 });
 
 /**
+ * POST /api/admin/recommendations/invalidate-cache
+ * Manually invalidate all caches
+ */
+router.post('/invalidate-cache', async (req, res) => {
+  try {
+    await cacheService.invalidateStats();
+    console.log('[ADMIN] Cache manually invalidated');
+
+    res.json({
+      success: true,
+      message: 'Cache invalidated successfully'
+    });
+  } catch (error) {
+    console.error('Error invalidating cache:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * POST /api/admin/recommendations/validate-all
  * Re-validate all existing recommendations
  */

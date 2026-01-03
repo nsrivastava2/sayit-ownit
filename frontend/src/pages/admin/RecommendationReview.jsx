@@ -16,6 +16,7 @@ function RecommendationReview() {
   const [showCreateExpert, setShowCreateExpert] = useState(null); // recId when creating new expert
   const [newExpertName, setNewExpertName] = useState('');
   const [page, setPage] = useState(1);
+  const [invalidatingCache, setInvalidatingCache] = useState(false);
   const pageSize = 20; // Show 20 items per page
   const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
@@ -189,6 +190,18 @@ function RecommendationReview() {
     }
   }
 
+  async function handleInvalidateCache() {
+    try {
+      setInvalidatingCache(true);
+      await api.invalidateCache();
+      alert('Cache invalidated successfully');
+    } catch (err) {
+      alert('Error invalidating cache: ' + err.message);
+    } finally {
+      setInvalidatingCache(false);
+    }
+  }
+
   // Format date as 12-Dec-2025
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
@@ -274,6 +287,13 @@ function RecommendationReview() {
             </div>
           )}
         </div>
+        <button
+          onClick={handleInvalidateCache}
+          disabled={invalidatingCache}
+          className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors disabled:opacity-50"
+        >
+          {invalidatingCache ? 'Clearing...' : 'Clear Cache'}
+        </button>
       </div>
 
       {/* Issue Filters - Compact */}

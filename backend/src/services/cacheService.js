@@ -115,11 +115,13 @@ class CacheService {
   };
 
   // TTLs in seconds
+  // With explicit cache invalidation on data changes, we can use longer TTLs
+  // Cache is invalidated when: new recommendations added, admin edits/approves/deletes
   static TTL = {
-    STATS: 120,        // 2 minutes - stats don't change often
-    EXPERTS: 300,      // 5 minutes
-    SHARES: 300,       // 5 minutes
-    RECOMMENDATIONS: 60 // 1 minute - more frequently accessed
+    STATS: 900,         // 15 minutes - invalidated on data changes
+    EXPERTS: 1800,      // 30 minutes - rarely changes
+    SHARES: 1800,       // 30 minutes - rarely changes
+    RECOMMENDATIONS: 600 // 10 minutes - invalidated on changes
   };
 }
 

@@ -407,6 +407,10 @@ export const api = {
     return fetchApi('/admin/recommendations/validate-all', { method: 'POST' });
   },
 
+  async invalidateCache() {
+    return fetchApi('/admin/recommendations/invalidate-cache', { method: 'POST' });
+  },
+
   // ============================================
   // Portfolio Simulation API
   // ============================================
