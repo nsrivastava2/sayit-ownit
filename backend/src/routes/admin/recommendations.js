@@ -78,12 +78,15 @@ router.post('/:id/approve', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { recommended_price, target_price, stop_loss, action, timeline, notes } = req.body;
+    const { expert_name, recommended_price, target_price, target_price_2, stop_loss, stop_loss_type, action, timeline, notes } = req.body;
 
     const updates = {};
+    if (expert_name !== undefined) updates.expert_name = expert_name;
     if (recommended_price !== undefined) updates.recommended_price = recommended_price;
     if (target_price !== undefined) updates.target_price = target_price;
+    if (target_price_2 !== undefined) updates.target_price_2 = target_price_2;
     if (stop_loss !== undefined) updates.stop_loss = stop_loss;
+    if (stop_loss_type !== undefined) updates.stop_loss_type = stop_loss_type;
     if (action !== undefined) updates.action = action;
     if (timeline !== undefined) updates.timeline = timeline;
 
