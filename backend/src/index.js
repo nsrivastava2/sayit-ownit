@@ -49,22 +49,13 @@ const app = express();
 // Trust proxy (required when behind Apache/Nginx reverse proxy)
 app.set('trust proxy', 1);
 
-// Rate limiting configuration
+// Rate limiting configuration - 100 requests per minute per IP
 const apiLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100, // 100 requests per minute
+  windowMs: 1 * 60 * 1000,
+  max: 100,
   message: { error: 'Too many requests, please try again later', code: 'RATE_LIMITED' },
   standardHeaders: true,
   legacyHeaders: false,
-});
-
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 login attempts per 15 minutes
-  message: { error: 'Too many login attempts, please try again later', code: 'LOGIN_RATE_LIMITED' },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true, // Don't count successful logins
 });
 
 // Middleware
@@ -151,11 +142,7 @@ app.get('/api/health', (req, res) => {
 // Apply rate limiting to all API routes
 app.use('/api', apiLimiter);
 
-// Apply stricter rate limiting to login endpoints
-app.post('/api/auth/admin-login', loginLimiter);
-app.post('/api/auth/login', loginLimiter);
-
-// Auth Routes (public)
+// Auth Routes (public - login rate limiting is in auth router)
 app.use('/api/auth', authRouter);
 app.use('/api/auth', userAuthRouter);  // Google OAuth routes
 

@@ -9,10 +9,21 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import rateLimit from 'express-rate-limit';
 import { db } from '../config/index.js';
 import { adminAuth } from '../middleware/adminAuth.js';
 
 const router = Router();
+
+// Rate limiter for login attempts: 5 attempts per 15 minutes
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many login attempts, please try again later', code: 'LOGIN_RATE_LIMITED' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+});
 
 const logger = {
   info: (msg, data) => console.log(`[AUTH:INFO] ${msg}`, JSON.stringify(data || {})),
@@ -24,7 +35,7 @@ const logger = {
  * POST /api/auth/admin-login
  * Authenticate admin with password
  */
-router.post('/admin-login', async (req, res) => {
+router.post('/admin-login', loginLimiter, async (req, res) => {
   const { password } = req.body;
   const ip = req.ip;
   const userAgent = req.get('User-Agent');
