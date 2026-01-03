@@ -1,6 +1,7 @@
 import express from 'express';
 import { db } from '../config/index.js';
 import queueService from '../services/queueService.js';
+import cacheService from '../services/cacheService.js';
 
 const router = express.Router();
 
@@ -10,6 +11,18 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
   try {
+    // Try to get from cache first
+    const cacheKey = cacheService.constructor.KEYS.STATS;
+    const cached = await cacheService.get(cacheKey);
+
+    if (cached) {
+      // Add processing jobs (always fresh) and return
+      const jobs = queueService.getAllJobs();
+      const processingJobs = jobs.filter(j => j.status === 'processing' || j.status === 'pending');
+      return res.json({ ...cached, processingJobs });
+    }
+
+    // Fetch from database
     const stats = await db.getStats();
 
     // Get top experts
@@ -26,11 +39,11 @@ router.get('/', async (req, res) => {
       offset: 0
     });
 
-    // Get processing jobs
+    // Get processing jobs (always fresh, not cached)
     const jobs = queueService.getAllJobs();
     const processingJobs = jobs.filter(j => j.status === 'processing' || j.status === 'pending');
 
-    res.json({
+    const response = {
       overview: {
         totalVideos: stats.totalVideos,
         completedVideos: stats.completedVideos,
@@ -41,9 +54,13 @@ router.get('/', async (req, res) => {
       actionBreakdown: stats.actionCounts,
       topExperts,
       topShares,
-      recentRecommendations,
-      processingJobs
-    });
+      recentRecommendations
+    };
+
+    // Cache the response (without processingJobs)
+    await cacheService.set(cacheKey, response, cacheService.constructor.TTL.STATS);
+
+    res.json({ ...response, processingJobs });
   } catch (error) {
     console.error('Error fetching stats:', error);
     res.status(500).json({ error: error.message });

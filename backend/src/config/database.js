@@ -128,7 +128,7 @@ export const db = {
   async createRecommendation(recommendationData) {
     const {
       video_id, expert_name, recommendation_date, share_name, nse_symbol,
-      action, recommended_price, target_price, stop_loss, reason,
+      action, recommended_price, target_price, target_price_2, stop_loss, reason,
       confidence_score, timestamp_in_video, raw_extract,
       is_flagged, flag_reasons, tags, timeline
     } = recommendationData;
@@ -136,12 +136,12 @@ export const db = {
     const result = await pool.query(
       `INSERT INTO recommendations
        (video_id, expert_name, recommendation_date, share_name, nse_symbol, action,
-        recommended_price, target_price, stop_loss, reason, confidence_score, timestamp_in_video, raw_extract,
+        recommended_price, target_price, target_price_2, stop_loss, reason, confidence_score, timestamp_in_video, raw_extract,
         is_flagged, flag_reasons, tags, timeline)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
        RETURNING *`,
       [video_id, expert_name, recommendation_date, share_name, nse_symbol, action,
-       recommended_price, target_price, stop_loss, reason, confidence_score, timestamp_in_video, raw_extract,
+       recommended_price, target_price, target_price_2 || null, stop_loss, reason, confidence_score, timestamp_in_video, raw_extract,
        is_flagged || false, flag_reasons || null, tags || null, timeline || null]
     );
     return result.rows[0];

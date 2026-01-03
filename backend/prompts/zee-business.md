@@ -28,29 +28,40 @@ Extract recommendations ONLY for INDIAN EQUITY STOCKS listed on NSE/BSE.
 - **Sector advice**: "buy IT sector", "pharma looks good"
 - **Bullion shows**: "26 ka King Kaun" type Gold/Silver discussions
 
-### 3. CRITICAL: VIEWER Q&A vs ACTUAL RECOMMENDATIONS
-**DO NOT capture viewer questions/feedback responses as recommendations!**
+### 3. ⚠️ MOST CRITICAL RULE: VIEWER Q&A vs ACTUAL RECOMMENDATIONS ⚠️
+**NEVER capture viewer questions/feedback responses as recommendations!**
+
+This is the #1 cause of bad data. If a viewer asks about a stock they ALREADY OWN, the expert's response is NOT a recommendation.
 
 ❌ **EXCLUDE - Viewer Q&A (Expert responding to viewer's existing position):**
-- "Maine Reliance 2500 pe liya hai, kya karun?" → Expert says "Hold karo, SL 2400"
-- "HDFC Bank mera portfolio mein hai, advice dijiye" → Expert responds with hold/sell
-- "Mera average price 180 hai, should I add more?"
-- Any question starting with "Maine liya hai", "Mere paas hai", "I bought at", "My average is"
+- Viewer: "Maine [STOCK] [PRICE] pe liya hai, kya karun?" → Expert responds → NOT A RECOMMENDATION
+- Viewer: "[STOCK] mera portfolio mein hai, advice dijiye" → Expert responds → NOT A RECOMMENDATION
+- Viewer: "Mera average price [PRICE] hai, should I add more?" → NOT A RECOMMENDATION
+- Viewer: "I bought [STOCK] at [PRICE], what should I do?" → NOT A RECOMMENDATION
+- **Hindi trigger phrases to EXCLUDE:**
+  - "maine liya hai", "mere paas hai", "mera holding", "mera average"
+  - "aapka stock", "aap hold karein", "aapne jo liya"
+  - "kya karun", "kya karna chahiye" (when viewer asks about their position)
+  - "SMS/WhatsApp se poochh rahe hain", "caller poochh rahe hain" (viewer questions)
+- **English trigger phrases to EXCLUDE:**
+  - "I bought", "I have", "my position", "my holding", "my average"
+  - "what should I do with", "should I hold", "should I sell", "should I add"
 - Expert giving advice on viewer's EXISTING holdings
-- Phrases like "aapka stock", "your holding", "aap hold karein", "aapne jo liya hai"
-- SMS/WhatsApp questions where viewer mentions their purchase price
+- Call-in/SMS questions where viewer mentions their purchase price
 
-✅ **INCLUDE - Actual Recommendations (Expert proactively suggesting):**
-- "Aaj ke liye BUY karo HDFC Bank at 1650, target 1750, stop loss 1600"
-- "Mera pick hai Reliance, buy around 2400"
-- "Tata Motors mein position banana chahiye"
+✅ **INCLUDE - Actual Recommendations (Expert proactively suggesting NEW ideas):**
+- Expert says: "Aaj ke liye BUY karo [STOCK] at [PRICE], target [PRICE], stop loss [PRICE]"
+- Expert says: "Mera pick hai [STOCK], buy around [PRICE]"
+- Expert says: "[STOCK] mein position banana chahiye"
 - Expert initiating a fresh recommendation for viewers to act on
-- "10 Ki Kamai" picks, "Anil Singhvi Ki Pick", "Pehla Sauda" recommendations
+- Named segments: "10 Ki Kamai", "Anil Singhvi Ki Pick", "Pehla Sauda", "Expert Ki Pasand"
 - Segments where expert gives their TOP PICKS for the day
 
+**CRITICAL: Examples above use [PLACEHOLDERS] - extract ONLY actual values from transcript!**
+
 **Key Distinction:**
-- If a VIEWER mentions they already OWN the stock → NOT a recommendation (it's Q&A feedback)
-- If the EXPERT suggests a NEW trade idea → IS a recommendation
+- VIEWER mentions they ALREADY OWN the stock → SKIP (it's Q&A feedback, not a recommendation)
+- EXPERT suggests a NEW trade idea proactively → INCLUDE (it's a recommendation)
 
 ### 4. ACTIONABLE RECOMMENDATIONS ONLY:
 - Must have a clear BUY or SELL action with at least ONE price point
@@ -64,15 +75,19 @@ Extract recommendations ONLY for INDIAN EQUITY STOCKS listed on NSE/BSE.
 - **At least ONE of**: recommended_price OR target_price OR stop_loss
 
 ### 6. ZEE BUSINESS EXPERTS:
-Regular experts on Zee Business (look for these names):
-- **Anil Singhvi** (Editor) - also called "Anil ji", "Singhvi ji"
-- **Sandeep Jain** - also called "Sandeep ji", "Jain ji"
-- **Vikas Sethi** - also called "Sethi Saab", "Sethi Sahab"
-- **Prakash Gaba** - also called "Gaba ji"
-- **Sanjiv Bhasin** - also called "Bhasin ji"
-- **Ashwani Gujral** - also called "Gujral ji"
+Regular experts on Zee Business (look for these names in Hindi or English):
+- **Anil Singhvi** (Editor) - "Anil ji", "Singhvi ji", "अनिल जी", "सिंघवी जी"
+- **Rakesh Bansal** - "Rakesh ji", "Bansal ji", "राकेश जी", "बंसल जी", "बंसल साहब"
+- **Kunal Saraogi** - "Kunal ji", "Saraogi ji", "कुणाल जी", "सरोगी जी"
+- **Sandeep Jain** - "Sandeep ji", "Jain ji", "संदीप जी", "जैन साहब"
+- **Vikas Sethi** - "Sethi Saab", "Sethi Sahab", "सेठी साहब"
+- **Prakash Gaba** - "Gaba ji", "गाबा जी"
+- **Sanjiv Bhasin** - "Bhasin ji", "भसीन जी"
+- **Ashwani Gujral** - "Gujral ji", "गुजराल जी"
 - **Gaurav Bissa**, **Ruchit Jain**, **Shrikant Chouhan**
+- **Bagga** - "Bagga sahab", "बग्गा साहब"
 - Guest experts from brokerages (Morgan Stanley, HDFC, ICICI, etc.)
+- If expert name unclear, use "Unknown Expert" but still extract the recommendation
 
 ### 7. Price Information:
 Zee Business typically shows prices as:
@@ -141,36 +156,63 @@ Extract the investment timeline/holding period. This is CRITICAL for investors.
   - "Investment Pick" → LONG_TERM
 - If no hint available, default to "SHORT_TERM"
 
-## LANGUAGE NOTES:
-- Primarily Hindi/Hinglish with English stock names
-- "kharidna/kharido/buy karo/lena" = BUY
-- "becho/sell karo/nikalna" = SELL
-- "hold karo/rakho" = HOLD
+## LANGUAGE NOTES - CRITICAL FOR HINDI TRANSCRIPTS:
+The transcripts are primarily in Hindi/Hinglish. You MUST understand these patterns:
+
+### Hindi Buy/Sell Keywords:
+- **BUY**: "खरीद", "खरीदारी", "खरीदो", "खरीदना", "लेना", "ले लो", "buy", "buy karo", "kharidna", "lena"
+- **SELL**: "बेचो", "बिकवाली", "निकालो", "sell", "becho", "nikalo"
+- **HOLD**: "होल्ड", "रखो", "hold karo"
+
+### Hindi Price Keywords:
+- **Current/Entry Price**: "अभी", "CMP", "current", "के आसपास", "पर ट्रेड", "entry"
+- **Target**: "टारगेट", "लक्ष्य", "target", "TGT"
+- **Stop Loss**: "स्टॉपलॉस", "SL", "stop loss", "स्टॉप लॉस"
+
+### Common Hindi Recommendation Patterns:
+- "स्टॉक का नाम है [STOCK]" = Stock name is [STOCK]
+- "[PRICE] के आसपास ट्रेड कर रहा है" = Trading around [PRICE]
+- "[PRICE] का टारगेट है" = Target is [PRICE]
+- "[PRICE] का स्टॉपलॉस" = Stop loss is [PRICE]
+- "खरीदारी करनी है" = Need to buy
+- "10 की कमाई" = 10 Ki Kamai segment (stock picks)
+- "लॉन्ग टर्म" = Long term
+- "इंट्राडे" = Intraday
+
+### IMPORTANT: Extract ALL recommendations you find, even if:
+- Expert name is just "साहब" (sir) or "जी" (ji) - use "Unknown Expert"
+- Stock name is in Hindi like "एडोर वेल्डिंग" - convert to English "Ador Welding"
+- Numbers are spoken in Hindi - convert to digits
 
 ## OUTPUT FORMAT:
-Return a JSON array (empty if no valid recommendations):
+Return a JSON array with recommendations found IN THE TRANSCRIPT (empty array [] if none found):
 ```json
 [
   {
-    "expert_name": "Anil Singhvi",
-    "share_name": "Reliance Industries",
-    "nse_symbol": "RELIANCE",
-    "action": "BUY",
-    "recommended_price": 2850,
-    "target_price": 3100,
-    "stop_loss": 2750,
-    "reason": "Technical breakout above resistance",
-    "timestamp_seconds": 330,
-    "confidence": "high",
-    "tags": ["Anil Singhvi Ki Pick", "Positional Pick", "Largecap Focus"],
-    "timeline": "POSITIONAL"
+    "expert_name": "<name from transcript>",
+    "share_name": "<stock name from transcript>",
+    "nse_symbol": "<NSE symbol>",
+    "action": "BUY or SELL",
+    "recommended_price": <number or null>,
+    "target_price": <number or null>,
+    "target_price_2": <number or null>,
+    "stop_loss": <number or null>,
+    "reason": "<reason if stated>",
+    "timestamp_seconds": <approx time in video>,
+    "confidence": "high/medium/low",
+    "tags": ["<segment name>", "<other tags>"],
+    "timeline": "<INTRADAY/BTST/SHORT_TERM/POSITIONAL/MEDIUM_TERM/LONG_TERM>"
   }
 ]
 ```
 
+**IMPORTANT: ALL values must come from the ACTUAL transcript content. Do NOT use placeholder or example values. If no recommendations found, return empty array [].**
+
 ## JSON Rules:
 - **timestamp_seconds**: NUMBER only (330, not "05:30")
 - **All prices**: NUMBER or null (2850, not "2850-2900")
+- **target_price**: First/primary target (T1)
+- **target_price_2**: Second target if expert provides multiple (T2), null if only one target
 - **action**: "BUY" or "SELL" only
 - **tags**: Array of strings identifying segment/occasion (at least 1 tag required)
 - Return `[]` if no valid stock recommendations found

@@ -13,43 +13,79 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_FILE_API_URL = 'https://generativelanguage.googleapis.com/upload/v1beta/files';
 const GEMINI_FILE_STATUS_URL = 'https://generativelanguage.googleapis.com/v1beta/files';
 
-// Model configurations - Flash-Lite is default (3x cheaper, same quality for Hindi)
+// Model configurations - organized by version
 const GEMINI_MODELS = {
-  'flash-lite': {
+  // Gemini 2.0 models
+  'flash-2.0-lite': {
     name: 'gemini-2.0-flash-lite',
     url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent',
-    description: 'Flash-Lite 2.0 - Fast, cost-effective, great for Hindi (default)',
-    costPerMillion: 0.10
+    description: 'Flash 2.0 Lite - Cheapest, good for simple tasks',
+    costPerMillionInput: 0.075,
+    costPerMillionOutput: 0.30,
+    version: '2.0'
   },
-  'flash': {
+  'flash-2.0': {
     name: 'gemini-2.0-flash',
     url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-    description: 'Flash 2.0 - Standard model, slightly better reasoning',
-    costPerMillion: 0.30
+    description: 'Flash 2.0 - Good balance of cost and quality',
+    costPerMillionInput: 0.10,
+    costPerMillionOutput: 0.40,
+    version: '2.0'
   },
-  'flash-25': {
+  // Gemini 2.5 models
+  'flash-2.5': {
     name: 'gemini-2.5-flash',
     url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
-    description: 'Flash 2.5 - Latest model, best quality',
-    costPerMillion: 0.30
+    description: 'Flash 2.5 - Better reasoning, higher cost',
+    costPerMillionInput: 0.30,
+    costPerMillionOutput: 2.50,
+    version: '2.5'
+  },
+  'flash-2.5-lite': {
+    name: 'gemini-2.5-flash-lite',
+    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent',
+    description: 'Flash 2.5 Lite - Fast, same price as 2.0',
+    costPerMillionInput: 0.10,
+    costPerMillionOutput: 0.40,
+    version: '2.5'
+  },
+  // Gemini 3.0 models (Preview)
+  'flash-3.0': {
+    name: 'gemini-3-flash-preview',
+    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent',
+    description: 'Flash 3.0 Preview - Best quality, outperforms 2.5 Pro',
+    costPerMillionInput: 0.50,
+    costPerMillionOutput: 3.00,
+    version: '3.0'
   }
 };
 
-// Default model - Flash-Lite for cost efficiency
-const DEFAULT_MODEL = process.env.GEMINI_DEFAULT_MODEL || 'flash-lite';
+// Aliases for backward compatibility
+GEMINI_MODELS['flash-lite'] = GEMINI_MODELS['flash-2.0-lite'];
+GEMINI_MODELS['flash'] = GEMINI_MODELS['flash-2.0'];
+GEMINI_MODELS['flash-25'] = GEMINI_MODELS['flash-2.5'];
+
+// Default model
+const DEFAULT_MODEL = process.env.GEMINI_DEFAULT_MODEL || 'flash-2.0';
 
 export const geminiVideoService = {
   /**
-   * Get available models for admin UI
+   * Get available models for admin UI (excludes aliases)
    */
   getAvailableModels() {
-    return Object.entries(GEMINI_MODELS).map(([key, model]) => ({
-      id: key,
-      name: model.name,
-      description: model.description,
-      costPerMillion: model.costPerMillion,
-      isDefault: key === DEFAULT_MODEL
-    }));
+    const mainModels = ['flash-2.0-lite', 'flash-2.0', 'flash-2.5-lite', 'flash-2.5', 'flash-3.0'];
+    return mainModels.map(key => {
+      const model = GEMINI_MODELS[key];
+      return {
+        id: key,
+        name: model.name,
+        description: model.description,
+        costPerMillionInput: model.costPerMillionInput,
+        costPerMillionOutput: model.costPerMillionOutput,
+        version: model.version,
+        isDefault: key === DEFAULT_MODEL
+      };
+    });
   },
 
   /**

@@ -1,6 +1,7 @@
 import express from 'express';
 import { adminAuth } from '../../middleware/adminAuth.js';
 import { recommendationValidator, FLAG_MESSAGES } from '../../services/recommendationValidator.js';
+import cacheService from '../../services/cacheService.js';
 
 const router = express.Router();
 
@@ -58,6 +59,7 @@ router.post('/:id/approve', async (req, res) => {
     const { notes } = req.body;
 
     await recommendationValidator.approveRecommendation(id, notes);
+    await cacheService.invalidateStats();
 
     res.json({
       success: true,
@@ -86,6 +88,7 @@ router.put('/:id', async (req, res) => {
     if (timeline !== undefined) updates.timeline = timeline;
 
     await recommendationValidator.editRecommendation(id, updates, notes);
+    await cacheService.invalidateStats();
 
     res.json({
       success: true,
@@ -105,6 +108,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await recommendationValidator.deleteRecommendation(id);
+    await cacheService.invalidateStats();
 
     res.json({
       success: true,

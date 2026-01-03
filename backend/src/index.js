@@ -38,6 +38,9 @@ import { adminAuth } from './middleware/adminAuth.js';
 // Import jobs
 import { initPriceUpdateJob } from './jobs/priceUpdateJob.js';
 
+// Import cache service
+import cacheService from './services/cacheService.js';
+
 dotenv.config();
 
 const app = express();
@@ -166,6 +169,10 @@ app.use((req, res) => {
 const PORT = config.port;
 
 async function startServer() {
+  // Initialize Redis cache
+  console.log('Connecting to Redis cache...');
+  await cacheService.connect();
+
   // Test Ollama connection
   console.log('Testing Ollama connection...');
   const ollamaConnected = await ollama.testConnection();

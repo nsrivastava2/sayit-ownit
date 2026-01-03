@@ -29,26 +29,34 @@ Extract recommendations ONLY for INDIAN EQUITY STOCKS listed on NSE/BSE.
 - **Sector advice**: "buy IT sector", "pharma looks good"
 - **F&O segment picks**: Skip derivative/options recommendations
 
-### 3. CRITICAL: VIEWER Q&A vs ACTUAL RECOMMENDATIONS
-**DO NOT capture viewer questions/feedback responses as recommendations!**
+### 3. ⚠️ MOST CRITICAL RULE: VIEWER Q&A vs ACTUAL RECOMMENDATIONS ⚠️
+**NEVER capture viewer questions/feedback responses as recommendations!**
+
+This is the #1 cause of bad data. If a viewer asks about a stock they ALREADY OWN, the expert's response is NOT a recommendation.
 
 ❌ **EXCLUDE - Viewer Q&A (Expert responding to viewer's existing position):**
-- "I bought XYZ at 500, what should I do?" → Expert responds with hold/sell advice
-- "My average price is 180, should I add more?"
-- Any question where viewer mentions "I bought", "I have", "my position", "my holding"
+- Viewer: "I bought [STOCK] at [PRICE], what should I do?" → Expert responds → NOT A RECOMMENDATION
+- Viewer: "My average price is [PRICE], should I add more?" → NOT A RECOMMENDATION
+- Viewer: "I have [STOCK] in my portfolio, advice please" → NOT A RECOMMENDATION
+- **English trigger phrases to EXCLUDE:**
+  - "I bought", "I have", "my position", "my holding", "my average"
+  - "what should I do with", "should I hold", "should I sell", "should I add"
+  - "caller asking about", "viewer question", "SMS question"
 - Expert giving advice on viewer's EXISTING holdings
 - Call-in questions where caller mentions their purchase price
 
-✅ **INCLUDE - Actual Recommendations (Expert proactively suggesting):**
-- Expert says "Buy XYZ at 500, target 600, stop loss 475"
-- "Today's pick is ABC, entry around 200"
-- "My recommendation for this week is..."
-- Named segments like "910 Calls", "Top Pick of the Day", "Stock of the Week"
+✅ **INCLUDE - Actual Recommendations (Expert proactively suggesting NEW ideas):**
+- Expert says: "Buy [STOCK] at [PRICE], target [PRICE], stop loss [PRICE]"
+- Expert says: "Today's pick is [STOCK], entry around [PRICE]"
+- Expert says: "My recommendation for this week is [STOCK]"
+- Named segments: "910 Calls", "Top Pick of the Day", "Stock of the Week"
 - Brokerage reports with specific buy/sell calls
 
+**CRITICAL: Examples above use [PLACEHOLDERS] - extract ONLY actual values from transcript!**
+
 **Key Distinction:**
-- If a VIEWER mentions they already OWN the stock → NOT a recommendation (it's Q&A feedback)
-- If the EXPERT suggests a NEW trade idea → IS a recommendation
+- VIEWER mentions they ALREADY OWN the stock → SKIP (it's Q&A feedback, not a recommendation)
+- EXPERT suggests a NEW trade idea proactively → INCLUDE (it's a recommendation)
 
 ### 4. ACTIONABLE RECOMMENDATIONS ONLY:
 - Must have a clear BUY or SELL action with at least ONE price point
@@ -177,6 +185,7 @@ Return a JSON array (empty if no valid recommendations):
     "action": "BUY",
     "recommended_price": 750,
     "target_price": 800,
+    "target_price_2": 850,
     "stop_loss": 720,
     "reason": "Breakout above resistance with volume",
     "timestamp_seconds": 450,
@@ -190,6 +199,8 @@ Return a JSON array (empty if no valid recommendations):
 ## JSON Rules:
 - **timestamp_seconds**: NUMBER only (330, not "05:30")
 - **All prices**: NUMBER or null (2850, not "2850-2900")
+- **target_price**: First/primary target (T1)
+- **target_price_2**: Second target if expert provides multiple (T2), null if only one target
 - **action**: "BUY" or "SELL" only
 - **tags**: Array of strings identifying segment/occasion (at least 1 tag required)
 - **timeline**: One of INTRADAY, BTST, SHORT_TERM, POSITIONAL, MEDIUM_TERM, LONG_TERM

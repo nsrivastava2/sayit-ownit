@@ -27,27 +27,37 @@ Extract recommendations ONLY for INDIAN EQUITY STOCKS listed on NSE/BSE.
 - **Sector advice**: "buy IT sector", "pharma looks good"
 - **F&O segment picks**: Skip derivative recommendations
 
-### 3. CRITICAL: VIEWER Q&A vs ACTUAL RECOMMENDATIONS
-**DO NOT capture viewer questions/feedback responses as recommendations!**
+### 3. ⚠️ MOST CRITICAL RULE: VIEWER Q&A vs ACTUAL RECOMMENDATIONS ⚠️
+**NEVER capture viewer questions/feedback responses as recommendations!**
+
+This is the #1 cause of bad data. If a viewer asks about a stock they ALREADY OWN, the expert's response is NOT a recommendation.
 
 ❌ **EXCLUDE - Viewer Q&A (Expert responding to viewer's existing position):**
-- "Maine Mankind Pharma 2500 pe liya hai, kya karun?" → Expert says "Hold karo, SL 2100"
-- "ONGC mera portfolio mein hai, advice dijiye" → Expert responds with hold/sell
-- "Mera average price 180 hai, should I add more?"
-- Any question starting with "Maine liya hai", "Mere paas hai", "I bought at", "My average is"
-- Expert giving advice on viewer's EXISTING holdings
-- Phrases like "aapka stock", "your holding", "aap hold karein"
+- Viewer: "Maine [STOCK] [PRICE] pe liya hai, kya karun?" → Expert responds → NOT A RECOMMENDATION
+- Viewer: "[STOCK] mera portfolio mein hai, advice dijiye" → Expert responds → NOT A RECOMMENDATION
+- Viewer: "Mera average price [PRICE] hai, should I add?" → Expert responds → NOT A RECOMMENDATION
+- Viewer: "I bought [STOCK] at [PRICE], what should I do?" → NOT A RECOMMENDATION
+- **Hindi trigger phrases to EXCLUDE:**
+  - "maine liya hai", "mere paas hai", "mera holding", "mera average"
+  - "aapka stock", "aap hold karein", "aapne jo liya"
+  - "kya karun", "kya karna chahiye" (when viewer asks about their position)
+  - "SMS/WhatsApp se poochh rahe hain" (viewer questions)
+- **English trigger phrases to EXCLUDE:**
+  - "I bought", "I have", "my position", "my holding", "my average"
+  - "what should I do with", "should I hold", "should I sell"
 
-✅ **INCLUDE - Actual Recommendations (Expert proactively suggesting):**
-- "Aaj ke liye BUY karo HDFC Bank at 1650, target 1750, stop loss 1600"
-- "Mera pick hai Reliance, buy around 2400"
-- "Tata Motors mein position banana chahiye"
+✅ **INCLUDE - Actual Recommendations (Expert proactively suggesting NEW ideas):**
+- Expert says: "Aaj ke liye BUY karo [STOCK], target [PRICE], stop loss [PRICE]"
+- Expert says: "Mera pick hai [STOCK], buy around [PRICE]"
+- Expert says: "[STOCK] mein position banana chahiye"
+- Named segments: "Top pick", "Stock of the week", "Fresh buy idea"
 - Expert initiating a fresh recommendation for viewers to act on
-- "Top pick of the day", "Stock of the week", "Fresh buy idea"
+
+**CRITICAL: Examples above use [PLACEHOLDERS] - extract ONLY actual values from transcript!**
 
 **Key Distinction:**
-- If a VIEWER mentions they already OWN the stock → NOT a recommendation (it's Q&A feedback)
-- If the EXPERT suggests a NEW trade idea → IS a recommendation
+- VIEWER mentions they ALREADY OWN the stock → SKIP (it's Q&A feedback, not a recommendation)
+- EXPERT suggests a NEW trade idea proactively → INCLUDE (it's a recommendation)
 
 ### 4. ACTIONABLE RECOMMENDATIONS ONLY:
 - Must have a clear BUY or SELL action with at least ONE price point
@@ -152,6 +162,7 @@ Return a JSON array (empty if no valid recommendations):
     "action": "BUY",
     "recommended_price": 750,
     "target_price": 800,
+    "target_price_2": 850,
     "stop_loss": 720,
     "reason": "Breakout with volume",
     "timestamp_seconds": 450,
@@ -165,6 +176,8 @@ Return a JSON array (empty if no valid recommendations):
 ## JSON Rules:
 - **timestamp_seconds**: NUMBER only (330, not "05:30")
 - **All prices**: NUMBER or null (2850, not "2850-2900")
+- **target_price**: First/primary target (T1)
+- **target_price_2**: Second target if expert provides multiple (T2), null if only one target
 - **action**: "BUY" or "SELL" only
 - **tags**: Array of strings identifying segment/occasion (at least 1 tag required)
 - Return `[]` if no valid stock recommendations found

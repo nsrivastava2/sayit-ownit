@@ -182,7 +182,7 @@ function Recommendations() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             >
               <option value="">All Experts</option>
-              {experts.map((e) => (
+              {[...experts].sort((a, b) => a.name.localeCompare(b.name)).map((e) => (
                 <option key={e.name} value={e.name}>
                   {e.name} ({e.count})
                 </option>
@@ -199,7 +199,7 @@ function Recommendations() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             >
               <option value="">All Stocks</option>
-              {shares.map((s) => (
+              {[...shares].sort((a, b) => a.name.localeCompare(b.name)).map((s) => (
                 <option key={s.name} value={s.name}>
                   {s.name} ({s.count})
                 </option>
@@ -262,7 +262,7 @@ function Recommendations() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
             >
               <option value="">All Tags</option>
-              {tags.map((t) => (
+              {[...tags].sort((a, b) => a.name.localeCompare(b.name)).map((t) => (
                 <option key={t.name} value={t.name}>
                   {t.name} ({t.count})
                 </option>
@@ -352,12 +352,14 @@ function Recommendations() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-400 uppercase w-16">ID</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expert</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timeline</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entry Price</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">T1</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">T2</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stop Loss</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Outcome</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
@@ -368,6 +370,17 @@ function Recommendations() {
                 {recommendations.map((rec) => (
                   <tr key={rec.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{formatDate(rec.recommendation_date)}</td>
+                    <td className="px-2 py-3">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(rec.id);
+                        }}
+                        className="text-xs font-mono text-gray-300 hover:text-gray-500 hover:bg-gray-100 px-1 rounded"
+                        title={`Click to copy: ${rec.id}`}
+                      >
+                        {rec.id?.slice(0, 6)}
+                      </button>
+                    </td>
                     <td className="px-4 py-3">
                       <Link
                         to={`/experts/${encodeURIComponent(rec.expert_name)}`}
@@ -411,7 +424,17 @@ function Recommendations() {
                       {rec.target_price ? `₹${rec.target_price}` : '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {rec.stop_loss ? `₹${rec.stop_loss}` : '-'}
+                      {rec.target_price_2 ? `₹${rec.target_price_2}` : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {rec.stop_loss ? (
+                        <span className={rec.stop_loss_type === 'SYSTEM' ? 'text-blue-600' : 'text-gray-600'}>
+                          ₹{rec.stop_loss}
+                          {rec.stop_loss_type === 'SYSTEM' && (
+                            <span className="ml-1 text-xs text-blue-500" title="Stop loss calculated by system (expert did not provide)">*</span>
+                          )}
+                        </span>
+                      ) : '-'}
                     </td>
                     <td className="px-4 py-3">
                       <OutcomeBadge

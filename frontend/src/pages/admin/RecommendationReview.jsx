@@ -12,6 +12,11 @@ function RecommendationReview() {
   const [editedValues, setEditedValues] = useState({}); // Track inline edits per recommendation
   const [processing, setProcessing] = useState({});
   const [filterReason, setFilterReason] = useState(null);
+  const [experts, setExperts] = useState([]);
+  const [showCreateExpert, setShowCreateExpert] = useState(null); // recId when creating new expert
+  const [newExpertName, setNewExpertName] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 20; // Show 20 items per page
   const { videoPlayer, openVideoPlayer, closeVideoPlayer } = useVideoPlayer();
 
   useEffect(() => {
@@ -21,20 +26,25 @@ function RecommendationReview() {
   async function loadData() {
     try {
       setLoading(true);
-      const [flaggedData, statsData] = await Promise.all([
+      const [flaggedData, statsData, expertsData] = await Promise.all([
         api.getFlaggedRecommendations(),
-        api.getFlagStats()
+        api.getFlagStats(),
+        api.getAdminExperts()
       ]);
       setRecommendations(flaggedData.recommendations || []);
       setStats(statsData.stats);
+      setExperts(expertsData.experts || []);
 
       // Initialize edited values with current values
       const initialEdits = {};
       (flaggedData.recommendations || []).forEach(rec => {
         initialEdits[rec.id] = {
+          expert_name: rec.expert_name || '',
           recommended_price: rec.recommended_price || '',
           target_price: rec.target_price || '',
+          target_price_2: rec.target_price_2 || '',
           stop_loss: rec.stop_loss || '',
+          stop_loss_type: rec.stop_loss_type || 'EXPERT',
           timeline: rec.timeline || 'SHORT_TERM'
         };
       });
@@ -57,11 +67,57 @@ function RecommendationReview() {
     const edited = editedValues[rec.id];
     if (!edited) return false;
     return (
+      (edited.expert_name || '') !== (rec.expert_name || '') ||
       (edited.recommended_price || '') !== (rec.recommended_price?.toString() || '') ||
       (edited.target_price || '') !== (rec.target_price?.toString() || '') ||
+      (edited.target_price_2 || '') !== (rec.target_price_2?.toString() || '') ||
       (edited.stop_loss || '') !== (rec.stop_loss?.toString() || '') ||
+      (edited.stop_loss_type || 'EXPERT') !== (rec.stop_loss_type || 'EXPERT') ||
       (edited.timeline || '') !== (rec.timeline || '')
     );
+  }
+
+  // Create a new expert and select it
+  async function handleCreateExpert(recId) {
+    if (!newExpertName.trim()) {
+      alert('Please enter an expert name');
+      return;
+    }
+    try {
+      const result = await api.createAdminExpert({ canonical_name: newExpertName.trim() });
+      // Refresh experts list and select the new expert
+      const expertsData = await api.getAdminExperts();
+      setExperts(expertsData.experts || []);
+      updateField(recId, 'expert_name', newExpertName.trim());
+      setShowCreateExpert(null);
+      setNewExpertName('');
+    } catch (err) {
+      alert('Error creating expert: ' + err.message);
+    }
+  }
+
+  // Calculate system-generated stop loss: entry - (target - entry) / 2
+  function calculateSystemSL(recId) {
+    const edited = editedValues[recId];
+    if (!edited) return;
+
+    const entry = parseFloat(edited.recommended_price);
+    const target = parseFloat(edited.target_price);
+
+    if (!entry || !target) {
+      alert('Entry price and Target are required to calculate SL');
+      return;
+    }
+
+    const systemSL = entry - (target - entry) / 2;
+    setEditedValues(prev => ({
+      ...prev,
+      [recId]: {
+        ...prev[recId],
+        stop_loss: systemSL.toFixed(2),
+        stop_loss_type: 'SYSTEM'
+      }
+    }));
   }
 
   async function handleSave(rec) {
@@ -71,9 +127,12 @@ function RecommendationReview() {
     try {
       setProcessing(prev => ({ ...prev, [rec.id]: true }));
       const updates = {
+        expert_name: edited.expert_name || null,
         recommended_price: edited.recommended_price ? parseFloat(edited.recommended_price) : null,
         target_price: edited.target_price ? parseFloat(edited.target_price) : null,
+        target_price_2: edited.target_price_2 ? parseFloat(edited.target_price_2) : null,
         stop_loss: edited.stop_loss ? parseFloat(edited.stop_loss) : null,
+        stop_loss_type: edited.stop_loss_type || 'EXPERT',
         timeline: edited.timeline || null
       };
       await api.editRecommendation(rec.id, updates);
@@ -173,6 +232,18 @@ function RecommendationReview() {
       )
     : recommendations;
 
+  // Pagination
+  const totalPages = Math.ceil(filteredRecommendations.length / pageSize);
+  const paginatedRecommendations = filteredRecommendations.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [filterReason]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -207,7 +278,7 @@ function RecommendationReview() {
 
       {/* Issue Filters - Compact */}
       {stats?.reasonBreakdown?.length > 0 && (
-        <div className="flex flex-wrap gap-2 px-1">
+        <div className="flex gap-2 px-1 overflow-x-auto">
           <button
             onClick={() => setFilterReason(null)}
             className={`px-2 py-1 rounded text-xs transition-colors ${
@@ -247,181 +318,265 @@ function RecommendationReview() {
             )}
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
-              <tr>
-                <th className="px-3 py-2 text-left">Date</th>
-                <th className="px-3 py-2 text-left">Stock / Expert</th>
-                <th className="px-3 py-2 text-left">Issues</th>
-                <th className="px-3 py-2 text-left w-24">Entry</th>
-                <th className="px-3 py-2 text-left w-24">Target</th>
-                <th className="px-3 py-2 text-left w-24">SL</th>
-                <th className="px-3 py-2 text-left w-32">Timeline</th>
-                <th className="px-3 py-2 text-left">Video</th>
-                <th className="px-3 py-2 text-right w-36">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredRecommendations.map((rec) => {
-                const edited = editedValues[rec.id] || {};
-                const isProcessing = processing[rec.id];
-                const changed = hasChanges(rec);
+          <div className="space-y-3 p-3">
+            {/* Pagination Info */}
+            <div className="flex items-center justify-between text-sm text-gray-500 px-1">
+              <span>Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, filteredRecommendations.length)} of {filteredRecommendations.length}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  ← Prev
+                </button>
+                <span className="px-2">Page {page} of {totalPages}</span>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
 
-                return (
-                  <tr key={rec.id} className="hover:bg-gray-50">
-                    {/* Date */}
-                    <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                      {formatDate(rec.recommendation_date)}
-                    </td>
+            {paginatedRecommendations.map((rec) => {
+              const edited = editedValues[rec.id] || {};
+              const isProcessing = processing[rec.id];
+              const changed = hasChanges(rec);
 
-                    {/* Stock / Expert */}
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-1">
-                        <span className={`px-1.5 py-0.5 text-xs font-semibold rounded ${
-                          rec.action === 'BUY' ? 'bg-green-100 text-green-800' :
-                          rec.action === 'SELL' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {rec.action}
-                        </span>
-                        <Link
-                          to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
-                          className="font-medium text-primary-600 hover:underline"
+              return (
+                <div key={rec.id} className="bg-white border border-gray-300 rounded-lg shadow-xl overflow-hidden">
+                  {/* Header Row */}
+                  <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-500 font-medium">
+                        {formatDate(rec.recommendation_date)}
+                      </span>
+                      <span className={`px-2.5 py-1 text-xs font-bold rounded ${
+                        rec.action === 'BUY' ? 'bg-green-500 text-white' :
+                        rec.action === 'SELL' ? 'bg-red-500 text-white' :
+                        'bg-yellow-500 text-white'
+                      }`}>
+                        {rec.action}
+                      </span>
+                      <Link
+                        to={`/shares/${encodeURIComponent(rec.nse_symbol || rec.share_name)}`}
+                        className="font-bold text-gray-900 hover:text-primary-600 text-lg"
+                      >
+                        {rec.share_name}
+                      </Link>
+                      {rec.nse_symbol && (
+                        <span className="text-sm text-gray-400">({rec.nse_symbol})</span>
+                      )}
+                      {/* Issues */}
+                      {rec.flag_messages?.map((flag, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-0.5 text-xs rounded bg-amber-100 text-amber-700 font-medium"
+                          title={flag.message}
                         >
-                          {rec.share_name}
-                        </Link>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-0.5">{rec.expert_name}</div>
-                    </td>
+                          {flag.code.replace(/^(MISSING_|ILLOGICAL_)/, '')}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {rec.youtube_url && (
+                        <button
+                          onClick={() => openVideoPlayer(rec.youtube_url, rec.timestamp_in_video, rec.video_title)}
+                          className="px-3 py-1.5 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 flex items-center gap-1"
+                        >
+                          ▶ {rec.timestamp_in_video ? formatTimestamp(rec.timestamp_in_video) : 'Play'}
+                        </button>
+                      )}
+                      {changed ? (
+                        <button
+                          onClick={() => handleSave(rec)}
+                          disabled={isProcessing}
+                          className="px-4 py-1.5 text-sm text-green-700 bg-green-50 border border-green-200 rounded font-medium hover:bg-green-100 disabled:opacity-50"
+                        >
+                          {isProcessing ? '...' : 'Save'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleApprove(rec)}
+                          disabled={isProcessing}
+                          className="px-4 py-1.5 text-sm text-green-700 bg-green-50 border border-green-200 rounded font-medium hover:bg-green-100 disabled:opacity-50"
+                        >
+                          {isProcessing ? '...' : 'Approve'}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(rec)}
+                        disabled={isProcessing}
+                        className="px-3 py-1.5 text-sm text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 disabled:opacity-50"
+                      >
+                        Delete
+                      </button>
+                      <span className="text-xs font-mono text-gray-300 ml-2">#{rec.id?.slice(0, 6)}</span>
+                    </div>
+                  </div>
 
-                    {/* Issues */}
-                    <td className="px-3 py-2">
-                      <div className="flex flex-wrap gap-1">
-                        {rec.flag_messages?.slice(0, 2).map((flag, idx) => (
-                          <span
-                            key={idx}
-                            className="px-1.5 py-0.5 text-xs rounded bg-amber-100 text-amber-700"
-                            title={flag.message}
+                  {/* Content Row */}
+                  <div className="px-4 py-3 flex items-center gap-6">
+                    {/* Expert */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-500 font-medium">Expert:</label>
+                      {showCreateExpert === rec.id ? (
+                        <div className="flex gap-1">
+                          <input
+                            type="text"
+                            value={newExpertName}
+                            onChange={(e) => setNewExpertName(e.target.value)}
+                            className="w-36 px-2 py-1.5 text-sm border border-blue-400 rounded"
+                            placeholder="Expert name..."
+                            autoFocus
+                          />
+                          <button onClick={() => handleCreateExpert(rec.id)} className="px-2 py-1 text-xs bg-green-500 text-white rounded">Save</button>
+                          <button onClick={() => { setShowCreateExpert(null); setNewExpertName(''); }} className="px-2 py-1 text-xs bg-gray-400 text-white rounded">X</button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-1">
+                          <select
+                            value={edited.expert_name || ''}
+                            onChange={(e) => updateField(rec.id, 'expert_name', e.target.value)}
+                            className="w-40 px-2 py-1.5 text-sm border border-gray-300 rounded"
                           >
-                            {flag.code.replace(/^(MISSING_|ILLOGICAL_)/, '')}
-                          </span>
-                        ))}
+                            <option value="">Select...</option>
+                            {edited.expert_name && !experts.find(e => e.canonical_name === edited.expert_name) && (
+                              <option value={edited.expert_name}>{edited.expert_name}</option>
+                            )}
+                            {experts.map(exp => (
+                              <option key={exp.id} value={exp.canonical_name}>{exp.canonical_name}</option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => { setShowCreateExpert(rec.id); setNewExpertName(rec.expert_name || ''); }}
+                            className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded border border-gray-300 hover:bg-gray-200"
+                          >
+                            +
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="h-8 w-px bg-gray-200"></div>
+
+                    {/* Prices */}
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1">
+                        <label className="text-xs text-gray-500">Entry:</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={edited.recommended_price || ''}
+                          onChange={(e) => updateField(rec.id, 'recommended_price', e.target.value)}
+                          className={`w-24 px-2 py-1.5 text-sm border rounded font-medium ${
+                            !edited.recommended_price ? 'border-red-400 bg-red-50 text-red-700' : 'border-gray-300 bg-white'
+                          }`}
+                        />
                       </div>
-                    </td>
+                      <div className="flex items-center gap-1">
+                        <label className="text-xs text-gray-500">T1:</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={edited.target_price || ''}
+                          onChange={(e) => updateField(rec.id, 'target_price', e.target.value)}
+                          className={`w-24 px-2 py-1.5 text-sm border rounded font-medium ${
+                            !edited.target_price ? 'border-red-400 bg-red-50 text-red-700' : 'border-gray-300 bg-white'
+                          }`}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <label className="text-xs text-gray-500">T2:</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={edited.target_price_2 || ''}
+                          onChange={(e) => updateField(rec.id, 'target_price_2', e.target.value)}
+                          className="w-24 px-2 py-1.5 text-sm border border-gray-300 rounded bg-white"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <label className="text-xs text-gray-500">SL:</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={edited.stop_loss || ''}
+                          onChange={(e) => {
+                            updateField(rec.id, 'stop_loss', e.target.value);
+                            updateField(rec.id, 'stop_loss_type', 'EXPERT');
+                          }}
+                          className={`w-24 px-2 py-1.5 text-sm border rounded font-medium ${
+                            !edited.stop_loss ? 'border-red-400 bg-red-50 text-red-700' :
+                            edited.stop_loss_type === 'SYSTEM' ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white'
+                          }`}
+                        />
+                        <button
+                          onClick={() => calculateSystemSL(rec.id)}
+                          className="px-2 py-1.5 text-xs bg-gray-100 text-gray-600 rounded border border-gray-300 hover:bg-gray-200"
+                          title="Auto-calculate SL"
+                        >
+                          Auto
+                        </button>
+                      </div>
+                    </div>
 
-                    {/* Entry Price - Editable */}
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={edited.recommended_price || ''}
-                        onChange={(e) => updateField(rec.id, 'recommended_price', e.target.value)}
-                        className={`w-full px-2 py-1 text-sm border rounded ${
-                          !edited.recommended_price ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                        }`}
-                        placeholder="Entry"
-                      />
-                    </td>
+                    <div className="h-8 w-px bg-gray-200"></div>
 
-                    {/* Target - Editable */}
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={edited.target_price || ''}
-                        onChange={(e) => updateField(rec.id, 'target_price', e.target.value)}
-                        className={`w-full px-2 py-1 text-sm border rounded ${
-                          !edited.target_price ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                        }`}
-                        placeholder="Target"
-                      />
-                    </td>
-
-                    {/* Stop Loss - Editable */}
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={edited.stop_loss || ''}
-                        onChange={(e) => updateField(rec.id, 'stop_loss', e.target.value)}
-                        className={`w-full px-2 py-1 text-sm border rounded ${
-                          !edited.stop_loss ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                        }`}
-                        placeholder="SL"
-                      />
-                    </td>
-
-                    {/* Timeline - Editable */}
-                    <td className="px-3 py-2">
+                    {/* Timeline */}
+                    <div className="flex items-center gap-1">
+                      <label className="text-xs text-gray-500">Timeline:</label>
                       <select
                         value={edited.timeline || ''}
                         onChange={(e) => updateField(rec.id, 'timeline', e.target.value)}
-                        className={`w-full px-2 py-1 text-xs border rounded ${getTimelineColor(edited.timeline)}`}
+                        className={`w-28 px-2 py-1.5 text-sm border border-gray-300 rounded ${getTimelineColor(edited.timeline)}`}
                       >
                         <option value="">Select...</option>
                         {timelineOptions.map(opt => (
                           <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
                       </select>
-                    </td>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
 
-                    {/* Video Link */}
-                    <td className="px-3 py-2">
-                      {rec.youtube_url && (
-                        <button
-                          onClick={() => openVideoPlayer(rec.youtube_url, rec.timestamp_in_video, rec.video_title)}
-                          className="text-xs text-primary-600 hover:underline flex items-center gap-1"
-                        >
-                          <span>▶</span>
-                          {rec.timestamp_in_video ? formatTimestamp(rec.timestamp_in_video) : 'Play'}
-                        </button>
-                      )}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-3 py-2 text-right">
-                      <div className="flex justify-end gap-1">
-                        {changed ? (
-                          <button
-                            onClick={() => handleSave(rec)}
-                            disabled={isProcessing}
-                            className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                          >
-                            {isProcessing ? '...' : 'Save'}
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleApprove(rec)}
-                            disabled={isProcessing}
-                            className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                          >
-                            {isProcessing ? '...' : 'OK'}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDelete(rec)}
-                          disabled={isProcessing}
-                          className="px-2 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 disabled:opacity-50"
-                        >
-                          Del
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+            {/* Bottom Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-500 pt-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  ← Prev
+                </button>
+                <span className="px-2">Page {page} of {totalPages}</span>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Floating Video Player */}
+      {/* Floating Video Player - 1.5x speed for admin review */}
       {videoPlayer && (
         <FloatingVideoPlayer
           videoId={videoPlayer.videoId}
           timestamp={videoPlayer.timestamp}
           title={videoPlayer.title}
           onClose={closeVideoPlayer}
+          playbackRate={1.5}
         />
       )}
     </div>

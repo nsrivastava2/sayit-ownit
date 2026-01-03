@@ -18,28 +18,39 @@ Extract recommendations ONLY for INDIAN EQUITY STOCKS listed on NSE/BSE.
 - **Sector advice**: "buy IT sector", "pharma looks good"
 - **Bullion/commodity shows**: Gold/Silver investment discussions
 
-### 3. CRITICAL: VIEWER Q&A vs ACTUAL RECOMMENDATIONS
-**DO NOT capture viewer questions/feedback responses as recommendations!**
+### 3. ⚠️ MOST CRITICAL RULE: VIEWER Q&A vs ACTUAL RECOMMENDATIONS ⚠️
+**NEVER capture viewer questions/feedback responses as recommendations!**
+
+This is the #1 cause of bad data. If a viewer asks about a stock they ALREADY OWN, the expert's response is NOT a recommendation.
 
 ❌ **EXCLUDE - Viewer Q&A (Expert responding to viewer's existing position):**
-- "I bought XYZ at 500, what should I do?" → Expert responds with hold/sell advice
-- "My average price is 180, should I add more?"
-- Any question where viewer mentions "I bought", "I have", "My average", "My portfolio"
+- Viewer: "I bought [STOCK] at [PRICE], what should I do?" → Expert responds → NOT A RECOMMENDATION
+- Viewer: "My average price is [PRICE], should I add more?" → NOT A RECOMMENDATION
+- Viewer: "I have [STOCK] in my portfolio, advice please" → NOT A RECOMMENDATION
+- **English trigger phrases to EXCLUDE:**
+  - "I bought", "I have", "my position", "my holding", "my average"
+  - "what should I do with", "should I hold", "should I sell", "should I add"
+  - "caller asking about", "viewer question", "SMS question"
+- **Hindi trigger phrases to EXCLUDE:**
+  - "maine liya hai", "mere paas hai", "mera holding", "mera average"
+  - "aapka stock", "aap hold karein", "aapne jo liya"
+  - "kya karun", "kya karna chahiye" (when viewer asks about their position)
+  - "SMS/WhatsApp se poochh rahe hain" (viewer questions)
 - Expert giving advice on viewer's EXISTING holdings
-- Phrases like "aapka stock", "your holding", "aapne jo liya hai"
-- SMS/Call-in questions where viewer mentions their purchase price
-- Hindi: "Maine liya hai", "Mere paas hai", "Mera average price"
+- Call-in questions where caller mentions their purchase price
 
-✅ **INCLUDE - Actual Recommendations (Expert proactively suggesting):**
-- Expert says "Buy XYZ at 500, target 600, stop loss 475"
-- "Today's pick is ABC, entry around 200"
-- "My recommendation for this week is..."
+✅ **INCLUDE - Actual Recommendations (Expert proactively suggesting NEW ideas):**
+- Expert says: "Buy [STOCK] at [PRICE], target [PRICE], stop loss [PRICE]"
+- Expert says: "Today's pick is [STOCK], entry around [PRICE]"
+- Expert says: "My recommendation for this week is [STOCK]"
+- Named segments: "Top Picks", "Stock of the Day", "Expert Ki Pasand"
 - Expert initiating a fresh trade idea for viewers to act on
-- Named segments like "Top Picks", "Stock of the Day", "Expert Ki Pasand"
+
+**CRITICAL: Examples above use [PLACEHOLDERS] - extract ONLY actual values from transcript!**
 
 **Key Distinction:**
-- If a VIEWER mentions they already OWN the stock → NOT a recommendation (it's Q&A feedback)
-- If the EXPERT suggests a NEW trade idea → IS a recommendation
+- VIEWER mentions they ALREADY OWN the stock → SKIP (it's Q&A feedback, not a recommendation)
+- EXPERT suggests a NEW trade idea proactively → INCLUDE (it's a recommendation)
 
 ### 4. ACTIONABLE RECOMMENDATIONS ONLY:
 - Must have a clear BUY or SELL action with at least ONE price point
@@ -133,6 +144,7 @@ Return a JSON array (empty if no valid recommendations):
     "action": "BUY",
     "recommended_price": 2850,
     "target_price": 3100,
+    "target_price_2": 3200,
     "stop_loss": 2750,
     "reason": "Technical breakout above resistance",
     "timestamp_seconds": 330,
@@ -146,6 +158,8 @@ Return a JSON array (empty if no valid recommendations):
 ## JSON Rules:
 - **timestamp_seconds**: NUMBER only (330, not "05:30")
 - **All prices**: NUMBER or null (2850, not "2850-2900")
+- **target_price**: First/primary target (T1)
+- **target_price_2**: Second target if expert provides multiple (T2), null if only one target
 - **action**: "BUY" or "SELL" only
 - **tags**: Array of strings identifying segment/occasion (at least 1 tag required)
 - Return `[]` if no valid stock recommendations found

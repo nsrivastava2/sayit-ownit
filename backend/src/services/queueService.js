@@ -7,6 +7,7 @@ import geminiVideoService from './geminiVideoService.js';
 import youtubeTranscriptService from './youtubeTranscriptService.js';
 import { expertService } from './expertService.js';
 import { recommendationValidator } from './recommendationValidator.js';
+import cacheService from './cacheService.js';
 
 /**
  * Job queue service for processing videos
@@ -360,6 +361,9 @@ export const queueService = {
     }
 
     console.log(`Saved ${recommendations.length} recommendations (${flaggedCount} flagged) via ${processingMethod}`);
+
+    // Invalidate cache since new recommendations were added
+    await cacheService.invalidateStats();
 
     // Mark as completed
     job.status = 'completed';

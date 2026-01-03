@@ -193,7 +193,9 @@ export const recommendationValidator = {
         r.action,
         r.recommended_price,
         r.target_price,
+        r.target_price_2,
         r.stop_loss,
+        r.stop_loss_type,
         r.reason,
         r.flag_reasons,
         r.reviewed_at,
@@ -242,7 +244,7 @@ export const recommendationValidator = {
   async editRecommendation(recommendationId, updates, notes = null) {
     // Get current values for history
     const current = await db.query(
-      'SELECT recommended_price, target_price, stop_loss, action FROM recommendations WHERE id = $1',
+      'SELECT expert_name, recommended_price, target_price, target_price_2, stop_loss, stop_loss_type, action FROM recommendations WHERE id = $1',
       [recommendationId]
     );
 
@@ -257,6 +259,11 @@ export const recommendationValidator = {
     const values = [];
     let paramIndex = 1;
 
+    if (updates.expert_name !== undefined) {
+      updateFields.push(`expert_name = $${paramIndex}`);
+      values.push(updates.expert_name);
+      paramIndex++;
+    }
     if (updates.recommended_price !== undefined) {
       updateFields.push(`recommended_price = $${paramIndex}`);
       values.push(updates.recommended_price);
@@ -267,9 +274,19 @@ export const recommendationValidator = {
       values.push(updates.target_price);
       paramIndex++;
     }
+    if (updates.target_price_2 !== undefined) {
+      updateFields.push(`target_price_2 = $${paramIndex}`);
+      values.push(updates.target_price_2);
+      paramIndex++;
+    }
     if (updates.stop_loss !== undefined) {
       updateFields.push(`stop_loss = $${paramIndex}`);
       values.push(updates.stop_loss);
+      paramIndex++;
+    }
+    if (updates.stop_loss_type !== undefined) {
+      updateFields.push(`stop_loss_type = $${paramIndex}`);
+      values.push(updates.stop_loss_type);
       paramIndex++;
     }
     if (updates.action !== undefined) {
@@ -351,15 +368,13 @@ export const recommendationValidator = {
       throw new Error('Recommendation not found');
     }
 
+    // Delete related history records first (FK constraint)
+    await db.query('DELETE FROM recommendation_flag_history WHERE recommendation_id = $1', [recommendationId]);
+
+    // Then delete the recommendation
     await db.query('DELETE FROM recommendations WHERE id = $1', [recommendationId]);
 
-    // Log to history
-    await db.query(
-      `INSERT INTO recommendation_flag_history
-       (recommendation_id, action, notes, created_at)
-       VALUES ($1, 'DELETED', $2, NOW())`,
-      [recommendationId, `Deleted: ${current.rows[0].share_name} by ${current.rows[0].expert_name}`]
-    );
+    console.log(`Deleted recommendation: ${current.rows[0].share_name} by ${current.rows[0].expert_name}`);
 
     return { success: true };
   }
