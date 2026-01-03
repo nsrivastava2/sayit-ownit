@@ -335,16 +335,16 @@ function ExpertManagement() {
                     {pending.video_title && (
                       <p className="text-sm text-gray-500 mt-1">
                         From: {pending.video_title}
-                        {pending.timestamp_in_video && (
+                        {(pending.recommendation_timestamp || pending.timestamp_in_video) && (
                           <span className="ml-2">
-                            @ {Math.floor(pending.timestamp_in_video / 60)}:{(pending.timestamp_in_video % 60).toString().padStart(2, '0')}
+                            @ {Math.floor((pending.recommendation_timestamp || pending.timestamp_in_video) / 60)}:{((pending.recommendation_timestamp || pending.timestamp_in_video) % 60).toString().padStart(2, '0')}
                           </span>
                         )}
                       </p>
                     )}
                     {pending.youtube_url && (
                       <button
-                        onClick={() => openVideoPlayer(pending.youtube_url, pending.timestamp_in_video, pending.video_title)}
+                        onClick={() => openVideoPlayer(pending.youtube_url, pending.recommendation_timestamp || pending.timestamp_in_video, pending.video_title)}
                         className="text-sm text-primary-600 hover:underline"
                       >
                         ▶ View in video

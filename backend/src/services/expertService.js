@@ -334,7 +334,16 @@ export const expertService = {
         pe.*,
         v.title as video_title,
         v.youtube_url,
-        v.channel_name
+        v.channel_name,
+        -- Use first recommendation timestamp if available, otherwise use mention timestamp
+        COALESCE(
+          (SELECT MIN(r.timestamp_in_video::integer)
+           FROM recommendations r
+           WHERE r.video_id = pe.video_id
+             AND LOWER(r.expert_name) = LOWER(pe.raw_name)
+             AND r.timestamp_in_video IS NOT NULL),
+          pe.timestamp_in_video
+        ) as recommendation_timestamp
       FROM pending_experts pe
       LEFT JOIN videos v ON pe.video_id = v.id
       WHERE pe.status = 'pending'
